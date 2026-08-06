@@ -890,7 +890,8 @@ async function loadPostsTable() {
     const posts = await res.json();
 
     if (!Array.isArray(posts)) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ff453a;">Failed to load posts.</td></tr>';
+      const errMsg = posts && posts.error ? posts.error : 'Failed to load posts from server.';
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ff453a; padding: 2rem; font-weight: 600;">⚠️ Failed to load posts: ${escapeHTML(errMsg)}</td></tr>`;
       return;
     }
 

@@ -88,7 +88,12 @@ function initAuthFlow() {
           body: JSON.stringify({ password })
         });
 
-        const data = await response.json();
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (e) {
+          console.error('Failed to parse response JSON:', e);
+        }
 
         if (response.ok && data.token) {
           localStorage.setItem('admin_token', data.token);
@@ -99,11 +104,12 @@ function initAuthFlow() {
           scheduleAutoLogout(FIFTEEN_MINUTES_MS);
           loadPostsTable();
         } else {
-          showLoginAlert(data.error || 'Invalid admin password.', true);
+          const errMsg = data.error || `Authentication failed (Status ${response.status}). Please check environment variables on Vercel.`;
+          showLoginAlert(errMsg, true);
         }
       } catch (err) {
         console.error('Login error:', err);
-        showLoginAlert('Network error during authentication.', true);
+        showLoginAlert(`Network/API error: ${err.message || err}`, true);
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }

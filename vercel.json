@@ -1,9 +1,3 @@
 {
-  "version": 2,
-  "rewrites": [
-    { "source": "/api/auth/login", "destination": "/api/auth/login.js" },
-    { "source": "/api/posts/detail", "destination": "/api/posts/detail.js" },
-    { "source": "/api/posts", "destination": "/api/posts/index.js" },
-    { "source": "/api/upload", "destination": "/api/upload.js" }
-  ]
+  "version": 2
 }

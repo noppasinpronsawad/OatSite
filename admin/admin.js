@@ -69,49 +69,79 @@ function initAuthFlow() {
     forceLogout();
   }
 
-  // Handle Login Submit
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const password = passwordInput.value.trim();
+  const loginBtn = document.getElementById('loginBtn');
 
-      if (!password) return;
+  async function executeLogin() {
+    const password = passwordInput ? passwordInput.value.trim() : '';
 
-      showLoginAlert('', false);
-      const submitBtn = document.getElementById('loginBtn');
-      if (submitBtn) submitBtn.disabled = true;
+    if (!password) {
+      alert('Please enter your admin password.');
+      return;
+    }
 
+    showLoginAlert('', false);
+    if (loginBtn) loginBtn.disabled = true;
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      let data = {};
       try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
-        });
+        data = await response.json();
+      } catch (e) {
+        console.error('Failed to parse response JSON:', e);
+      }
 
-        let data = {};
-        try {
-          data = await response.json();
-        } catch (e) {
-          console.error('Failed to parse response JSON:', e);
-        }
+      if (response.ok && data.token) {
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_login_time', Date.now().toString());
 
-        if (response.ok && data.token) {
-          localStorage.setItem('admin_token', data.token);
-          localStorage.setItem('admin_login_time', Date.now().toString());
+        if (passwordInput) passwordInput.value = '';
+        showDashboardView();
+        scheduleAutoLogout(FIFTEEN_MINUTES_MS);
+        loadPostsTable();
+      } else {
+        const errMsg = data.error || `Authentication failed (Status ${response.status}). Please check environment variables on Vercel.`;
+        showLoginAlert(errMsg, true);
+        alert(`Login Failed: ${errMsg}`);
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      const errMsg = `Network/API error: ${err.message || err}`;
+      showLoginAlert(errMsg, true);
+      alert(`Login Error: ${errMsg}`);
+    } finally {
+      if (loginBtn) loginBtn.disabled = false;
+    }
+  }
 
-          passwordInput.value = '';
-          showDashboardView();
-          scheduleAutoLogout(FIFTEEN_MINUTES_MS);
-          loadPostsTable();
-        } else {
-          const errMsg = data.error || `Authentication failed (Status ${response.status}). Please check environment variables on Vercel.`;
-          showLoginAlert(errMsg, true);
-        }
-      } catch (err) {
-        console.error('Login error:', err);
-        showLoginAlert(`Network/API error: ${err.message || err}`, true);
-      } finally {
-        if (submitBtn) submitBtn.disabled = false;
+  // Handle Login Submit and Button Click (Prevents Native HTML Form Refresh)
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      executeLogin();
+      return false;
+    });
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      executeLogin();
+      return false;
+    });
+  }
+
+  if (passwordInput) {
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeLogin();
+        return false;
       }
     });
   }

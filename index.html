@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noppasin Pronsawad — Business Analyst, Science & Tech</title>
+  <meta name="description"
+    content="Personal website, resume, technology & science blog, and Thai Personal Income Tax 2026 calculator of Noppasin Pronsawad.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Glass Navigation Bar -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#home" class="nav-brand">
+        <span class="brand-icon">NP</span>
+        <span>Noppasin P.</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#home" class="nav-link" data-route="home">Home</a></li>
+        <li><a href="#blog" class="nav-link" data-route="blog">Blog</a></li>
+        <li><a href="#tax" class="nav-link" data-route="tax">Tax Calculator</a></li>
+        <li><a href="#about" class="nav-link" data-route="about">About</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn-theme" id="themeToggleBtn" aria-label="Toggle Theme">
+          <span class="theme-icon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content SPA Container -->
+  <main>
+
+    <!-- ====================================================================
+         1. HOME SECTION (Clean Minimalist Landing Screen)
+         ==================================================================== -->
+    <section class="page-view" id="home-view">
+      <div class="home-landing">
+        <div class="home-glow-bg"></div>
+        <div class="home-content">
+          <div class="home-badge">
+            <span class="badge-dot"></span>
+            Personal Workspace & Publications
+          </div>
+          <h1 class="home-greeting gradient-text">Hello, I'm Noppasin.</h1>
+          <p class="home-subgreeting">
+            Senior Business Analyst & Technology Specialist specializing in FinTech architecture, banking
+            reconciliation, and data-driven systems.
+          </p>
+          <div class="home-actions">
+            <a href="#about" class="btn-cta">
+              Explore Resume & Experience
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
+            <a href="#blog" class="btn-secondary">Read Science & Tech Blog</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         2. RESUME SECTION (Combined with About & Contact)
+         ==================================================================== -->
+    <section class="page-view" id="resume-view">
+
+      <!-- Hero Section / About Me (Split Layout) -->
+      <section class="hero-split-section" id="hero">
+        <div class="hero-container">
+          <!-- Left Column: Visual Anchor (Domain & Focus Card - No Image) -->
+          <div class="hero-left-card">
+            <span class="left-card-tag">SPECIALIZATION</span>
+            <h2 class="left-card-title">BUSINESS ANALYST</h2>
+            <p class="left-card-subtitle">Noppasin Pronsawad</p>
+
+            <div class="domain-focus-list">
+              <div class="focus-item">
+                <span class="focus-icon">💳</span>
+                <span class="focus-text">Payment Gateway & E-Wallet Engine</span>
+              </div>
+              <div class="focus-item">
+                <span class="focus-icon">🔒</span>
+                <span class="focus-text">BAHTNET API & HSM Security</span>
+              </div>
+              <div class="focus-item">
+                <span class="focus-icon">📊</span>
+                <span class="focus-text">Banking Reconciliation Automation</span>
+              </div>
+              <div class="focus-item">
+                <span class="focus-icon">⚡</span>
+                <span class="focus-text">ThaiQR Refund Process Optimization</span>
+              </div>
+              <div class="focus-item">
+                <span class="focus-icon">🗺️</span>
+                <span class="focus-text">ArcGIS / QGIS & VRP Logistics</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Content & Metrics -->
+          <div class="hero-right-content">
+            <span class="about-label">ABOUT ME</span>
+            <h1 class="about-headline gradient-text">Driving innovation in FinTech & Banking.</h1>
+            <p class="about-body">
+              Result-driven Business Analyst with 5+ years of experience in FinTech, enterprise banking, and GIS
+              sectors. Proven ability to translate complex business requirements into scalable technical solutions,
+              leading high-throughput API integrations, core system revamps, back-office automation, and cybersecurity
+              compliance.
+            </p>
+
+            <!-- Metric Cards (Key Performance Indicators - Grid 3 Columns) -->
+            <div class="hero-metrics-grid">
+              <div class="hero-metric-card">
+                <span class="metric-val" data-target="5" data-suffix="+">0</span>
+                <span class="metric-lbl">YEARS EXP.</span>
+              </div>
+              <div class="hero-metric-card">
+                <span class="metric-val" data-target="4" data-suffix="">0</span>
+                <span class="metric-lbl">COMPANIES</span>
+              </div>
+              <div class="hero-metric-card">
+                <span class="metric-val" data-target="100000" data-suffix="+">0</span>
+                <span class="metric-lbl">MERCHANTS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Component B: Vertical Timeline Experience Section -->
+      <section class="section" id="experience">
+        <div class="section-header">
+          <span class="section-tag">CAREER JOURNEY</span>
+          <h2 class="section-title gradient-text">Professional Experience.</h2>
+          <p class="section-description">
+            A proven record of delivering high-impact financial systems, API gateway integrations, and operational
+            automation.
+          </p>
+        </div>
+
+        <!-- Vertical Timeline Mechanics -->
+        <div class="vertical-timeline">
+          <div class="timeline-line"></div>
+
+          <!-- Timeline Entry 1: KBTG -->
+          <div class="timeline-item experience-card" data-category="fintech automation">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card-content">
+              <div class="timeline-meta">
+                <span class="timeline-date">Sep 2023 — Present</span>
+                <span class="company-badge">Current Role</span>
+              </div>
+              <h3 class="timeline-role">Business Analyst</h3>
+              <h4 class="timeline-company">KASIKORN Business-Technology Group [KBTG]</h4>
+
+              <ul class="timeline-impact-list">
+                <li>
+                  <strong>Merchant Report Revamp:</strong> Upgraded Merchant Report System supporting <strong>100,000+
+                    merchants</strong> and integrated support for new Sources of Fund (SOF) & card types.
+                </li>
+                <li>
+                  <strong>BAHTNET API Gateway & HSM:</strong> Directed BAHTNET API integration into API Gateway
+                  utilizing Hardware Security Modules (HSM) for enterprise cybersecurity compliance.
+                </li>
+                <li>
+                  <strong>Reconciliation Automation:</strong> Automated manual back-office banking reconciliation,
+                  <strong>reducing operational workload by 30%</strong>.
+                </li>
+                <li>
+                  <strong>ThaiQR Refund Optimization:</strong> Streamlined ThaiQR refund processing, cutting settlement
+                  fulfillment time from 7-14 days to <strong>next-day fulfillment</strong>.
+                </li>
+                <li>
+                  <strong>Core E-Wallet Engine:</strong> Transitioned eSlip management to an in-house centralized
+                  platform and upgraded core E-Wallet Engine infrastructure.
+                </li>
+              </ul>
+
+              <div class="exp-footer">
+                <div class="tech-chips">
+                  <span class="chip">BAHTNET API</span>
+                  <span class="chip">HSM Security</span>
+                  <span class="chip">E-Wallet Engine</span>
+                  <span class="chip">Merchant Reports</span>
+                  <span class="chip">Reconciliation</span>
+                  <span class="chip">ThaiQR Refunds</span>
+                </div>
+                <button class="btn-detail" data-spec="kbtg">
+                  View System Specs
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Entry 2: ICONEXT -->
+          <div class="timeline-item experience-card" data-category="fintech automation">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card-content">
+              <div class="timeline-meta">
+                <span class="timeline-date">Oct 2022 — Sep 2023</span>
+              </div>
+              <h3 class="timeline-role">Business Analyst & Project Manager</h3>
+              <h4 class="timeline-company">ICONEXT.CO.,LTD</h4>
+
+              <ul class="timeline-impact-list">
+                <li>
+                  <strong>CMS Upgrade & Scan-to-Pay:</strong> Managed CMS upgrade project, <strong>reducing go-live
+                    delays by 25%</strong>, and led Mastercard integration for Aeon Scan to Pay mobile app.
+                </li>
+                <li>
+                  <strong>Customer Code Tracking:</strong> Designed Customer Code Tracking system to measure marketing
+                  campaigns, <strong>decreasing issue resolution time by 30%</strong>.
+                </li>
+                <li>
+                  <strong>OCR Digital Lending:</strong> Deployed OCR-based digital lending infrastructure to automate
+                  document processing for credit card approvals.
+                </li>
+              </ul>
+
+              <div class="exp-footer">
+                <div class="tech-chips">
+                  <span class="chip">Mastercard Integration</span>
+                  <span class="chip">Aeon Scan to Pay</span>
+                  <span class="chip">OCR Lending</span>
+                  <span class="chip">CMS Upgrade</span>
+                </div>
+                <button class="btn-detail" data-spec="iconext">
+                  View System Specs
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Entry 3: SCB -->
+          <div class="timeline-item experience-card" data-category="fintech">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card-content">
+              <div class="timeline-meta">
+                <span class="timeline-date">Apr 2022 — Oct 2022</span>
+              </div>
+              <h3 class="timeline-role">Business Analyst</h3>
+              <h4 class="timeline-company">Siam Commercial Bank [SCB]</h4>
+
+              <ul class="timeline-impact-list">
+                <li>
+                  <strong>Core System Data Alignment:</strong> Aligned customer data workflows post-core system upgrade
+                  (CPX Project) to enhance data consistency.
+                </li>
+                <li>
+                  <strong>Payment Hub & CBDC:</strong> Formulated end-to-end workflows and technical specifications for
+                  Payment Hub initiatives, including Central Bank Digital Currency (CBDC) and bill payment services.
+                </li>
+              </ul>
+
+              <div class="exp-footer">
+                <div class="tech-chips">
+                  <span class="chip">Payment Hub</span>
+                  <span class="chip">CBDC Digital Currency</span>
+                  <span class="chip">CPX Core Upgrade</span>
+                  <span class="chip">Bill Payments</span>
+                </div>
+                <button class="btn-detail" data-spec="scb">
+                  View System Specs
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Entry 4: CDG Group -->
+          <div class="timeline-item experience-card" data-category="gis">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card-content">
+              <div class="timeline-meta">
+                <span class="timeline-date">Oct 2019 — Mar 2022</span>
+              </div>
+              <h3 class="timeline-role">Business Analyst & System Engineer</h3>
+              <h4 class="timeline-company">CDG Group (NOSTRA Maps)</h4>
+
+              <ul class="timeline-impact-list">
+                <li>
+                  <strong>International Integration:</strong> Collaborated with South Korean partner (FATOS) to research
+                  and integrate new backend technologies for NOSTRA Maps.
+                </li>
+                <li>
+                  <strong>Vehicle Routing Optimization:</strong> Enhanced Vehicle Routing Problem (VRP) backend using
+                  ArcGIS/QGIS for logistics optimization.
+                </li>
+                <li>
+                  <strong>Tourism Platform Workflow:</strong> Spearheaded UI/UX and workflow design for the CBT-DASTA
+                  tourism CMS platform.
+                </li>
+              </ul>
+
+              <div class="exp-footer">
+                <div class="tech-chips">
+                  <span class="chip">NOSTRA Maps</span>
+                  <span class="chip">FATOS South Korea</span>
+                  <span class="chip">ArcGIS / QGIS</span>
+                  <span class="chip">VRP Logistics</span>
+                </div>
+                <button class="btn-detail" data-spec="cdg">
+                  View System Specs
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skills & Technical Matrix Section -->
+      <section class="section" id="skills">
+        <div class="section-header">
+          <span class="section-tag">CAPABILITIES & STACK</span>
+          <h2 class="section-title gradient-text">Technical & Functional Skills.</h2>
+          <p class="section-description">
+            A balanced skill foundation spanning requirement analysis, API system design, data modeling, and domain
+            security.
+          </p>
+        </div>
+
+        <div class="skills-grid">
+          <!-- Category 1: Business Analysis & Methods -->
+          <div class="skill-category-card">
+            <div class="cat-header">
+              <div class="cat-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 class="cat-title">Analysis & Methodology</h3>
+            </div>
+            <div class="skill-tags-list">
+              <span class="skill-tag">Business Analysis</span>
+              <span class="skill-tag">System & Workflow Design</span>
+              <span class="skill-tag">RESTful API Specs</span>
+              <span class="skill-tag">Agile / Scrum</span>
+              <span class="skill-tag">UAT Execution</span>
+              <span class="skill-tag">Process Automation</span>
+              <span class="skill-tag">Project Coordination</span>
+            </div>
+          </div>
+
+          <!-- Category 2: Tech & Data -->
+          <div class="skill-category-card">
+            <div class="cat-header">
+              <div class="cat-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h3 class="cat-title">Tech & Data Analytics</h3>
+            </div>
+            <div class="skill-tags-list">
+              <span class="skill-tag">Python</span>
+              <span class="skill-tag">SQL</span>
+              <span class="skill-tag">Power BI</span>
+              <span class="skill-tag">RESTful API</span>
+              <span class="skill-tag">GIS (ArcGIS / QGIS)</span>
+              <span class="skill-tag">JSON / Postman</span>
+              <span class="skill-tag">OCR Integration</span>
+            </div>
+          </div>
+
+          <!-- Category 3: Domain Expertise -->
+          <div class="skill-category-card">
+            <div class="cat-header">
+              <div class="cat-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 class="cat-title">Domain Expertise</h3>
+            </div>
+            <div class="skill-tags-list">
+              <span class="skill-tag">Payment Gateway</span>
+              <span class="skill-tag">E-Wallet Infrastructure</span>
+              <span class="skill-tag">Banking Reconciliation</span>
+              <span class="skill-tag">ThaiQR Refund Processing</span>
+              <span class="skill-tag">Cybersecurity (HSM)</span>
+              <span class="skill-tag">Merchant Reporting</span>
+              <span class="skill-tag">CBDC Initiatives</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Education Section (Vertical Timeline Style) -->
+      <section class="section" id="education">
+        <div class="section-header">
+          <span class="section-tag">ACADEMIC BACKGROUND</span>
+          <h2 class="section-title gradient-text">Education & Leadership.</h2>
+          <p class="section-description">
+            Scientific precision grounded in master's level petroleum geoscience research and second-class honours
+            engineering discipline.
+          </p>
+        </div>
+
+        <!-- Vertical Timeline for Education -->
+        <div class="vertical-timeline">
+          <div class="timeline-line"></div>
+
+          <!-- Education Entry 1: Chulalongkorn -->
+          <div class="timeline-item edu-card">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card-content">
+              <div class="timeline-meta">
+                <span class="timeline-date">Jul 2018 — Jun 2019</span>
+                <span class="company-badge">Master's Degree</span>
+              </div>
+              <h3 class="timeline-role">M.Sc. Petroleum Geoscience</h3>
+              <h4 class="timeline-company">Chulalongkorn University</h4>
+
+              <ul class="timeline-impact-list">
+                <li>
+                  <strong>Thesis Research:</strong> Mapping reservoir geometry using seismic and well data in the Gulf
+                  of Thailand. Developed high-precision spatial modeling and subsurface structural interpretation.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Education Entry 2: Khon Kaen -->
+          <div class="timeline-item edu-card">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card-content">
+              <div class="timeline-meta">
+                <span class="timeline-date">Jul 2014 — Jun 2018</span>
+                <span class="company-badge"
+                  style="background: rgba(255, 214, 10, 0.12); color: var(--accent-gold); border-color: rgba(255, 214, 10, 0.3);">Second-Class
+                  Honours</span>
+              </div>
+              <h3 class="timeline-role">B.Sc. Geotechnology</h3>
+              <h4 class="timeline-company">Khon Kaen University</h4>
+
+              <ul class="timeline-impact-list">
+                <li>
+                  <strong>Leadership & Extracurricular:</strong> Student Leader Team & Fencing Athlete / Coach.
+                  Demonstrated strategic planning, extreme discipline, and high performance under pressure.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ====================================================================
+         3. BLOG SECTION (Science & Technology Categories)
+         ==================================================================== -->
+    <section class="page-view" id="blog-view">
+      <div class="blog-section">
+        <div class="section-header">
+          <span class="section-tag">PUBLICATIONS & ARTICLES</span>
+          <h2 class="section-title gradient-text">Science & Technology Insights.</h2>
+          <p class="section-description">
+            Explorations into physical sciences, aviation meteorology, software engineering methodologies, and automated
+            trading algorithms.
+          </p>
+        </div>
+
+        <!-- Blog Category Filter Tabs -->
+        <div class="blog-category-tabs">
+          <button class="blog-tab-btn active" data-blog-filter="all">All Articles</button>
+          <button class="blog-tab-btn" data-blog-filter="Science">Science Blog</button>
+          <button class="blog-tab-btn" data-blog-filter="Technology">Technology Blog</button>
+        </div>
+
+        <!-- Article Cards Grid -->
+        <div class="blog-grid" id="blogGrid">
+          <!-- Dynamically populated by app.js -->
+        </div>
+
+        <!-- Pagination Controls (Max 10 per page) -->
+        <div class="pagination-container" id="paginationContainer">
+          <button class="page-btn" id="prevPageBtn" disabled>&larr; Previous</button>
+          <span class="page-info" id="pageInfo">Page 1 of 1</span>
+          <button class="page-btn" id="nextPageBtn" disabled>Next &rarr;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         4. THAI PERSONAL INCOME TAX 2026 CALCULATOR (#tax-view)
+         ==================================================================== -->
+    <section class="page-view" id="tax-view">
+      <div class="tax-section">
+        <div class="section-header">
+          <span class="section-tag">TAX OPTIMIZATION ENGINE</span>
+          <h2 class="section-title gradient-text">ระบบคำนวณภาษีเงินได้บุคคลธรรมดา ปี 2569</h2>
+          <p class="section-description">
+            Thai Personal Income Tax 2026 Calculator & Tax Bracket Drop Recommender: คำนวณภาษีแบบขั้นบันไดและวิเคราะห์แผนซื้อกองทุน/ประกันเพื่อลดฐานภาษี
+          </p>
+        </div>
+
+        <div class="tax-grid">
+          <!-- Left Column: Form Inputs -->
+          <div class="tax-card-box">
+            <h3 class="tax-card-title">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m-6 4h6m-6 4h6M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              ข้อมูลรายได้และค่าลดหย่อน
+            </h3>
+
+            <form id="taxCalcForm" onsubmit="return false;">
+              <div class="tax-form-group">
+                <!-- Section 1: Income Breakdown -->
+                <div class="tax-form-section-title">1. รายได้พึงประเมิน (Income Breakdown)</div>
+                
+                <div class="tax-input-field">
+                  <label class="tax-label" for="yearlySalary">
+                    เงินเดือนทั้งปี
+                    <small>( default: 360,000.00 บาท )</small>
+                  </label>
+                  <input type="text" id="yearlySalary" class="tax-input currency-input" value="360,000.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="yearlyBonus">
+                    โบนัสทั้งปี
+                  </label>
+                  <input type="text" id="yearlyBonus" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="otherIncome">
+                    รายได้อื่นๆ ทั้งปี
+                  </label>
+                  <input type="text" id="otherIncome" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <!-- Section 2: Personal & Family Allowances -->
+                <div class="tax-form-section-title">2. ค่าลดหย่อนส่วนตัวและครอบครัว (Personal & Family)</div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="spouseAllowance">
+                    ลดหย่อนคู่สมรส (กรณีไม่มีรายได้)
+                    <small>(หักได้ 60,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="spouseAllowance" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="childCount">
+                    จำนวนบุตร (คน)
+                    <small>(หักได้ 30,000.00 บาท/คน)</small>
+                  </label>
+                  <input type="number" id="childCount" class="tax-input" value="0" min="0" step="1">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="parentCount">
+                    จำนวนบิดามารดาที่อุปการะ (คน)
+                    <small>(หักได้ 30,000.00 บาท/คน)</small>
+                  </label>
+                  <input type="number" id="parentCount" class="tax-input" value="0" min="0" max="4" step="1">
+                </div>
+
+                <!-- Section 3: Insurances & Funds -->
+                <div class="tax-form-section-title">3. ประกัน และ กองทุนลดหย่อนภาษี (Insurances & Funds)</div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="socialSecurity">
+                    ประกันสังคมทั้งปี
+                    <small>(สูงสุด 9,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="socialSecurity" class="tax-input currency-input" value="9,000.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="healthIns">
+                    ประกันสุขภาพ
+                    <small>(สูงสุด 25,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="healthIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="lifeIns">
+                    ประกันชีวิต / ออมทรัพย์
+                    <small>(สูงสุด 100,000.00 บาท รวมสุขภาพไม่เกิน 100,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="lifeIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="thaiEsg">
+                    กองทุน Thai ESG
+                    <small>(ไม่เกิน 30% ของรายได้ สูงสุด 300,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="thaiEsg" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="pvdFund">
+                    กองทุน PVD / กบข.
+                    <small>(ไม่เกิน 15% ของรายได้ รวมกลุ่มเกษียณไม่เกิน 500,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="pvdFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="ssfFund">
+                    กองทุน SSF
+                    <small>(ไม่เกิน 30% ของรายได้ สูงสุด 200,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="ssfFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="rmfFund">
+                    กองทุน RMF
+                    <small>(ไม่เกิน 30% ของรายได้ สูงสุด 500,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="rmfFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="pensionIns">
+                    ประกันชีวิตแบบบำนาญ
+                    <small>(ไม่เกิน 15% ของรายได้ สูงสุด 200,000.00 บาท)</small>
+                  </label>
+                  <input type="text" id="pensionIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <!-- Section 4: Other Allowances -->
+                <div class="tax-form-section-title">4. ค่าลดหย่อนอื่นๆ (Others)</div>
+
+                <div class="tax-input-field">
+                  <label class="tax-label" for="otherDeductions">
+                    ค่าลดหย่อนอื่นๆ รวม
+                  </label>
+                  <input type="text" id="otherDeductions" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                </div>
+
+                <!-- Warning Banner Container for Exceeded Caps -->
+                <div id="taxWarningContainer"></div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right Column: Summary, Visualization & Tax Recommender -->
+          <div style="display: flex; flex-direction: column; gap: 1.8rem;">
+
+            <!-- Summary Card -->
+            <div class="tax-card-box">
+              <h3 class="tax-card-title">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                สรุปการประเมินภาษี (Tax Assessment Summary)
+              </h3>
+
+              <div class="tax-summary-metrics">
+                <div class="tax-row">
+                  <span>รายได้รวม (Gross Income):</span>
+                  <span id="grossSummaryVal" class="tax-val">0 ฿</span>
+                </div>
+                <div class="tax-row">
+                  <span>หักค่าใช้จ่าย (50% สูงสุด 100k):</span>
+                  <span id="standardDeductionVal" class="tax-val">- 0 ฿</span>
+                </div>
+                <div class="tax-row">
+                  <span>รวมค่าลดหย่อน (Total Allowances):</span>
+                  <span id="totalAllowancesVal" class="tax-val">- 0 ฿</span>
+                </div>
+                <div class="tax-row highlight">
+                  <span>เงินได้สุทธิ (Net Income):</span>
+                  <span id="netIncomeVal" class="tax-val">0 ฿</span>
+                </div>
+                <div class="tax-row highlight" style="border-top: none; padding-top: 0.2rem;">
+                  <span>ภาษีที่ต้องชำระ (Tax Payable):</span>
+                  <span id="taxPayableVal" class="tax-val" style="color: var(--accent-cyan);">0 ฿</span>
+                </div>
+              </div>
+
+              <!-- Bracket Visualization Meter Chart -->
+              <h4 class="bracket-visual-title">อัตราภาษีแบบขั้นบันได (Progressive Tax Meter) — ฐานปัจจุบัน: <span id="currentBracketRateVal" style="color: var(--accent-cyan);">0%</span></h4>
+              
+              <div class="bracket-meter-container">
+                <div class="bracket-step-row" data-bracket="0">
+                  <span class="bracket-range-lbl">0 - 150k</span>
+                  <span class="bracket-rate-badge">0%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="1">
+                  <span class="bracket-range-lbl">150k - 300k</span>
+                  <span class="bracket-rate-badge">5%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="2">
+                  <span class="bracket-range-lbl">300k - 500k</span>
+                  <span class="bracket-rate-badge">10%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="3">
+                  <span class="bracket-range-lbl">500k - 750k</span>
+                  <span class="bracket-rate-badge">15%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="4">
+                  <span class="bracket-range-lbl">750k - 1M</span>
+                  <span class="bracket-rate-badge">20%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="5">
+                  <span class="bracket-range-lbl">1M - 2M</span>
+                  <span class="bracket-rate-badge">25%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="6">
+                  <span class="bracket-range-lbl">2M - 5M</span>
+                  <span class="bracket-rate-badge">30%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+                <div class="bracket-step-row" data-bracket="7">
+                  <span class="bracket-range-lbl">> 5M</span>
+                  <span class="bracket-rate-badge">35%</span>
+                  <div class="bracket-bar-track"><div class="bracket-bar-fill"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tax Bracket Drop Recommender Output -->
+            <div class="tax-recommender-box" id="taxRecommenderBody">
+              <!-- Dynamically populated by app.js calculateTax() -->
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Blog Article Reader Overlay Modal (<dialog id="blogArticleModal">) -->
+  <dialog id="blogArticleModal" class="modal-article">
+    <div class="article-modal-content">
+      <button class="modal-close-btn" id="closeArticleModalBtn" aria-label="Close article">&times;</button>
+      <div class="article-modal-header">
+        <div class="article-modal-meta">
+          <span class="blog-cat-pill" id="articleCategoryPill">Science</span>
+          <span class="blog-date-text" id="articleDateText">Aug 2026</span>
+          <span class="blog-date-text" id="articleReadTimeText">5 min read</span>
+        </div>
+        <h2 class="article-modal-title" id="articleModalTitle">Article Title</h2>
+      </div>
+      <div class="article-modal-body" id="articleModalBody">
+        <!-- Dynamically rendered article HTML -->
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Interactive Detail Spec Modal (<dialog id="specModal">) -->
+  <dialog id="specModal" class="modal-spec">
+    <div class="modal-content">
+      <button class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">&times;</button>
+      <h3 class="modal-title" id="modalTitle">System Specs</h3>
+      <p class="modal-subtitle" id="modalSubtitle">Subheading</p>
+      <p class="modal-body-text" id="modalDesc">Detailed description of the role and achievements.</p>
+      <div class="modal-spec-grid" id="specGrid">
+        <!-- Dynamically rendered by app.js -->
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Apple Style Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo gradient-text">Noppasin Pronsawad</div>
+          <p class="footer-desc">
+            Business Analyst specializing in FinTech, Core Banking integrations, back-office automation, and enterprise
+            security.
+          </p>
+        </div>
+        <div class="footer-contact-items">
+          <a href="tel:+669565251011" class="contact-link">
+            <div class="contact-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </div>
+            <span>+66 95 652 51011</span>
+          </a>
+          <a href="mailto:noppasin.pronsawad@gmail.com" class="contact-link">
+            <div class="contact-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span>noppasin.pronsawad@gmail.com</span>
+          </a>
+          <a href="https://www.linkedin.com/in/noppasin-pronsawad/" target="_blank" rel="noopener noreferrer"
+            class="contact-link">
+            <div class="contact-icon">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.72a1.48 1.48 0 1 0 0 2.96 1.48 1.48 0 0 0 0-2.96Z" />
+              </svg>
+            </div>
+            <span>linkedin.com/in/noppasin-pronsawad</span>
+          </a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Noppasin Pronsawad. All rights reserved.</span>
+        <a href="#navbar" class="back-to-top">Back to top &uarr;</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="blog-data.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-const BLOG_POSTS = [
+[
   {
     "_id": "6a74c52ee73e19e35fec4dfb",
     "title": "Physics of Flight: Understanding Modern Aircraft Dynamics",
@@ -119,4 +119,4 @@ const BLOG_POSTS = [
     "updatedAt": "2026-08-06T17:32:30.498Z",
     "id": "6a74c52ee73e19e35fec4dfa"
   }
-];
+]

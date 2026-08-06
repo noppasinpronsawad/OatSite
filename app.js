@@ -137,9 +137,36 @@ function initAnimatedCounters() {
   }
 }
 
-/* ==========================================================================
-   4. Blog Module (Supports Optional Article Images, Pagination & Overlay Reader)
-   ========================================================================== */
+/* Minimal Cover Fallback Helper for Broken Image URLs (e.g. 404 when source deletes image) */
+window.handleCoverImageFallback = function(imgEl, category) {
+  if (!imgEl || !imgEl.parentElement) return;
+  const parent = imgEl.parentElement;
+  parent.className = 'blog-card-minimal-cover';
+  parent.innerHTML = `<span class="minimal-badge">${category || 'Article'}</span>`;
+};
+
+/* Helper to guarantee exact Day Month Year format (e.g. 07 Aug 2026) for all posts */
+function formatFullDisplayDate(post) {
+  if (!post) return '07 Aug 2026';
+  
+  if (post.date && /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
+    return post.date.trim();
+  }
+
+  const dateObj = post.publishAt ? new Date(post.publishAt) : (post.createdAt ? new Date(post.createdAt) : null);
+  if (dateObj && !isNaN(dateObj.getTime())) {
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${day} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+  }
+
+  if (post.date && /^[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
+    return `01 ${post.date.trim()}`;
+  }
+
+  return post.date || '07 Aug 2026';
+}
+
 function initBlogModule() {
   const blogGrid = document.getElementById('blogGrid');
   const filterBtns = document.querySelectorAll('.blog-tab-btn');
@@ -150,15 +177,36 @@ function initBlogModule() {
   const articleModal = document.getElementById('blogArticleModal');
   const closeArticleBtn = document.getElementById('closeArticleModalBtn');
 
-  if (!blogGrid || typeof BLOG_POSTS === 'undefined') return;
+  if (!blogGrid) return;
 
+  // Use static BLOG_POSTS as fallback, activePostsData will store dynamic data from API
+  let activePostsData = (typeof BLOG_POSTS !== 'undefined') ? BLOG_POSTS : [];
   let currentCategory = 'all';
   let currentPage = 1;
   const ITEMS_PER_PAGE = 10;
 
+  async function fetchDynamicPosts() {
+    try {
+      if (blogGrid) {
+        blogGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">⏳ Loading latest articles...</p>';
+      }
+      const response = await fetch('/api/posts');
+      if (response.ok) {
+        const posts = await response.json();
+        if (Array.isArray(posts) && posts.length > 0) {
+          activePostsData = posts;
+        }
+      }
+    } catch (err) {
+      console.warn('API /api/posts unreachable, using fallback blog-data.js:', err);
+    } finally {
+      renderBlog();
+    }
+  }
+
   function getFilteredPosts() {
-    if (currentCategory === 'all') return BLOG_POSTS;
-    return BLOG_POSTS.filter(post => post.category.toLowerCase() === currentCategory.toLowerCase());
+    if (currentCategory === 'all') return activePostsData;
+    return activePostsData.filter(post => (post.category || '').toLowerCase() === currentCategory.toLowerCase());
   }
 
   function renderBlog() {
@@ -172,21 +220,25 @@ function initBlogModule() {
 
     blogGrid.innerHTML = '';
     if (paginatedPosts.length === 0) {
-      blogGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No articles found in this category.</p>`;
+      blogGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">No articles found in this category.</p>`;
     } else {
       paginatedPosts.forEach(post => {
         const card = document.createElement('div');
         card.className = 'blog-card';
-        card.setAttribute('data-id', post.id);
+        card.setAttribute('data-id', post.id || post._id);
 
-        const catClass = post.category.toLowerCase();
+        const catClass = (post.category || 'Science').toLowerCase().replace(/\s+/g, '-');
         
-        // Optional Image Header
+        // Image Header with Minimal Fallback on 404/broken URL
         const imageHTML = post.image ? `
           <div class="blog-card-image-wrap">
-            <img src="${post.image}" alt="${post.title}" class="blog-card-img" loading="lazy">
+            <img src="${post.image}" alt="${post.title}" class="blog-card-img" loading="lazy" onerror="handleCoverImageFallback(this, '${escapeHTML(post.category)}')">
           </div>
-        ` : '';
+        ` : `
+          <div class="blog-card-minimal-cover">
+            <span class="minimal-badge">${escapeHTML(post.category)}</span>
+          </div>
+        `;
 
         card.innerHTML = `
           ${imageHTML}
@@ -194,7 +246,7 @@ function initBlogModule() {
             <div>
               <div class="blog-card-meta">
                 <span class="blog-cat-pill ${catClass}">${post.category}</span>
-                <span class="blog-date-text">${post.date} • ${post.readTime}</span>
+                <span class="blog-date-text">${formatFullDisplayDate(post)} • ${post.readTime || '5 min read'}</span>
               </div>
               <h3 class="blog-card-title">${post.title}</h3>
               <p class="blog-card-summary">${post.summary}</p>
@@ -260,10 +312,10 @@ function initBlogModule() {
     if (titleEl) titleEl.textContent = post.title;
     if (catPillEl) {
       catPillEl.textContent = post.category;
-      catPillEl.className = `blog-cat-pill ${post.category.toLowerCase()}`;
+      catPillEl.className = `blog-cat-pill ${(post.category || 'Science').toLowerCase()}`;
     }
-    if (dateEl) dateEl.textContent = post.date;
-    if (readTimeEl) readTimeEl.textContent = post.readTime;
+    if (dateEl) dateEl.textContent = formatFullDisplayDate(post);
+    if (readTimeEl) readTimeEl.textContent = post.readTime || '5 min read';
     
     // Header Image inside Modal if present
     const imgHeader = post.image ? `<img src="${post.image}" class="article-modal-header-img" alt="${post.title}">` : '';
@@ -285,7 +337,8 @@ function initBlogModule() {
     });
   }
 
-  renderBlog();
+  // Fetch dynamic posts from API on init
+  fetchDynamicPosts();
 }
 
 /* ==========================================================================
@@ -337,6 +390,7 @@ function initTaxCalculator() {
   const yearlySalaryInput = document.getElementById('yearlySalary');
   const yearlyBonusInput = document.getElementById('yearlyBonus');
   const otherIncomeInput = document.getElementById('otherIncome');
+  const withholdingTaxInput = document.getElementById('withholdingTax');
 
   const spouseAllowanceInput = document.getElementById('spouseAllowance');
   const childCountInput = document.getElementById('childCount');
@@ -356,16 +410,20 @@ function initTaxCalculator() {
   const standardDeductionVal = document.getElementById('standardDeductionVal');
   const totalAllowancesVal = document.getElementById('totalAllowancesVal');
   const netIncomeVal = document.getElementById('netIncomeVal');
+  const taxCalculatedVal = document.getElementById('taxCalculatedVal');
+  const withholdingTaxVal = document.getElementById('withholdingTaxVal');
+  const finalTaxLabel = document.getElementById('finalTaxLabel');
   const taxPayableVal = document.getElementById('taxPayableVal');
   const currentBracketRateVal = document.getElementById('currentBracketRateVal');
   const warningContainer = document.getElementById('taxWarningContainer');
   const recommenderBody = document.getElementById('taxRecommenderBody');
 
   function calculateTax() {
-    // 1. Income Breakdown (Default Salary 360,000.00 THB)
+    // 1. Income Breakdown & Withholding Tax
     const salary = parseCurrency(yearlySalaryInput ? yearlySalaryInput.value : 360000);
     const bonus = parseCurrency(yearlyBonusInput ? yearlyBonusInput.value : 0);
     const otherIncome = parseCurrency(otherIncomeInput ? otherIncomeInput.value : 0);
+    const withholdingTax = parseCurrency(withholdingTaxInput ? withholdingTaxInput.value : 0);
     const grossIncome = Math.max(0, salary + bonus + otherIncome);
 
     // Standard Deduction: 50% of gross income, max 100,000 THB
@@ -450,7 +508,7 @@ function initTaxCalculator() {
     }
 
     // 6. Progressive Tax Payable Calculation
-    let taxPayable = 0;
+    let taxCalculated = 0;
     let currentBracketIndex = 0;
 
     for (let i = 0; i < TAX_BRACKETS_2026.length; i++) {
@@ -458,10 +516,12 @@ function initTaxCalculator() {
       if (netIncome > b.min) {
         currentBracketIndex = i;
         const taxableChunk = Math.min(netIncome - b.min, b.max - b.min);
-        taxPayable += taxableChunk * b.rate;
+        taxCalculated += taxableChunk * b.rate;
       }
     }
 
+    const roundedTaxCalculated = Math.round(taxCalculated);
+    const finalNetTax = roundedTaxCalculated - withholdingTax;
     const currentBracket = TAX_BRACKETS_2026[currentBracketIndex];
 
     // Update Summary Values (Formatted with 2 decimals)
@@ -469,7 +529,25 @@ function initTaxCalculator() {
     if (standardDeductionVal) standardDeductionVal.textContent = `- ${formatCurrencyString(standardDeduction)} ฿`;
     if (totalAllowancesVal) totalAllowancesVal.textContent = `- ${formatCurrencyString(totalAllowances)} ฿`;
     if (netIncomeVal) netIncomeVal.textContent = `${formatCurrencyString(netIncome)} ฿`;
-    if (taxPayableVal) taxPayableVal.textContent = `${formatCurrencyString(Math.round(taxPayable))} ฿`;
+    if (taxCalculatedVal) taxCalculatedVal.textContent = `${formatCurrencyString(roundedTaxCalculated)} ฿`;
+    if (withholdingTaxVal) withholdingTaxVal.textContent = `- ${formatCurrencyString(withholdingTax)} ฿`;
+
+    if (finalTaxLabel && taxPayableVal) {
+      if (finalNetTax > 0) {
+        finalTaxLabel.textContent = 'ภาษีที่ต้องชำระเพิ่มเติม:';
+        taxPayableVal.textContent = `${formatCurrencyString(finalNetTax)} ฿`;
+        taxPayableVal.style.color = 'var(--accent-cyan)';
+      } else if (finalNetTax < 0) {
+        finalTaxLabel.textContent = 'ภาษีชำระไว้เกิน (ได้รับคืน):';
+        taxPayableVal.textContent = `${formatCurrencyString(Math.abs(finalNetTax))} ฿`;
+        taxPayableVal.style.color = 'var(--accent-green)';
+      } else {
+        finalTaxLabel.textContent = 'ภาษีที่ต้องชำระเพิ่มเติม:';
+        taxPayableVal.textContent = `0.00 ฿`;
+        taxPayableVal.style.color = 'var(--accent-cyan)';
+      }
+    }
+
     if (currentBracketRateVal) currentBracketRateVal.textContent = `${(currentBracket.rate * 100).toFixed(0)}%`;
 
     // 7. Meter Visualization Update
@@ -760,4 +838,9 @@ function initScrollEffects() {
     el.style.transition = "opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)";
     observer.observe(el);
   });
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

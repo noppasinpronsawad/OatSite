@@ -476,18 +476,19 @@
       <div class="blog-section">
         <div class="section-header">
           <span class="section-tag">PUBLICATIONS & ARTICLES</span>
-          <h2 class="section-title gradient-text">Science & Technology Insights.</h2>
+          <h2 class="section-title gradient-text">Articles & Insights.</h2>
           <p class="section-description">
-            Explorations into physical sciences, aviation meteorology, software engineering methodologies, and automated
-            trading algorithms.
+            Personal perspectives, physical sciences, software engineering, investment strategies, and daily life experiences.
           </p>
         </div>
 
         <!-- Blog Category Filter Tabs -->
         <div class="blog-category-tabs">
           <button class="blog-tab-btn active" data-blog-filter="all">All Articles</button>
-          <button class="blog-tab-btn" data-blog-filter="Science">Science Blog</button>
-          <button class="blog-tab-btn" data-blog-filter="Technology">Technology Blog</button>
+          <button class="blog-tab-btn" data-blog-filter="Daily Life">Daily Life</button>
+          <button class="blog-tab-btn" data-blog-filter="Science">Science</button>
+          <button class="blog-tab-btn" data-blog-filter="Technology">Technology</button>
+          <button class="blog-tab-btn" data-blog-filter="Investment">Investment</button>
         </div>
 
         <!-- Article Cards Grid -->
@@ -517,155 +518,225 @@
           </p>
         </div>
 
-        <div class="tax-grid">
-          <!-- Left Column: Form Inputs -->
-          <div class="tax-card-box">
+        <div class="tax-layout">
+          <!-- Top Row / Card: Form Inputs -->
+          <div class="tax-card-box tax-input-card">
             <h3 class="tax-card-title">
               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m-6 4h6m-6 4h6M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              ข้อมูลรายได้และค่าลดหย่อน
+              ข้อมูลรายได้และค่าลดหย่อน (Tax Inputs)
             </h3>
 
             <form id="taxCalcForm" onsubmit="return false;">
               <div class="tax-form-group">
-                <!-- Section 1: Income Breakdown -->
-                <div class="tax-form-section-title">1. รายได้พึงประเมิน (Income Breakdown)</div>
-                
-                <div class="tax-input-field">
-                  <label class="tax-label" for="yearlySalary">
-                    เงินเดือนทั้งปี
-                    <small>( default: 360,000.00 บาท )</small>
-                  </label>
-                  <input type="text" id="yearlySalary" class="tax-input currency-input" value="360,000.00" inputmode="decimal">
+                <!-- Section 1: Income & Withholding Tax -->
+                <div class="tax-form-section-title">
+                  <span class="sec-num">1</span> รายได้พึงประเมิน และ ภาษีหัก ณ ที่จ่าย (Income & Withholding Tax)
                 </div>
+                <div class="tax-inputs-grid grid-cols-4">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="yearlySalary">
+                      <span class="label-title">1.1 เงินเดือนทั้งปี</span>
+                      <small class="label-hint">(default: 360,000.00 บาท)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="yearlySalary" class="tax-input currency-input" value="360,000.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="yearlyBonus">
-                    โบนัสทั้งปี
-                  </label>
-                  <input type="text" id="yearlyBonus" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="yearlyBonus">
+                      <span class="label-title">1.2 โบนัสทั้งปี</span>
+                      <small class="label-hint">(ระบุตามจริง)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="yearlyBonus" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="otherIncome">
-                    รายได้อื่นๆ ทั้งปี
-                  </label>
-                  <input type="text" id="otherIncome" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="otherIncome">
+                      <span class="label-title">1.3 รายได้อื่นๆ ทั้งปี</span>
+                      <small class="label-hint">(ระบุตามจริง)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="otherIncome" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
+
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="withholdingTax">
+                      <span class="label-title">1.4 ภาษีหัก ณ ที่จ่าย</span>
+                      <small class="label-hint">(ระบุยอดรวมตามใบ 50 ทวิ)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="withholdingTax" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Section 2: Personal & Family Allowances -->
-                <div class="tax-form-section-title">2. ค่าลดหย่อนส่วนตัวและครอบครัว (Personal & Family)</div>
-
-                <div class="tax-input-field">
-                  <label class="tax-label" for="spouseAllowance">
-                    ลดหย่อนคู่สมรส (กรณีไม่มีรายได้)
-                    <small>(หักได้ 60,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="spouseAllowance" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                <div class="tax-form-section-title">
+                  <span class="sec-num">2</span> ค่าลดหย่อนส่วนตัวและครอบครัว (Personal & Family)
                 </div>
+                <div class="tax-inputs-grid grid-cols-3">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="spouseAllowance">
+                      <span class="label-title">ลดหย่อนคู่สมรส</span>
+                      <small class="label-hint">(กรณีไม่มีรายได้ หักได้ 60,000 บาท)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="spouseAllowance" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="childCount">
-                    จำนวนบุตร (คน)
-                    <small>(หักได้ 30,000.00 บาท/คน)</small>
-                  </label>
-                  <input type="number" id="childCount" class="tax-input" value="0" min="0" step="1">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="childCount">
+                      <span class="label-title">จำนวนบุตร</span>
+                      <small class="label-hint">(หักได้ 30,000 บาท/คน)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="number" id="childCount" class="tax-input" value="0" min="0" step="1">
+                      <span class="input-suffix">คน</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="parentCount">
-                    จำนวนบิดามารดาที่อุปการะ (คน)
-                    <small>(หักได้ 30,000.00 บาท/คน)</small>
-                  </label>
-                  <input type="number" id="parentCount" class="tax-input" value="0" min="0" max="4" step="1">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="parentCount">
+                      <span class="label-title">จำนวนบิดามารดาที่อุปการะ</span>
+                      <small class="label-hint">(หักได้ 30,000 บาท/คน สูงสุด 4 คน)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="number" id="parentCount" class="tax-input" value="0" min="0" max="4" step="1">
+                      <span class="input-suffix">คน</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Section 3: Insurances & Funds -->
-                <div class="tax-form-section-title">3. ประกัน และ กองทุนลดหย่อนภาษี (Insurances & Funds)</div>
-
-                <div class="tax-input-field">
-                  <label class="tax-label" for="socialSecurity">
-                    ประกันสังคมทั้งปี
-                    <small>(สูงสุด 9,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="socialSecurity" class="tax-input currency-input" value="9,000.00" inputmode="decimal">
+                <div class="tax-form-section-title">
+                  <span class="sec-num">3</span> ประกัน และ กองทุนลดหย่อนภาษี (Insurances & Funds)
                 </div>
+                <div class="tax-inputs-grid grid-cols-4">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="socialSecurity">
+                      <span class="label-title">ประกันสังคมทั้งปี</span>
+                      <small class="label-hint">(สูงสุด 9,000 บาท)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="socialSecurity" class="tax-input currency-input" value="9,000.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="healthIns">
-                    ประกันสุขภาพ
-                    <small>(สูงสุด 25,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="healthIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="healthIns">
+                      <span class="label-title">ประกันสุขภาพ</span>
+                      <small class="label-hint">(สูงสุด 25,000 บาท)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="healthIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="lifeIns">
-                    ประกันชีวิต / ออมทรัพย์
-                    <small>(สูงสุด 100,000.00 บาท รวมสุขภาพไม่เกิน 100,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="lifeIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="lifeIns">
+                      <span class="label-title">ประกันชีวิต / ออมทรัพย์</span>
+                      <small class="label-hint">(สูงสุด 100,000 บาท)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="lifeIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="thaiEsg">
-                    กองทุน Thai ESG
-                    <small>(ไม่เกิน 30% ของรายได้ สูงสุด 300,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="thaiEsg" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="pensionIns">
+                      <span class="label-title">ประกันชีวิตแบบบำนาญ</span>
+                      <small class="label-hint">(ไม่เกิน 15% รายได้ สูงสุด 200k)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="pensionIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="pvdFund">
-                    กองทุน PVD / กบข.
-                    <small>(ไม่เกิน 15% ของรายได้ รวมกลุ่มเกษียณไม่เกิน 500,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="pvdFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="thaiEsg">
+                      <span class="label-title">กองทุน Thai ESG</span>
+                      <small class="label-hint">(ไม่เกิน 30% รายได้ สูงสุด 300k)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="thaiEsg" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="ssfFund">
-                    กองทุน SSF
-                    <small>(ไม่เกิน 30% ของรายได้ สูงสุด 200,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="ssfFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="pvdFund">
+                      <span class="label-title">กองทุน PVD / กบข.</span>
+                      <small class="label-hint">(ไม่เกิน 15% รายได้ สูงสุด 500k)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="pvdFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="rmfFund">
-                    กองทุน RMF
-                    <small>(ไม่เกิน 30% ของรายได้ สูงสุด 500,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="rmfFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
-                </div>
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="ssfFund">
+                      <span class="label-title">กองทุน SSF</span>
+                      <small class="label-hint">(ไม่เกิน 30% รายได้ สูงสุด 200k)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="ssfFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
 
-                <div class="tax-input-field">
-                  <label class="tax-label" for="pensionIns">
-                    ประกันชีวิตแบบบำนาญ
-                    <small>(ไม่เกิน 15% ของรายได้ สูงสุด 200,000.00 บาท)</small>
-                  </label>
-                  <input type="text" id="pensionIns" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="rmfFund">
+                      <span class="label-title">กองทุน RMF</span>
+                      <small class="label-hint">(ไม่เกิน 30% รายได้ สูงสุด 500k)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="rmfFund" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Section 4: Other Allowances -->
-                <div class="tax-form-section-title">4. ค่าลดหย่อนอื่นๆ (Others)</div>
-
-                <div class="tax-input-field">
-                  <label class="tax-label" for="otherDeductions">
-                    ค่าลดหย่อนอื่นๆ รวม
-                  </label>
-                  <input type="text" id="otherDeductions" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                <div class="tax-form-section-title">
+                  <span class="sec-num">4</span> ค่าลดหย่อนอื่นๆ (Others)
+                </div>
+                <div class="tax-inputs-grid grid-cols-4">
+                  <div class="tax-input-field">
+                    <label class="tax-label" for="otherDeductions">
+                      <span class="label-title">ค่าลดหย่อนอื่นๆ รวม</span>
+                      <small class="label-hint">(ระบุหากมี)</small>
+                    </label>
+                    <div class="tax-input-wrap">
+                      <input type="text" id="otherDeductions" class="tax-input currency-input" value="0.00" inputmode="decimal">
+                      <span class="input-suffix">บาท</span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Warning Banner Container for Exceeded Caps -->
-                <div id="taxWarningContainer"></div>
+                <div id="taxWarningContainer" style="margin-top: 0.5rem;"></div>
               </div>
             </form>
           </div>
 
-          <!-- Right Column: Summary, Visualization & Tax Recommender -->
-          <div style="display: flex; flex-direction: column; gap: 1.8rem;">
-
-            <!-- Summary Card -->
+          <!-- Bottom Row / Container: Results & Recommendations -->
+          <div class="tax-results-grid">
+            <!-- Summary Card (Result) -->
             <div class="tax-card-box">
               <h3 class="tax-card-title">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -689,8 +760,16 @@
                   <span>เงินได้สุทธิ (Net Income):</span>
                   <span id="netIncomeVal" class="tax-val">0 ฿</span>
                 </div>
-                <div class="tax-row highlight" style="border-top: none; padding-top: 0.2rem;">
-                  <span>ภาษีที่ต้องชำระ (Tax Payable):</span>
+                <div class="tax-row" style="border-top: 1px dashed var(--border-subtle); padding-top: 0.6rem; margin-top: 0.2rem;">
+                  <span>ภาษีคำนวณตามอัตราก้าวหน้า:</span>
+                  <span id="taxCalculatedVal" class="tax-val">0 ฿</span>
+                </div>
+                <div class="tax-row">
+                  <span>หัก ภาษีหัก ณ ที่จ่าย (สะสม):</span>
+                  <span id="withholdingTaxVal" class="tax-val">- 0 ฿</span>
+                </div>
+                <div class="tax-row highlight" style="border-top: 1px solid var(--border-subtle); padding-top: 0.6rem;">
+                  <span id="finalTaxLabel">ภาษีที่ต้องชำระเพิ่มเติม:</span>
                   <span id="taxPayableVal" class="tax-val" style="color: var(--accent-cyan);">0 ฿</span>
                 </div>
               </div>
@@ -742,11 +821,10 @@
               </div>
             </div>
 
-            <!-- Tax Bracket Drop Recommender Output -->
-            <div class="tax-recommender-box" id="taxRecommenderBody">
+            <!-- Tax Bracket Drop Recommender Output (Recommendation) -->
+            <div class="tax-card-box tax-recommender-box" id="taxRecommenderBody">
               <!-- Dynamically populated by app.js calculateTax() -->
             </div>
-
           </div>
         </div>
       </div>

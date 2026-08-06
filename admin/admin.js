@@ -1,0 +1,1032 @@
+/**
+ * Admin Panel JavaScript Architecture
+ * Authentication, 15-Minute Auto-Logout, Interactive Image Cropper (File & URL),
+ * Flatpickr Modern Datetime Picker (DD/MM/YYYY HH:mm),
+ * Search & Date Range Filters, Category Filters, Newest-to-Oldest Default Sorting,
+ * 10 Articles/Page Pagination, Visual Rich Text Toolbar & Posts CRUD
+ * Author: Noppasin Pronsawad
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
+  initAuthFlow();
+  initDashboard();
+  initRichTextEditor();
+  initImageCropper();
+  initSchedulePicker();
+});
+
+// Global state variables
+let autoLogoutTimer = null;
+let cropperInstance = null;
+let publishAtFlatpickr = null;
+let fromDateFlatpickr = null;
+let toDateFlatpickr = null;
+
+let allAdminPosts = [];
+let filteredAdminPosts = [];
+let currentAdminPage = 1;
+const ADMIN_ITEMS_PER_PAGE = 10;
+const FIFTEEN_MINUTES_MS = 900000; // 15 minutes = 900,000 milliseconds
+
+/* ==========================================================================
+   1. Light / Dark Theme Switcher
+   ========================================================================== */
+function initThemeToggle() {
+  const themeBtn = document.getElementById('themeToggleBtn');
+  const savedTheme = localStorage.getItem('apple_resume_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('apple_resume_theme', newTheme);
+    });
+  }
+}
+
+/* ==========================================================================
+   2. Authentication & 15-Minute Auto-Logout Manager
+   ========================================================================== */
+function initAuthFlow() {
+  const loginForm = document.getElementById('loginForm');
+  const passwordInput = document.getElementById('adminPassword');
+  const loginAlert = document.getElementById('loginAlert');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // Check existing session on load
+  const token = localStorage.getItem('admin_token');
+  const loginTime = parseInt(localStorage.getItem('admin_login_time') || '0', 10);
+  const now = Date.now();
+
+  if (token && loginTime && (now - loginTime < FIFTEEN_MINUTES_MS)) {
+    const remainingMs = FIFTEEN_MINUTES_MS - (now - loginTime);
+    showDashboardView();
+    scheduleAutoLogout(remainingMs);
+  } else {
+    forceLogout();
+  }
+
+  // Handle Login Submit
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = passwordInput.value.trim();
+
+      if (!password) return;
+
+      showLoginAlert('', false);
+      const submitBtn = document.getElementById('loginBtn');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.token) {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_login_time', Date.now().toString());
+
+          passwordInput.value = '';
+          showDashboardView();
+          scheduleAutoLogout(FIFTEEN_MINUTES_MS);
+          loadPostsTable();
+        } else {
+          showLoginAlert(data.error || 'Invalid admin password.', true);
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        showLoginAlert('Network error during authentication.', true);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      forceLogout();
+    });
+  }
+}
+
+function scheduleAutoLogout(delayMs) {
+  if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+
+  const timerBadge = document.getElementById('sessionTimer');
+  if (timerBadge) {
+    const minutesLeft = Math.round(delayMs / 60000);
+    timerBadge.textContent = `Session: ~${minutesLeft} min left`;
+  }
+
+  autoLogoutTimer = setTimeout(() => {
+    alert('Security Alert: Your 15-minute admin session has expired. Please log in again.');
+    forceLogout();
+  }, delayMs);
+}
+
+function forceLogout() {
+  if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_login_time');
+
+  document.getElementById('loginView').style.display = 'block';
+  document.getElementById('dashboardView').style.display = 'none';
+
+  const timerBadge = document.getElementById('sessionTimer');
+  if (timerBadge) timerBadge.textContent = 'Session Expiry: 15 Mins';
+}
+
+function showDashboardView() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('dashboardView').style.display = 'block';
+}
+
+function showLoginAlert(msg, isError) {
+  const alertBox = document.getElementById('loginAlert');
+  if (!alertBox) return;
+  if (!msg) {
+    alertBox.style.display = 'none';
+    return;
+  }
+  alertBox.textContent = msg;
+  alertBox.className = `alert-banner ${isError ? 'alert-error' : 'alert-success'}`;
+  alertBox.style.display = 'block';
+}
+
+function showDashboardAlert(msg, isError) {
+  const alertBox = document.getElementById('dashboardAlert');
+  if (!alertBox) return;
+  if (!msg) {
+    alertBox.style.display = 'none';
+    return;
+  }
+  alertBox.textContent = msg;
+  alertBox.className = `alert-banner ${isError ? 'alert-error' : 'alert-success'}`;
+  alertBox.style.display = 'block';
+  setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+}
+
+/* ==========================================================================
+   3. Interactive Image Cropper (Supports BOTH Local File & Image URL)
+   ========================================================================== */
+function initImageCropper() {
+  const dropzoneBox = document.getElementById('dropzoneBox');
+  const imageFileInput = document.getElementById('imageFileInput');
+  const cropModal = document.getElementById('cropModal');
+  const cropImageElement = document.getElementById('cropImageElement');
+  const closeCropModalBtn = document.getElementById('closeCropModalBtn');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const applyCropBtn = document.getElementById('applyCropBtn');
+
+  const cropZoomInBtn = document.getElementById('cropZoomInBtn');
+  const cropZoomOutBtn = document.getElementById('cropZoomOutBtn');
+  const cropResetBtn = document.getElementById('cropResetBtn');
+
+  const postImageUrlInput = document.getElementById('postImageUrl');
+  const cropUrlBtn = document.getElementById('cropUrlBtn');
+  const imagePreviewBox = document.getElementById('imagePreviewBox');
+
+  if (dropzoneBox && imageFileInput) {
+    dropzoneBox.addEventListener('click', () => imageFileInput.click());
+
+    imageFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        cropImageElement.crossOrigin = 'anonymous';
+        cropImageElement.src = event.target.result;
+        openCropModal();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Handle URL Image Cropping
+  if (postImageUrlInput && cropUrlBtn) {
+    postImageUrlInput.addEventListener('input', () => {
+      const url = postImageUrlInput.value.trim();
+      if (url) {
+        cropUrlBtn.style.display = 'block';
+        imagePreviewBox.src = url;
+        imagePreviewBox.style.display = 'block';
+      } else {
+        cropUrlBtn.style.display = 'none';
+        imagePreviewBox.style.display = 'none';
+      }
+    });
+
+    cropUrlBtn.addEventListener('click', () => {
+      const url = postImageUrlInput.value.trim();
+      if (!url) {
+        alert('Please enter a valid Image URL first.');
+        return;
+      }
+      cropImageElement.crossOrigin = 'anonymous';
+      cropImageElement.src = url;
+      openCropModal();
+    });
+  }
+
+  function openCropModal() {
+    cropModal.classList.add('active');
+    if (cropperInstance) cropperInstance.destroy();
+
+    cropperInstance = new Cropper(cropImageElement, {
+      aspectRatio: 16 / 9,
+      viewMode: 1,
+      autoCropArea: 0.9,
+      responsive: true,
+      zoomable: true,
+      movable: true,
+      scalable: true
+    });
+  }
+
+  function closeCropModal() {
+    cropModal.classList.remove('active');
+    if (cropperInstance) {
+      cropperInstance.destroy();
+      cropperInstance = null;
+    }
+  }
+
+  if (closeCropModalBtn) closeCropModalBtn.addEventListener('click', closeCropModal);
+  if (cancelCropBtn) cancelCropBtn.addEventListener('click', closeCropModal);
+
+  if (cropZoomInBtn) {
+    cropZoomInBtn.addEventListener('click', () => {
+      if (cropperInstance) cropperInstance.zoom(0.1);
+    });
+  }
+
+  if (cropZoomOutBtn) {
+    cropZoomOutBtn.addEventListener('click', () => {
+      if (cropperInstance) cropperInstance.zoom(-0.1);
+    });
+  }
+
+  if (cropResetBtn) {
+    cropResetBtn.addEventListener('click', () => {
+      if (cropperInstance) cropperInstance.reset();
+    });
+  }
+
+  // Crop & Upload to Cloudinary
+  if (applyCropBtn) {
+    applyCropBtn.addEventListener('click', async () => {
+      if (!cropperInstance) return;
+
+      const dropzoneText = document.getElementById('dropzoneText');
+      if (dropzoneText) dropzoneText.textContent = '⏳ Cropping & uploading to Cloudinary...';
+
+      try {
+        const canvas = cropperInstance.getCroppedCanvas({
+          width: 1200,
+          height: 675
+        });
+
+        const croppedBase64 = canvas.toDataURL('image/jpeg', 0.9);
+        closeCropModal();
+
+        const token = localStorage.getItem('admin_token');
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ image: croppedBase64 })
+        });
+
+        if (res.status === 401) {
+          forceLogout();
+          return;
+        }
+
+        const data = await res.json();
+        if (res.ok && data.url) {
+          postImageUrlInput.value = data.url;
+          imagePreviewBox.src = data.url;
+          imagePreviewBox.style.display = 'block';
+          if (cropUrlBtn) cropUrlBtn.style.display = 'block';
+          if (dropzoneText) dropzoneText.textContent = '✅ Image cropped & uploaded to Cloudinary!';
+        } else {
+          alert(`Upload Error: ${data.error || 'Failed to upload'}`);
+          if (dropzoneText) dropzoneText.textContent = '📸 Click or drag image file here to crop & upload';
+        }
+      } catch (err) {
+        console.error('Crop upload error:', err);
+        alert('CORS restriction on external image URL or failed to upload cropped image.');
+        if (dropzoneText) dropzoneText.textContent = '📸 Click or drag image file here to crop & upload';
+      }
+    });
+  }
+}
+
+/* ==========================================================================
+   4. Flatpickr Datetime Picker Integration (DD/MM/YYYY HH:mm) & Schedule Presets
+   ========================================================================== */
+function formatDDMMYYYYHHmm(dateObj) {
+  if (!dateObj || isNaN(dateObj.getTime())) return '';
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  const hours = String(dateObj.getHours()).padStart(2, '0');
+  const mins = String(dateObj.getMinutes()).padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${mins}`;
+}
+
+function initSchedulePicker() {
+  const enableScheduleCheck = document.getElementById('enableScheduleCheck');
+  const scheduleFieldWrap = document.getElementById('scheduleFieldWrap');
+  const postPublishAtInput = document.getElementById('postPublishAt');
+  const formattedDateBadge = document.getElementById('formattedDateBadge');
+  const presetChips = document.querySelectorAll('.preset-chip');
+
+  if (!enableScheduleCheck || !scheduleFieldWrap || !postPublishAtInput) return;
+
+  // Initialize Flatpickr on #postPublishAt input field
+  if (typeof flatpickr !== 'undefined') {
+    publishAtFlatpickr = flatpickr(postPublishAtInput, {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      altInput: true,
+      altFormat: "d/m/Y H:i", // Displays DD/MM/YYYY HH:mm
+      time_24hr: true,
+      allowInput: true,
+      clickOpens: true,
+      appendTo: document.body,
+      onChange: (selectedDates) => {
+        if (selectedDates && selectedDates[0]) {
+          updateFormattedBadge(selectedDates[0]);
+        }
+      }
+    });
+  }
+
+  enableScheduleCheck.addEventListener('change', () => {
+    if (enableScheduleCheck.checked) {
+      scheduleFieldWrap.style.opacity = '1';
+      scheduleFieldWrap.style.pointerEvents = 'auto';
+      postPublishAtInput.disabled = false;
+      if (publishAtFlatpickr) {
+        if (publishAtFlatpickr.altInput) publishAtFlatpickr.altInput.disabled = false;
+        if (publishAtFlatpickr.element) publishAtFlatpickr.element.disabled = false;
+      }
+
+      if (!postPublishAtInput.value && (!publishAtFlatpickr || !publishAtFlatpickr.selectedDates[0])) {
+        const defaultDate = new Date(Date.now() + 3600000); // 1 hr in future
+        if (publishAtFlatpickr) {
+          publishAtFlatpickr.setDate(defaultDate);
+        } else {
+          postPublishAtInput.value = defaultDate.toISOString().slice(0, 16);
+        }
+        updateFormattedBadge(defaultDate);
+      }
+    } else {
+      scheduleFieldWrap.style.opacity = '0.4';
+      scheduleFieldWrap.style.pointerEvents = 'none';
+      postPublishAtInput.disabled = true;
+      if (publishAtFlatpickr) {
+        if (publishAtFlatpickr.altInput) publishAtFlatpickr.altInput.disabled = true;
+        if (publishAtFlatpickr.element) publishAtFlatpickr.element.disabled = true;
+        publishAtFlatpickr.clear();
+      }
+      postPublishAtInput.value = '';
+      if (formattedDateBadge) formattedDateBadge.style.display = 'none';
+    }
+  });
+
+  presetChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const type = chip.getAttribute('data-preset');
+      const now = new Date();
+      let targetDate = new Date();
+
+      if (type === '1h') {
+        targetDate = new Date(now.getTime() + 3600000);
+      } else if (type === 'tomorrow') {
+        targetDate.setDate(now.getDate() + 1);
+        targetDate.setHours(9, 0, 0, 0);
+      } else if (type === 'nextweek') {
+        targetDate.setDate(now.getDate() + 7);
+        targetDate.setHours(9, 0, 0, 0);
+      }
+
+      enableScheduleCheck.checked = true;
+      scheduleFieldWrap.style.opacity = '1';
+      scheduleFieldWrap.style.pointerEvents = 'auto';
+      postPublishAtInput.disabled = false;
+      if (publishAtFlatpickr) {
+        if (publishAtFlatpickr.altInput) publishAtFlatpickr.altInput.disabled = false;
+        if (publishAtFlatpickr.element) publishAtFlatpickr.element.disabled = false;
+        publishAtFlatpickr.setDate(targetDate);
+      } else {
+        postPublishAtInput.value = targetDate.toISOString().slice(0, 16);
+      }
+      updateFormattedBadge(targetDate);
+    });
+  });
+
+  function updateFormattedBadge(dateObj) {
+    if (!formattedDateBadge) return;
+    const formatted = formatDDMMYYYYHHmm(dateObj);
+    if (formatted) {
+      formattedDateBadge.textContent = `📅 กำหนดเผยแพร่: ${formatted} (รูปแบบ DD/MM/YYYY HH:mm)`;
+      formattedDateBadge.style.display = 'inline-block';
+    }
+  }
+}
+
+/* ==========================================================================
+   5. Visual Rich Text Editor Toolbar (H1-H4, B/I/U, Font Size, Image URL insert)
+   Strictly Enforces NO Color Customization
+   ========================================================================== */
+function initRichTextEditor() {
+  const toolbar = document.getElementById('editorToolbar');
+  const editorContent = document.getElementById('postContentEditor');
+  const headingSelect = document.getElementById('editorHeadingSelect');
+  const fontSizeSelect = document.getElementById('editorFontSizeSelect');
+  const insertImageUrlBtn = document.getElementById('insertImageUrlBtn');
+
+  if (!toolbar || !editorContent) return;
+
+  // Format buttons (Bold, Italic, Underline, RemoveFormat)
+  const buttons = toolbar.querySelectorAll('.toolbar-btn[data-command]');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const cmd = btn.getAttribute('data-command');
+      document.execCommand(cmd, false, null);
+      editorContent.focus();
+      updateActiveToolbarState();
+    });
+  });
+
+  // Heading Selector (p, h1, h2, h3, h4)
+  if (headingSelect) {
+    headingSelect.addEventListener('change', () => {
+      const val = headingSelect.value;
+      document.execCommand('formatBlock', false, `<${val}>`);
+      editorContent.focus();
+    });
+  }
+
+  // Font Size Selector (1, 3, 4, 6)
+  if (fontSizeSelect) {
+    fontSizeSelect.addEventListener('change', () => {
+      const val = fontSizeSelect.value;
+      document.execCommand('fontSize', false, val);
+      editorContent.focus();
+    });
+  }
+
+  // Insert Image URL or <pic>URL</pic> tag handler
+  if (insertImageUrlBtn) {
+    insertImageUrlBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const input = prompt('Enter Image URL (or paste <pic>https://...</pic>):');
+      if (!input) return;
+
+      let cleanUrl = input.trim();
+
+      const picMatch = cleanUrl.match(/<pic>(.*?)<\/pic>/i);
+      if (picMatch && picMatch[1]) {
+        cleanUrl = picMatch[1].trim();
+      }
+
+      if (cleanUrl) {
+        const imageHTML = `<p><img src="${cleanUrl}" class="article-body-img" alt="Article Image" onerror="this.style.display='none'"></p>`;
+        document.execCommand('insertHTML', false, imageHTML);
+        editorContent.focus();
+      }
+    });
+  }
+
+  // Auto-convert typed <pic>https://...</pic> tags inside editor automatically
+  editorContent.addEventListener('input', () => {
+    const rawHTML = editorContent.innerHTML;
+    if (rawHTML.includes('&lt;pic&gt;') || rawHTML.includes('<pic>')) {
+      const convertedHTML = rawHTML
+        .replace(/&lt;pic&gt;(.*?)&lt;\/pic&gt;/gi, '<img src="$1" class="article-body-img" alt="Article Image">')
+        .replace(/<pic>(.*?)<\/pic>/gi, '<img src="$1" class="article-body-img" alt="Article Image">');
+
+      if (convertedHTML !== rawHTML) {
+        editorContent.innerHTML = convertedHTML;
+      }
+    }
+    updateActiveToolbarState();
+  });
+
+  editorContent.addEventListener('keyup', updateActiveToolbarState);
+  editorContent.addEventListener('click', updateActiveToolbarState);
+
+  function updateActiveToolbarState() {
+    buttons.forEach(btn => {
+      const cmd = btn.getAttribute('data-command');
+      if (cmd && ['bold', 'italic', 'underline'].includes(cmd)) {
+        if (document.queryCommandState(cmd)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+  }
+}
+
+/* ==========================================================================
+   6. Search, Filter, Sorting (Newest to Oldest) & 10-Articles/Page Pagination
+   ========================================================================== */
+function initAdminSearchAndFilters() {
+  const searchInput = document.getElementById('adminSearchInput');
+  const catSelect = document.getElementById('adminCategorySelect');
+  const fromDateInput = document.getElementById('adminFromDate');
+  const toDateInput = document.getElementById('adminToDate');
+  const resetBtn = document.getElementById('adminResetFilterBtn');
+
+  const prevBtn = document.getElementById('adminPrevPageBtn');
+  const nextBtn = document.getElementById('adminNextPageBtn');
+
+  // Initialize Flatpickr for Date Range filtering
+  if (typeof flatpickr !== 'undefined') {
+    fromDateFlatpickr = flatpickr(fromDateInput, {
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d/m/Y",
+      onChange: () => applyAdminFilters()
+    });
+
+    toDateFlatpickr = flatpickr(toDateInput, {
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d/m/Y",
+      onChange: () => applyAdminFilters()
+    });
+  }
+
+  if (searchInput) searchInput.addEventListener('input', applyAdminFilters);
+  if (catSelect) catSelect.addEventListener('change', applyAdminFilters);
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      if (catSelect) catSelect.value = 'all';
+      if (fromDateFlatpickr) fromDateFlatpickr.clear();
+      if (toDateFlatpickr) toDateFlatpickr.clear();
+      applyAdminFilters();
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentAdminPage > 1) {
+        currentAdminPage--;
+        renderAdminPostsTable();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const totalPages = Math.max(1, Math.ceil(filteredAdminPosts.length / ADMIN_ITEMS_PER_PAGE));
+      if (currentAdminPage < totalPages) {
+        currentAdminPage++;
+        renderAdminPostsTable();
+      }
+    });
+  }
+}
+
+function applyAdminFilters() {
+  const searchKeyword = (document.getElementById('adminSearchInput')?.value || '').toLowerCase().trim();
+  const selectedCategory = document.getElementById('adminCategorySelect')?.value || 'all';
+  
+  const fromDateVal = fromDateFlatpickr ? fromDateFlatpickr.selectedDates[0] : null;
+  const toDateVal = toDateFlatpickr ? toDateFlatpickr.selectedDates[0] : null;
+
+  filteredAdminPosts = allAdminPosts.filter(p => {
+    // 1. Keyword search (Title & Summary)
+    const titleMatch = (p.title || '').toLowerCase().includes(searchKeyword);
+    const summaryMatch = (p.summary || '').toLowerCase().includes(searchKeyword);
+    if (searchKeyword && !titleMatch && !summaryMatch) return false;
+
+    // 2. Category Filter (Supports 'all')
+    if (selectedCategory !== 'all' && (p.category || '').toLowerCase() !== selectedCategory.toLowerCase()) {
+      return false;
+    }
+
+    // 3. Date Range Filter
+    const postDate = p.publishAt ? new Date(p.publishAt) : (p.createdAt ? new Date(p.createdAt) : null);
+    if (postDate) {
+      if (fromDateVal && postDate < fromDateVal) return false;
+      if (toDateVal) {
+        const endOfDay = new Date(toDateVal);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (postDate > endOfDay) return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Default Sort: Newest to Oldest
+  filteredAdminPosts.sort((a, b) => {
+    const timeA = new Date(a.publishAt || a.createdAt || 0).getTime();
+    const timeB = new Date(b.publishAt || b.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
+
+  currentAdminPage = 1;
+  renderAdminPostsTable();
+}
+
+function renderAdminPostsTable() {
+  const tbody = document.getElementById('postsTableBody');
+  const paginationInfo = document.getElementById('adminPaginationInfo');
+  const pageNumDisplay = document.getElementById('adminPageNumDisplay');
+  const prevBtn = document.getElementById('adminPrevPageBtn');
+  const nextBtn = document.getElementById('adminNextPageBtn');
+
+  if (!tbody) return;
+
+  if (filteredAdminPosts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No matching articles found.</td></tr>';
+    if (paginationInfo) paginationInfo.textContent = 'Showing 0 of 0 articles';
+    if (pageNumDisplay) pageNumDisplay.textContent = 'Page 1 of 1';
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+    return;
+  }
+
+  const totalArticles = filteredAdminPosts.length;
+  const totalPages = Math.max(1, Math.ceil(totalArticles / ADMIN_ITEMS_PER_PAGE));
+  if (currentAdminPage > totalPages) currentAdminPage = totalPages;
+
+  const startIndex = (currentAdminPage - 1) * ADMIN_ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ADMIN_ITEMS_PER_PAGE, totalArticles);
+  const pagePosts = filteredAdminPosts.slice(startIndex, endIndex);
+
+  const now = new Date();
+
+  tbody.innerHTML = pagePosts.map(p => {
+    const catClass = (p.category || 'Science').toLowerCase().replace(/\s+/g, '-');
+    const isScheduled = p.publishAt && new Date(p.publishAt) > now;
+    const statusHTML = isScheduled
+      ? `<span style="color: var(--accent-gold); font-size: 0.78rem; font-weight: 700;">🕒 Scheduled</span>`
+      : `<span style="color: #30d158; font-size: 0.78rem; font-weight: 700;">🟢 Published</span>`;
+
+    return `
+    <tr>
+      <td>
+        <img src="${p.image || '../assets/images/avatar.png'}" class="post-thumb-preview" alt="Thumb" onerror="this.src='../avatar.png'">
+      </td>
+      <td>
+        <strong style="color: var(--text-primary); font-size: 0.95rem;">${escapeHTML(p.title)}</strong>
+        <br>
+        <small style="color: var(--text-tertiary);">${escapeHTML(p.summary ? p.summary.substring(0, 60) + '...' : '')}</small>
+      </td>
+      <td>
+        <span class="badge-cat ${catClass}">${p.category}</span>
+      </td>
+      <td>
+        ${formatFullDisplayDate(p)}
+        <br>
+        ${statusHTML}
+      </td>
+      <td>${p.readTime || '5 min read'}</td>
+      <td>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn-admin-secondary" onclick="editPost('${p.id || p._id}')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Edit</button>
+          <button class="btn-admin-secondary btn-danger" onclick="deletePost('${p.id || p._id}')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join('');
+
+  if (paginationInfo) paginationInfo.textContent = `Showing ${startIndex + 1}-${endIndex} of ${totalArticles} articles`;
+  if (pageNumDisplay) pageNumDisplay.textContent = `Page ${currentAdminPage} of ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = (currentAdminPage === 1);
+  if (nextBtn) nextBtn.disabled = (currentAdminPage === totalPages);
+}
+
+/* ==========================================================================
+   7. Dashboard & Post CRUD Operations
+   ========================================================================== */
+function initDashboard() {
+  const openAddModalBtn = document.getElementById('openAddModalBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const cancelPostBtn = document.getElementById('cancelPostBtn');
+  const postForm = document.getElementById('postForm');
+
+  const postImageUrlInput = document.getElementById('postImageUrl');
+  const imagePreviewBox = document.getElementById('imagePreviewBox');
+  const enableScheduleCheck = document.getElementById('enableScheduleCheck');
+  const postPublishAtInput = document.getElementById('postPublishAt');
+
+  initAdminSearchAndFilters();
+
+  // Load posts table if already logged in
+  if (localStorage.getItem('admin_token')) {
+    loadPostsTable();
+  }
+
+  // Modal handlers
+  if (openAddModalBtn) {
+    openAddModalBtn.addEventListener('click', () => {
+      openPostModal();
+    });
+  }
+
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closePostModal);
+  if (cancelPostBtn) cancelPostBtn.addEventListener('click', closePostModal);
+
+  // Handle Form Submit (Add / Edit)
+  if (postForm) {
+    postForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const postId = document.getElementById('postId').value;
+      const title = document.getElementById('postTitle').value.trim();
+      const category = document.getElementById('postCategory').value;
+      const readTime = document.getElementById('postReadTime').value.trim();
+      const summary = document.getElementById('postSummary').value.trim();
+      const image = document.getElementById('postImageUrl').value.trim();
+
+      // Sync rich text editor content into postContent payload
+      const editorContent = document.getElementById('postContentEditor');
+      let content = editorContent ? editorContent.innerHTML.trim() : '';
+
+      content = content
+        .replace(/&lt;pic&gt;(.*?)&lt;\/pic&gt;/gi, '<img src="$1" class="article-body-img" alt="Article Image">')
+        .replace(/<pic>(.*?)<\/pic>/gi, '<img src="$1" class="article-body-img" alt="Article Image">');
+
+      if (!content || content === '<br>') {
+        alert('Please write article content before publishing.');
+        return;
+      }
+
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        forceLogout();
+        return;
+      }
+
+      const isScheduledChecked = enableScheduleCheck && enableScheduleCheck.checked;
+      const publishAt = (isScheduledChecked && postPublishAtInput && postPublishAtInput.value) ? postPublishAtInput.value : '';
+
+      const postData = { title, category, readTime, summary, image, content, publishAt };
+      const isEdit = !!postId;
+      const endpoint = isEdit ? `/api/posts/detail?id=${postId}` : '/api/posts';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(endpoint, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(postData)
+        });
+
+        if (res.status === 401) {
+          forceLogout();
+          return;
+        }
+
+        const data = await res.json();
+        if (res.ok) {
+          closePostModal();
+          showDashboardAlert(isEdit ? 'Article updated successfully!' : 'Article saved & scheduled/published successfully!', false);
+          loadPostsTable();
+        } else {
+          alert(`Error: ${data.error || 'Failed to save post'}`);
+        }
+      } catch (err) {
+        console.error('Save post error:', err);
+        alert('Network error while saving post');
+      }
+    });
+  }
+}
+
+function formatFullDisplayDate(post) {
+  if (!post) return '07 Aug 2026';
+  
+  if (post.date && /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
+    return post.date.trim();
+  }
+
+  const dateObj = post.publishAt ? new Date(post.publishAt) : (post.createdAt ? new Date(post.createdAt) : null);
+  if (dateObj && !isNaN(dateObj.getTime())) {
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${day} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+  }
+
+  if (post.date && /^[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
+    return `01 ${post.date.trim()}`;
+  }
+
+  return post.date || '07 Aug 2026';
+}
+
+async function loadPostsTable() {
+  const tbody = document.getElementById('postsTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">⏳ Loading articles from MongoDB...</td></tr>';
+
+  try {
+    const res = await fetch('/api/posts?admin=true');
+    const posts = await res.json();
+
+    if (!Array.isArray(posts)) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ff453a;">Failed to load posts.</td></tr>';
+      return;
+    }
+
+    allAdminPosts = posts;
+
+    // Default Sort: Newest to Oldest
+    allAdminPosts.sort((a, b) => {
+      const timeA = new Date(a.publishAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.publishAt || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    applyAdminFilters();
+  } catch (err) {
+    console.error('Load posts error:', err);
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ff453a;">Network error loading posts.</td></tr>';
+  }
+}
+
+function openPostModal(post = null) {
+  const modal = document.getElementById('postModal');
+  const modalTitle = document.getElementById('modalTitleText');
+  const imagePreviewBox = document.getElementById('imagePreviewBox');
+  const dropzoneText = document.getElementById('dropzoneText');
+  const editorContent = document.getElementById('postContentEditor');
+  const enableScheduleCheck = document.getElementById('enableScheduleCheck');
+  const scheduleFieldWrap = document.getElementById('scheduleFieldWrap');
+  const publishAtInput = document.getElementById('postPublishAt');
+  const formattedDateBadge = document.getElementById('formattedDateBadge');
+  const cropUrlBtn = document.getElementById('cropUrlBtn');
+
+  document.getElementById('postForm').reset();
+  if (dropzoneText) dropzoneText.textContent = '📸 Click or drag image file here to crop & upload';
+  if (cropUrlBtn) cropUrlBtn.style.display = 'none';
+
+  if (post) {
+    modalTitle.textContent = 'Edit Article';
+    document.getElementById('postId').value = post.id || post._id;
+    document.getElementById('postTitle').value = post.title || '';
+    document.getElementById('postCategory').value = post.category || 'Science';
+    document.getElementById('postReadTime').value = post.readTime || '5 min read';
+    document.getElementById('postSummary').value = post.summary || '';
+    document.getElementById('postImageUrl').value = post.image || '';
+
+    if (post.image && cropUrlBtn) {
+      cropUrlBtn.style.display = 'block';
+    }
+
+    const isFutureScheduled = post.publishAt && (new Date(post.publishAt) > new Date());
+    if (enableScheduleCheck && scheduleFieldWrap && publishAtInput) {
+      if (isFutureScheduled) {
+        enableScheduleCheck.checked = true;
+        scheduleFieldWrap.style.opacity = '1';
+        scheduleFieldWrap.style.pointerEvents = 'auto';
+        publishAtInput.disabled = false;
+        if (publishAtFlatpickr) {
+          if (publishAtFlatpickr.altInput) publishAtFlatpickr.altInput.disabled = false;
+          if (publishAtFlatpickr.element) publishAtFlatpickr.element.disabled = false;
+        }
+
+        const d = new Date(post.publishAt);
+        if (publishAtFlatpickr) {
+          publishAtFlatpickr.setDate(d);
+        } else {
+          publishAtInput.value = d.toISOString().slice(0, 16);
+        }
+
+        if (formattedDateBadge) {
+          formattedDateBadge.textContent = `📅 กำหนดเผยแพร่: ${formatDDMMYYYYHHmm(d)} (รูปแบบ DD/MM/YYYY HH:mm)`;
+          formattedDateBadge.style.display = 'inline-block';
+        }
+      } else {
+        enableScheduleCheck.checked = false;
+        scheduleFieldWrap.style.opacity = '0.4';
+        scheduleFieldWrap.style.pointerEvents = 'none';
+        publishAtInput.disabled = true;
+        if (publishAtFlatpickr) {
+          if (publishAtFlatpickr.altInput) publishAtFlatpickr.altInput.disabled = true;
+          if (publishAtFlatpickr.element) publishAtFlatpickr.element.disabled = true;
+          publishAtFlatpickr.clear();
+        }
+        publishAtInput.value = '';
+        if (formattedDateBadge) formattedDateBadge.style.display = 'none';
+      }
+    }
+
+    if (editorContent) {
+      editorContent.innerHTML = post.content || '';
+    }
+
+    if (post.image) {
+      imagePreviewBox.src = post.image;
+      imagePreviewBox.style.display = 'block';
+    } else {
+      imagePreviewBox.style.display = 'none';
+    }
+  } else {
+    modalTitle.textContent = 'Add New Article';
+    document.getElementById('postId').value = '';
+    if (enableScheduleCheck && scheduleFieldWrap && publishAtInput) {
+      enableScheduleCheck.checked = false;
+      scheduleFieldWrap.style.opacity = '0.4';
+      scheduleFieldWrap.style.pointerEvents = 'none';
+      publishAtInput.disabled = true;
+      if (publishAtFlatpickr) publishAtFlatpickr.clear();
+      publishAtInput.value = '';
+      if (formattedDateBadge) formattedDateBadge.style.display = 'none';
+    }
+    if (editorContent) editorContent.innerHTML = '';
+    imagePreviewBox.style.display = 'none';
+  }
+
+  modal.classList.add('active');
+}
+
+function closePostModal() {
+  const modal = document.getElementById('postModal');
+  modal.classList.remove('active');
+}
+
+window.editPost = async function(id) {
+  const token = localStorage.getItem('admin_token');
+  if (!token) return forceLogout();
+
+  try {
+    const res = await fetch('/api/posts?admin=true');
+    const posts = await res.json();
+    const target = posts.find(p => (p.id === id || p._id === id));
+
+    if (target) {
+      openPostModal(target);
+    } else {
+      alert('Post not found.');
+    }
+  } catch (err) {
+    console.error('Fetch post detail error:', err);
+  }
+};
+
+window.deletePost = async function(id) {
+  if (!confirm('Are you sure you want to delete this article?')) return;
+
+  const token = localStorage.getItem('admin_token');
+  if (!token) return forceLogout();
+
+  try {
+    const res = await fetch(`/api/posts/detail?id=${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (res.status === 401) {
+      forceLogout();
+      return;
+    }
+
+    if (res.ok) {
+      showDashboardAlert('Article and associated Cloudinary image deleted successfully.', false);
+      loadPostsTable();
+    } else {
+      const data = await res.json();
+      alert(`Delete Error: ${data.error || 'Failed'}`);
+    }
+  } catch (err) {
+    console.error('Delete post error:', err);
+    alert('Network error deleting post');
+  }
+};
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}

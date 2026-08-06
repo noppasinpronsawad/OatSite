@@ -62,6 +62,11 @@ module.exports = async (req, res) => {
 
     await connectToDatabase();
 
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) {}
+    }
+
     const { id } = req.query;
 
     if (!id) {
@@ -70,7 +75,7 @@ module.exports = async (req, res) => {
 
     // PUT /api/posts/detail?id=:id -> Update Post
     if (req.method === 'PUT') {
-      const { title, category, summary, content, image, date, readTime, publishAt } = req.body || {};
+      const { title, category, summary, content, image, date, readTime, publishAt } = body;
 
       // If updating image, find existing post to delete old Cloudinary image if replaced
       if (image !== undefined) {

@@ -80,7 +80,12 @@ module.exports = async (req, res) => {
         return res.status(authErr.statusCode || 401).json({ error: authErr.message });
       }
 
-      const { title, category, summary, content, image, date, readTime, publishAt } = req.body || {};
+      let body = req.body || {};
+      if (typeof body === 'string') {
+        try { body = JSON.parse(body); } catch (e) {}
+      }
+
+      const { title, category, summary, content, image, date, readTime, publishAt } = body || {};
 
       if (!title || !category || !summary || !content) {
         return res.status(400).json({ error: 'Title, category, summary, and content are required fields' });

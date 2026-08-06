@@ -35,7 +35,12 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Cloudinary credentials missing in environment variables' });
     }
 
-    const { image } = req.body || {};
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) {}
+    }
+
+    const { image } = body || {};
 
     if (!image) {
       return res.status(400).json({ error: 'No image data provided in request body' });

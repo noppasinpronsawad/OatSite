@@ -16,7 +16,17 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { password } = req.body || {};
+    // Robust body parsing for Vercel Serverless Function environment
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        console.error('Failed to parse req.body string:', e);
+      }
+    }
+
+    const { password } = body || {};
     const adminPassword = process.env.ADMIN_PASSWORD;
     const jwtSecret = process.env.JWT_SECRET;
 
@@ -24,7 +34,7 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Server configuration error: ADMIN_PASSWORD or JWT_SECRET missing' });
     }
 
-    if (!password || password !== adminPassword) {
+    if (!password || String(password).trim() !== String(adminPassword).trim()) {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 
@@ -38,7 +48,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       token,
-      expiresIn: 900, // 15 minutes in seconds (900,000 ms)
+      expiresIn: 900, // 15 minutes in seconds
       message: 'Login successful'
     });
   } catch (err) {

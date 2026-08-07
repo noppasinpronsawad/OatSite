@@ -42,8 +42,17 @@ module.exports = async (req, res) => {
 
       let posts = await Post.find(query).sort({ publishAt: -1, createdAt: -1 });
 
-      // Auto-seed if database is completely empty or ?seed=true
-      if ((posts.length === 0 || req.query.seed === 'true') && Array.isArray(initialBlogPosts)) {
+      // Auto-seed if database is completely empty or ?seed=true (protected by auth)
+      const isSeedRequested = req.query.seed === 'true';
+      if (isSeedRequested) {
+        try {
+          verifyAuth(req);
+        } catch (authErr) {
+          return res.status(401).json({ error: 'Unauthorized: Admin authentication required to re-seed database' });
+        }
+      }
+
+      if ((posts.length === 0 || isSeedRequested) && Array.isArray(initialBlogPosts)) {
         console.log('Seeding initial blog posts into MongoDB Atlas...');
         const postsToInsert = initialBlogPosts.map(p => ({
           title: p.title,
@@ -56,7 +65,7 @@ module.exports = async (req, res) => {
           publishAt: new Date()
         }));
         
-        if (req.query.seed === 'true') {
+        if (isSeedRequested) {
           await Post.deleteMany({});
         }
         posts = await Post.insertMany(postsToInsert);

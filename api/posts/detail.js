@@ -1,4 +1,5 @@
 const cloudinary = require('cloudinary').v2;
+const mongoose = require('mongoose');
 const connectToDatabase = require('../lib/db');
 const Post = require('../models/Post');
 const { verifyAuth } = require('../lib/auth');
@@ -69,8 +70,8 @@ module.exports = async (req, res) => {
 
     const { id } = req.query;
 
-    if (!id) {
-      return res.status(400).json({ error: 'Post ID is required' });
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Valid Post ID is required' });
     }
 
     // PUT /api/posts/detail?id=:id -> Update Post

@@ -1327,11 +1327,11 @@ dialog.modal-spec::backdrop {
 .bento-card {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  min-height: 310px;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, rgba(22, 22, 28, 0.9) 0%, rgba(32, 38, 55, 0.8) 100%);
   border: 1px solid rgba(41, 151, 255, 0.35);
-  padding: 1.8rem;
+  padding: 1.3rem 1.4rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1388,19 +1388,19 @@ dialog.modal-spec::backdrop {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .bento-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.85rem;
+  gap: 0.4rem;
+  padding: 0.28rem 0.75rem;
   border-radius: var(--radius-pill);
   background: rgba(41, 151, 255, 0.12);
   border: 1px solid rgba(41, 151, 255, 0.3);
   color: var(--accent-blue);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1413,11 +1413,11 @@ dialog.modal-spec::backdrop {
 }
 
 .badge-dot.pulse {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--accent-blue);
-  box-shadow: 0 0 10px var(--accent-blue);
+  box-shadow: 0 0 8px var(--accent-blue);
   animation: pulseGlow 2s infinite;
 }
 
@@ -1428,30 +1428,31 @@ dialog.modal-spec::backdrop {
 }
 
 .bento-status-tag {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--accent-green);
   background: rgba(48, 209, 88, 0.12);
-  padding: 0.3rem 0.75rem;
+  padding: 0.25rem 0.65rem;
   border-radius: var(--radius-pill);
   border: 1px solid rgba(48, 209, 88, 0.3);
 }
 
 .bento-body {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
+  flex-grow: 1;
 }
 
 .bento-icon-wrapper {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-md);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(135deg, rgba(41, 151, 255, 0.2), rgba(175, 82, 222, 0.2));
   border: 1px solid rgba(41, 151, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent-blue);
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.6rem;
 }
 
 .bento-icon-wrapper.muted {
@@ -1461,40 +1462,34 @@ dialog.modal-spec::backdrop {
 }
 
 .bento-title {
-  font-size: 1.25rem;
+  font-size: 1.18rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
-  margin-bottom: 0.25rem;
-  line-height: 1.35;
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
 }
 
 .bento-subtitle {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--accent-blue);
   letter-spacing: 0.02em;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .bento-description {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.45;
   font-weight: 400;
-}
-
-.bento-description {
-  font-size: 0.92rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
 }
 
 .bento-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 1.2rem;
+  padding-top: 0.8rem;
   border-top: 1px solid var(--border-subtle);
   margin-top: auto;
 }

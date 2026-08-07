@@ -2254,6 +2254,60 @@ dialog.modal-spec::backdrop {
     line-height: 1.7;
   }
 
+  /* Showcase & Bento Grid Mobile Polish */
+  .showcase-section {
+    padding-top: 90px;
+    padding-bottom: 60px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    margin-top: 1.5rem;
+  }
+
+  .bento-card {
+    min-height: 270px;
+    padding: 1.25rem 1.2rem;
+    border-radius: var(--radius-md);
+  }
+
+  .bento-header {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .bento-title {
+    font-size: 1.15rem;
+  }
+
+  .bento-description {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  /* Tax Navigation Mobile Polish */
+  .tax-section {
+    padding-top: 85px;
+    padding-bottom: 60px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .tax-top-nav {
+    margin-bottom: 1rem;
+  }
+
+  .btn-back-showcase {
+    padding: 0.5rem 1.1rem;
+    font-size: 0.85rem;
+    min-height: 42px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   /* Footer Mobile Layout */
   .footer {
     padding: 50px 1rem 30px 1rem;

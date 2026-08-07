@@ -593,6 +593,126 @@
       background: var(--accent-blue) !important;
       border-color: var(--accent-blue) !important;
     }
+
+    /* Admin Mobile Web Optimization & Touch Responsiveness */
+    @media (max-width: 768px) {
+      .admin-main {
+        padding: 1.2rem 0.75rem 3rem 0.75rem;
+      }
+
+      .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.85rem;
+      }
+
+      .admin-title-group h1 {
+        font-size: 1.4rem;
+      }
+
+      .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+
+      .dashboard-title-group h2 {
+        font-size: 1.5rem;
+      }
+
+      .dashboard-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        width: 100%;
+      }
+
+      .dashboard-actions button,
+      .btn-admin-primary,
+      .btn-admin-secondary {
+        width: 100% !important;
+        justify-content: center;
+        min-height: 44px;
+        font-size: 0.92rem;
+      }
+
+      .admin-filter-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        width: 100%;
+        padding: 1rem;
+      }
+
+      .filter-search-box,
+      .filter-select-box,
+      .filter-date-box {
+        width: 100%;
+      }
+
+      .filter-date-box {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .filter-date-box input {
+        width: 100%;
+      }
+
+      .posts-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-subtle);
+        margin-top: 1rem;
+      }
+
+      .posts-table {
+        min-width: 680px;
+      }
+
+      .admin-pagination-bar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+        text-align: center;
+      }
+
+      .pagination-buttons {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .admin-modal {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .admin-modal-content {
+        padding: 1.25rem 1rem;
+        max-height: 92vh;
+        width: 100%;
+        border-radius: var(--radius-md);
+      }
+
+      .schedule-presets {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+      }
+
+      .preset-chip {
+        text-align: center;
+        padding: 0.5rem 0.2rem;
+        font-size: 0.75rem;
+      }
+
+      .editor-toolbar {
+        gap: 0.35rem;
+        padding: 0.5rem 0.4rem;
+      }
+    }
   </style>
 </head>
 
@@ -866,7 +986,7 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=2026080703"></script>
+  <script src="/admin/admin.js?v=2026080704"></script>
 </body>
 
 </html>

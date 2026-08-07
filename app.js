@@ -55,7 +55,8 @@ function initRouter() {
     // Map route aliases
     let targetViewId = `${hash}-view`;
     if (hash === 'about' || hash === 'resume') targetViewId = 'resume-view';
-    if (hash === 'tax') targetViewId = 'tax-view';
+    if (hash === 'tax' || hash === 'tax-calculator') targetViewId = 'tax-view';
+    if (hash === 'showcase') targetViewId = 'showcase-view';
 
     const targetView = document.getElementById(targetViewId);
     if (!targetView) {
@@ -75,7 +76,7 @@ function initRouter() {
     // Update nav links
     navLinks.forEach(link => {
       const route = link.getAttribute('data-route');
-      if (route === hash || (hash === 'resume' && route === 'about')) {
+      if (route === hash || (hash === 'resume' && route === 'about') || (hash === 'tax' && route === 'showcase')) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');

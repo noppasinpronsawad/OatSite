@@ -2,13 +2,6 @@ const cloudinary = require('cloudinary').v2;
 const { verifyAuth } = require('./lib/auth');
 require('dotenv').config();
 
-// Configure Cloudinary SDK
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,9 +24,20 @@ module.exports = async (req, res) => {
       return res.status(authErr.statusCode || 401).json({ error: authErr.message });
     }
 
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      return res.status(500).json({ error: 'Cloudinary credentials missing in environment variables' });
+    // Configure Cloudinary SDK dynamically per request with trimmed credentials
+    const cloudName = String(process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+    const apiKey = String(process.env.CLOUDINARY_API_KEY || '').trim();
+    const apiSecret = String(process.env.CLOUDINARY_API_SECRET || '').trim();
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      return res.status(500).json({ error: 'Cloudinary credentials missing in Vercel Environment Variables' });
     }
+
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret
+    });
 
     let body = req.body || {};
     if (typeof body === 'string') {

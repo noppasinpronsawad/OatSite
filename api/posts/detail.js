@@ -5,13 +5,6 @@ const Post = require('../models/Post');
 const { verifyAuth } = require('../lib/auth');
 require('dotenv').config();
 
-// Configure Cloudinary SDK
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 // Helper to format date as "07 Aug 2026"
 function formatFullDate(dateObj) {
   const d = dateObj || new Date();
@@ -59,6 +52,19 @@ module.exports = async (req, res) => {
       verifyAuth(req);
     } catch (authErr) {
       return res.status(authErr.statusCode || 401).json({ error: authErr.message });
+    }
+
+    // Configure Cloudinary SDK dynamically per request with trimmed credentials
+    const cloudName = String(process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+    const apiKey = String(process.env.CLOUDINARY_API_KEY || '').trim();
+    const apiSecret = String(process.env.CLOUDINARY_API_SECRET || '').trim();
+
+    if (cloudName && apiKey && apiSecret) {
+      cloudinary.config({
+        cloud_name: cloudName,
+        api_key: apiKey,
+        api_secret: apiSecret
+      });
     }
 
     await connectToDatabase();

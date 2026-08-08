@@ -63,7 +63,7 @@ window.switchAdminTab = function(tab) {
 };
 
 async function fetchAdminMetrics() {
-  const token = localStorage.getItem('admin_jwt_token');
+  const token = localStorage.getItem('admin_token') || localStorage.getItem('admin_jwt_token');
   if (!token) return;
 
   try {
@@ -264,6 +264,8 @@ function initAuthFlow() {
       if (loginBtn) loginBtn.disabled = false;
     }
   }
+
+  window.executeAdminLogin = executeLogin;
 
   // Handle Login Submit and Button Click (Prevents Native HTML Form Refresh)
   if (loginForm) {

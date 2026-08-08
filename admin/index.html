@@ -749,13 +749,13 @@
 
       <div id="loginAlert" class="alert-banner alert-error"></div>
 
-      <form id="loginForm" onsubmit="return false;">
+      <form id="loginForm" onsubmit="window.executeAdminLogin && window.executeAdminLogin(); return false;">
         <div class="admin-form-group">
           <div>
             <label class="admin-label" for="adminPassword">Admin Password</label>
             <input type="password" id="adminPassword" class="admin-input" placeholder="Enter password..." required autofocus>
           </div>
-          <button type="button" class="btn-admin-primary" id="loginBtn">
+          <button type="submit" class="btn-admin-primary" id="loginBtn" onclick="window.executeAdminLogin && window.executeAdminLogin()">
             <span>Unlock CMS</span>
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>

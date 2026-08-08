@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global state variables
 let autoLogoutTimer = null;
+let sessionHeartbeatTimer = null;
 let cropperInstance = null;
 let publishAtFlatpickr = null;
 let fromDateFlatpickr = null;
@@ -49,8 +50,41 @@ function initThemeToggle() {
 }
 
 /* ==========================================================================
-   2. Authentication & 45-Minute Auto-Logout Manager
+   2. Authentication & Single Active Session Manager (Auto-Logout & Heartbeat)
    ========================================================================== */
+function startSessionHeartbeat() {
+  stopSessionHeartbeat();
+  // Check active session status every 8 seconds
+  sessionHeartbeatTimer = setInterval(async () => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) return stopSessionHeartbeat();
+
+    try {
+      const res = await fetch('/api/auth/session', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401) {
+        let data = {};
+        try { data = await res.json(); } catch (e) {}
+        stopSessionHeartbeat();
+        forceLogout();
+        const msg = '🚨 Security Alert: Another login session was detected from another device or browser tab. You have been logged out immediately for security.';
+        showLoginAlert(msg, true);
+        alert(msg);
+      }
+    } catch (err) {
+      console.error('Session heartbeat error:', err);
+    }
+  }, 8000);
+}
+
+function stopSessionHeartbeat() {
+  if (sessionHeartbeatTimer) {
+    clearInterval(sessionHeartbeatTimer);
+    sessionHeartbeatTimer = null;
+  }
+}
+
 function initAuthFlow() {
   const loginForm = document.getElementById('loginForm');
   const passwordInput = document.getElementById('adminPassword');
@@ -100,6 +134,7 @@ function initAuthFlow() {
       if (response.ok && data.token) {
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_login_time', Date.now().toString());
+        if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
 
         if (passwordInput) passwordInput.value = '';
         showDashboardView();
@@ -171,8 +206,10 @@ function scheduleAutoLogout(delayMs) {
 
 function forceLogout() {
   if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+  stopSessionHeartbeat();
   localStorage.removeItem('admin_token');
   localStorage.removeItem('admin_login_time');
+  localStorage.removeItem('admin_session_id');
 
   document.getElementById('loginView').style.display = 'block';
   document.getElementById('dashboardView').style.display = 'none';
@@ -184,6 +221,7 @@ function forceLogout() {
 function showDashboardView() {
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('dashboardView').style.display = 'block';
+  startSessionHeartbeat();
 }
 
 function showLoginAlert(msg, isError) {

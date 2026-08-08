@@ -1,7 +1,9 @@
 const jwt = require('jsonwebtoken');
+const connectToDatabase = require('./db');
+const AdminSession = require('../models/AdminSession');
 require('dotenv').config();
 
-function verifyAuth(req) {
+async function verifyAuth(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,14 +15,41 @@ function verifyAuth(req) {
   const token = authHeader.split(' ')[1];
   const jwtSecret = process.env.JWT_SECRET || 'oatsite_jwt_secret_key_2026';
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, jwtSecret);
-    return decoded;
+    decoded = jwt.verify(token, jwtSecret);
   } catch (err) {
     const error = new Error('Unauthorized: Token missing or expired');
     error.statusCode = 401;
     throw error;
   }
+
+  // Single Active Session Validation
+  if (decoded && decoded.sessionId) {
+    let currentActiveId = global.activeAdminSessionId;
+
+    if (!currentActiveId) {
+      try {
+        await connectToDatabase();
+        const activeDoc = await AdminSession.findOne({ key: 'admin_active_session' });
+        if (activeDoc && activeDoc.activeSessionId) {
+          currentActiveId = activeDoc.activeSessionId;
+          global.activeAdminSessionId = currentActiveId;
+        }
+      } catch (dbErr) {
+        console.error('DB session lookup error:', dbErr);
+      }
+    }
+
+    if (currentActiveId && decoded.sessionId !== currentActiveId) {
+      const error = new Error('Session Invalidated: Another login session was detected on another device or tab.');
+      error.statusCode = 401;
+      error.isSessionOverride = true;
+      throw error;
+    }
+  }
+
+  return decoded;
 }
 
 module.exports = { verifyAuth };

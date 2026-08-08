@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const connectToDatabase = require('../lib/db');
+const AdminSession = require('../models/AdminSession');
 require('dotenv').config();
 
 module.exports = async (req, res) => {
@@ -34,9 +36,25 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 
-    // Generate JWT with EXACTLY 45 minutes expiration ('45m')
+    // Generate Single Active Session ID (invalidates any previous active session)
+    const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    global.activeAdminSessionId = sessionId;
+
+    // Save/Update active session in MongoDB
+    try {
+      await connectToDatabase();
+      await AdminSession.findOneAndUpdate(
+        { key: 'admin_active_session' },
+        { activeSessionId: sessionId, lastLoginAt: new Date() },
+        { upsert: true, new: true }
+      );
+    } catch (dbErr) {
+      console.error('Failed to persist AdminSession in DB:', dbErr);
+    }
+
+    // Generate JWT with EXACTLY 45 minutes expiration ('45m') and embedded sessionId
     const token = jwt.sign(
-      { role: 'admin', user: 'Noppasin P.' },
+      { role: 'admin', user: 'Noppasin P.', sessionId },
       jwtSecret,
       { expiresIn: '45m' }
     );
@@ -44,6 +62,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       token,
+      sessionId,
       expiresIn: 2700, // 45 minutes in seconds
       message: 'Login successful'
     });

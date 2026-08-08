@@ -11,12 +11,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Require API Route Handlers
 const loginHandler = require('./api/auth/login');
+const sessionHandler = require('./api/auth/session');
 const postsHandler = require('./api/posts/index');
 const postDetailHandler = require('./api/posts/detail');
 const uploadHandler = require('./api/upload/index');
 
 // API Routes
 app.all('/api/auth/login', (req, res) => loginHandler(req, res));
+app.all('/api/auth/session', (req, res) => sessionHandler(req, res));
 app.all('/api/posts/detail', (req, res) => postDetailHandler(req, res));
 app.all('/api/posts', (req, res) => postsHandler(req, res));
 app.all('/api/upload', (req, res) => uploadHandler(req, res));

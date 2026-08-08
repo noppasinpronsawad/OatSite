@@ -37,11 +37,14 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // JWT Verification (Protected Route)
+    // JWT Verification (Protected Route with Single Active Session Enforcement)
     try {
-      verifyAuth(req);
+      await verifyAuth(req);
     } catch (authErr) {
-      return res.status(authErr.statusCode || 401).json({ error: authErr.message });
+      return res.status(authErr.statusCode || 401).json({ 
+        error: authErr.message, 
+        isSessionOverride: !!authErr.isSessionOverride 
+      });
     }
 
     // Configure Cloudinary SDK dynamically per request with trimmed credentials

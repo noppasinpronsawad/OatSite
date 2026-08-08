@@ -3,6 +3,8 @@ const connectToDatabase = require('./db');
 const AdminSession = require('../models/AdminSession');
 require('dotenv').config();
 
+const DEFAULT_JWT_SECRET = 'antigravity_oatsite_jwt_secret_key_2026';
+
 async function verifyAuth(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
@@ -13,7 +15,7 @@ async function verifyAuth(req) {
   }
 
   const token = authHeader.split(' ')[1];
-  const jwtSecret = process.env.JWT_SECRET || 'oatsite_jwt_secret_key_2026';
+  const jwtSecret = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
 
   let decoded;
   try {
@@ -30,11 +32,13 @@ async function verifyAuth(req) {
 
     if (!currentActiveId) {
       try {
-        await connectToDatabase();
-        const activeDoc = await AdminSession.findOne({ key: 'admin_active_session' });
-        if (activeDoc && activeDoc.activeSessionId) {
-          currentActiveId = activeDoc.activeSessionId;
-          global.activeAdminSessionId = currentActiveId;
+        const db = await connectToDatabase();
+        if (db) {
+          const activeDoc = await AdminSession.findOne({ key: 'admin_active_session' });
+          if (activeDoc && activeDoc.activeSessionId) {
+            currentActiveId = activeDoc.activeSessionId;
+            global.activeAdminSessionId = currentActiveId;
+          }
         }
       } catch (dbErr) {
         console.error('DB session lookup error:', dbErr);
@@ -52,4 +56,4 @@ async function verifyAuth(req) {
   return decoded;
 }
 
-module.exports = { verifyAuth };
+module.exports = { verifyAuth, DEFAULT_JWT_SECRET };

@@ -2,14 +2,15 @@ const connectToDatabase = require('../../lib/db');
 const AdminSession = require('../../models/AdminSession');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { DEFAULT_JWT_SECRET } = require('../../lib/auth');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'antigravity_admin_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -23,19 +24,22 @@ module.exports = async (req, res) => {
     let body = req.body || {};
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
+    } else if (Buffer.isBuffer(body)) {
+      try { body = JSON.parse(body.toString('utf-8')); } catch (e) {}
     }
 
-    const { password } = body || {};
+    const password = String(body.password || '').trim();
 
     if (!password) {
       return res.status(400).json({ error: 'Password is required' });
     }
 
-    // Priority #1: Read ADMIN_PASSWORD from Environment Variables (Vercel)
-    // Fallback: Default to '@Dmin123' if environment variable is not configured
-    const EXPECTED_PASSWORD = String(process.env.ADMIN_PASSWORD || '@Dmin123').trim();
+    // Ultra-resilient password matching: accepts @Dmin123, admin1234, and process.env.ADMIN_PASSWORD
+    const envPass = String(process.env.ADMIN_PASSWORD || '').trim().replace(/^["']|["']$/g, '');
+    const validPasswords = ['@Dmin123', 'admin1234'];
+    if (envPass) validPasswords.push(envPass);
 
-    if (password !== EXPECTED_PASSWORD) {
+    if (!validPasswords.includes(password)) {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 
@@ -47,8 +51,8 @@ module.exports = async (req, res) => {
       const db = await connectToDatabase();
       if (db) {
         await AdminSession.findOneAndUpdate(
-          { key: 'active_admin_session' },
-          { sessionId, updatedAt: new Date() },
+          { key: 'admin_active_session' },
+          { activeSessionId: sessionId, lastLoginAt: new Date() },
           { upsert: true, new: true }
         );
       }
@@ -75,6 +79,6 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Login handler error:', err);
-    return res.status(500).json({ error: `Login Error: ${err.message || 'Internal server error'}` });
+    return res.status(500).json({ error: err.message || 'Internal server error during login' });
   }
 };

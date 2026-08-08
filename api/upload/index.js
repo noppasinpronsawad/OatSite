@@ -2,17 +2,37 @@ const cloudinary = require('cloudinary').v2;
 const { verifyAuth } = require('../lib/auth');
 require('dotenv').config();
 
+// Helper to extract Cloudinary public_id from URL
+function extractCloudinaryPublicId(url) {
+  if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) {
+    return null;
+  }
+  try {
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex === -1) return null;
+    let pathAfterUpload = url.substring(uploadIndex + 8);
+    pathAfterUpload = pathAfterUpload.replace(/^v\d+\//, '');
+    const lastDotIndex = pathAfterUpload.lastIndexOf('.');
+    if (lastDotIndex !== -1) {
+      pathAfterUpload = pathAfterUpload.substring(0, lastDotIndex);
+    }
+    return pathAfterUpload;
+  } catch (err) {
+    return null;
+  }
+}
+
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
@@ -46,6 +66,16 @@ module.exports = async (req, res) => {
     let body = req.body || {};
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
+    }
+
+    // Handle DELETE Request -> Destroy unused image from Cloudinary
+    if (req.method === 'DELETE') {
+      const publicId = body.public_id || (req.query ? req.query.public_id : null) || extractCloudinaryPublicId(body.url || (req.query ? req.query.url : null));
+      if (!publicId) {
+        return res.status(400).json({ error: 'public_id or url required to delete Cloudinary image' });
+      }
+      const destroyResult = await cloudinary.uploader.destroy(publicId);
+      return res.status(200).json({ success: true, message: 'Cloudinary image destroyed successfully', result: destroyResult });
     }
 
     const { image } = body || {};

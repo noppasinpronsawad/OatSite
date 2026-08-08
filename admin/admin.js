@@ -22,6 +22,7 @@ let cropperInstance = null;
 let publishAtFlatpickr = null;
 let fromDateFlatpickr = null;
 let toDateFlatpickr = null;
+let unsavedCropPublicId = null;
 
 let allAdminPosts = [];
 let filteredAdminPosts = [];
@@ -322,8 +323,13 @@ function initImageCropper() {
     applyCropBtn.addEventListener('click', async () => {
       if (!cropperInstance) return;
 
+      const origBtnHTML = applyCropBtn.innerHTML;
       const dropzoneText = document.getElementById('dropzoneText');
-      if (dropzoneText) dropzoneText.textContent = '⏳ Cropping & uploading to Cloudinary...';
+      
+      applyCropBtn.disabled = true;
+      applyCropBtn.style.opacity = '0.6';
+      applyCropBtn.innerHTML = '<span>⏳ Uploading to Cloudinary...</span>';
+      if (dropzoneText) dropzoneText.textContent = '⏳ Cropping & uploading image to Cloudinary...';
 
       try {
         const canvas = cropperInstance.getCroppedCanvas({
@@ -375,6 +381,8 @@ function initImageCropper() {
         }
 
         if (res.ok && data.url) {
+          // Store public_id of unsaved crop for automatic cleanup if modal is cancelled
+          unsavedCropPublicId = data.public_id || null;
           postImageUrlInput.value = data.url;
           imagePreviewBox.src = data.url;
           imagePreviewBox.style.display = 'block';
@@ -388,6 +396,10 @@ function initImageCropper() {
         console.error('Crop upload error:', err);
         alert(`Crop upload failed: ${err.message || err}`);
         if (dropzoneText) dropzoneText.textContent = '📸 Click or drag image file here to crop & upload';
+      } finally {
+        applyCropBtn.disabled = false;
+        applyCropBtn.style.opacity = '1';
+        applyCropBtn.innerHTML = origBtnHTML;
       }
     });
   }
@@ -817,41 +829,55 @@ function initDashboard() {
     postForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const postId = document.getElementById('postId').value;
-      const title = document.getElementById('postTitle').value.trim();
-      const category = document.getElementById('postCategory').value;
-      const readTime = document.getElementById('postReadTime').value.trim();
-      const summary = document.getElementById('postSummary').value.trim();
-      const image = document.getElementById('postImageUrl').value.trim();
-
-      // Sync rich text editor content into postContent payload
-      const editorContent = document.getElementById('postContentEditor');
-      let content = editorContent ? editorContent.innerHTML.trim() : '';
-
-      content = content
-        .replace(/&lt;pic&gt;(.*?)&lt;\/pic&gt;/gi, '<img src="$1" class="article-body-img" alt="Article Image">')
-        .replace(/<pic>(.*?)<\/pic>/gi, '<img src="$1" class="article-body-img" alt="Article Image">');
-
-      if (!content || content === '<br>') {
-        alert('Please write article content before publishing.');
-        return;
+      const savePostBtn = document.getElementById('savePostBtn');
+      const origBtnHTML = savePostBtn ? savePostBtn.innerHTML : '<span>Save & Publish</span>';
+      
+      if (savePostBtn) {
+        savePostBtn.disabled = true;
+        savePostBtn.style.opacity = '0.6';
+        savePostBtn.innerHTML = '<span>⏳ Saving Article...</span>';
       }
-
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        forceLogout();
-        return;
-      }
-
-      const isScheduledChecked = enableScheduleCheck && enableScheduleCheck.checked;
-      const publishAt = (isScheduledChecked && postPublishAtInput && postPublishAtInput.value) ? postPublishAtInput.value : '';
-
-      const postData = { title, category, readTime, summary, image, content, publishAt };
-      const isEdit = !!postId;
-      const endpoint = isEdit ? `/api/posts/detail?id=${postId}` : '/api/posts';
-      const method = isEdit ? 'PUT' : 'POST';
 
       try {
+        const postId = document.getElementById('postId').value;
+        const title = document.getElementById('postTitle').value.trim();
+        const category = document.getElementById('postCategory').value;
+        const readTime = document.getElementById('postReadTime').value.trim();
+        const summary = document.getElementById('postSummary').value.trim();
+        const image = document.getElementById('postImageUrl').value.trim();
+
+        // Sync rich text editor content into postContent payload
+        const editorContent = document.getElementById('postContentEditor');
+        let content = editorContent ? editorContent.innerHTML.trim() : '';
+
+        content = content
+          .replace(/&lt;pic&gt;(.*?)&lt;\/pic&gt;/gi, '<img src="$1" class="article-body-img" alt="Article Image">')
+          .replace(/<pic>(.*?)<\/pic>/gi, '<img src="$1" class="article-body-img" alt="Article Image">');
+
+        if (!content || content === '<br>') {
+          alert('Please write article content before publishing.');
+          return;
+        }
+
+        const token = localStorage.getItem('admin_token');
+        if (!token) {
+          forceLogout();
+          return;
+        }
+
+        const isEdit = !!postId;
+        const isScheduledChecked = enableScheduleCheck && enableScheduleCheck.checked;
+        const publishAtVal = (isScheduledChecked && postPublishAtInput && postPublishAtInput.value) ? postPublishAtInput.value : '';
+
+        // Build payload: Preserve original publish date on Edit unless user explicitly set a new schedule
+        const postData = { title, category, readTime, summary, image, content };
+        if (isScheduledChecked && publishAtVal) {
+          postData.publishAt = publishAtVal;
+        }
+
+        const endpoint = isEdit ? `/api/posts/detail?id=${postId}` : '/api/posts';
+        const method = isEdit ? 'PUT' : 'POST';
+
         const res = await fetch(endpoint, {
           method,
           headers: {
@@ -868,6 +894,8 @@ function initDashboard() {
 
         const data = await res.json();
         if (res.ok) {
+          // Success: Keep the cropped image on Cloudinary (do not clean up on modal close)
+          unsavedCropPublicId = null;
           closePostModal();
           showDashboardAlert(isEdit ? 'Article updated successfully!' : 'Article saved & scheduled/published successfully!', false);
           loadPostsTable();
@@ -877,6 +905,12 @@ function initDashboard() {
       } catch (err) {
         console.error('Save post error:', err);
         alert('Network error while saving post');
+      } finally {
+        if (savePostBtn) {
+          savePostBtn.disabled = false;
+          savePostBtn.style.opacity = '1';
+          savePostBtn.innerHTML = origBtnHTML;
+        }
       }
     });
   }
@@ -1031,9 +1065,31 @@ function openPostModal(post = null) {
   modal.classList.add('active');
 }
 
+async function cleanupUnsavedCrop() {
+  if (unsavedCropPublicId) {
+    const pubId = unsavedCropPublicId;
+    unsavedCropPublicId = null;
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      try {
+        fetch('/api/upload', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ public_id: pubId })
+        }).catch(err => console.error('Cloudinary cleanup error:', err));
+        console.log('Cleaned up unsaved Cloudinary image:', pubId);
+      } catch (e) {}
+    }
+  }
+}
+
 function closePostModal() {
   const modal = document.getElementById('postModal');
   modal.classList.remove('active');
+  cleanupUnsavedCrop();
 }
 
 window.editPost = async function(id) {

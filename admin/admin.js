@@ -81,24 +81,23 @@ async function fetchAdminMetrics() {
         document.getElementById('m_mongo_toeic').textContent = m.mongodb.totalToeicQuestions;
       }
 
-      // AI Pipeline Progress Tracking
-      if (m.aiPipeline) {
-        const p1 = m.aiPipeline.phase1;
-        const p2 = m.aiPipeline.phase2;
+      // Summary & Daily News Ingestion Logs
+      const summaryQs = document.getElementById('summary_total_qs');
+      if (summaryQs && m.mongodb) {
+        summaryQs.textContent = `${m.mongodb.totalToeicQuestions} ข้อ`;
+      }
 
-        const phase1Text = document.getElementById('m_phase1_text');
-        const phase1Bar = document.getElementById('m_phase1_bar');
-        if (phase1Text && p1) {
-          phase1Text.textContent = `${p1.current.toLocaleString()} / 10,000 (${p1.progressPercentage}%)`;
-        }
-        if (phase1Bar && p1) {
-          phase1Bar.style.width = `${p1.progressPercentage}%`;
-        }
-
-        const phase2Schedule = document.getElementById('m_phase2_schedule');
-        const phase2Status = document.getElementById('m_phase2_status');
-        if (phase2Schedule && p2) phase2Schedule.textContent = p2.cronSchedule;
-        if (phase2Status && p2) phase2Status.textContent = p2.status;
+      const logsTableBody = document.getElementById('dailyNewsLogsTableBody');
+      if (logsTableBody && m.dailyNewsLogs && Array.isArray(m.dailyNewsLogs)) {
+        logsTableBody.innerHTML = m.dailyNewsLogs.map(log => `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <td style="padding: 0.6rem; color: var(--text-secondary);">${log.date}</td>
+            <td style="padding: 0.6rem;">${log.source}</td>
+            <td style="padding: 0.6rem;">${log.topic}</td>
+            <td style="padding: 0.6rem;"><strong style="color: #30d158;">+${log.questionsGenerated} ข้อ</strong></td>
+            <td style="padding: 0.6rem;">${log.status}</td>
+          </tr>
+        `).join('');
       }
 
       // Gemini API

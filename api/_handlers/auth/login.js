@@ -29,22 +29,6 @@ module.exports = async (req, res) => {
       try { body = JSON.parse(body.toString('utf-8')); } catch (e) {}
     }
 
-    // Fallback stream parsing if req.body is unpopulated
-    if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
-      try {
-        const buffers = [];
-        for await (const chunk of req) {
-          buffers.push(chunk);
-        }
-        const rawData = Buffer.concat(buffers).toString('utf-8');
-        if (rawData) {
-          body = JSON.parse(rawData);
-        }
-      } catch (streamErr) {
-        console.warn('Stream parsing fallback failed:', streamErr.message);
-      }
-    }
-
     const password = String(body.password || '').trim();
 
     if (!password) {

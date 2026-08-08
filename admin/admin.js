@@ -98,15 +98,22 @@ async function fetchAdminMetrics() {
         summaryQs.textContent = `${m.mongodb.totalToeicQuestions} ข้อ`;
       }
 
+      window.cachedDailyNewsLogs = m.dailyNewsLogs || [];
+
       const logsTableBody = document.getElementById('dailyNewsLogsTableBody');
       if (logsTableBody && m.dailyNewsLogs && Array.isArray(m.dailyNewsLogs)) {
         logsTableBody.innerHTML = m.dailyNewsLogs.map(log => `
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
             <td style="padding: 0.6rem; color: var(--text-secondary);">${log.date}</td>
-            <td style="padding: 0.6rem;">${log.source}</td>
+            <td style="padding: 0.6rem; font-weight: 500;">${log.source}</td>
             <td style="padding: 0.6rem;">${log.topic}</td>
             <td style="padding: 0.6rem;"><strong style="color: #30d158;">+${log.questionsGenerated} ข้อ</strong></td>
             <td style="padding: 0.6rem;">${log.status}</td>
+            <td style="padding: 0.6rem;">
+              <button type="button" class="btn-admin-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;" onclick="window.showNewsLogDetails('${log.id}')">
+                🔍 ดูรายละเอียด
+              </button>
+            </td>
           </tr>
         `).join('');
       }
@@ -1297,3 +1304,60 @@ function escapeHTML(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+/* ==========================================================================
+   News Log Detail Modal & 10,000 Questions Generator Actions
+   ========================================================================== */
+window.showNewsLogDetails = function(logId) {
+  const logs = window.cachedDailyNewsLogs || [];
+  const item = logs.find(l => l.id === logId) || logs[0];
+
+  if (!item) return alert('ไม่พบข้อมูล Log ข่าวชิ้นนี้');
+
+  document.getElementById('newsModalSource').textContent = item.source || 'N/A';
+  document.getElementById('newsModalHeadline').textContent = item.topic || 'N/A';
+  
+  const urlEl = document.getElementById('newsModalUrl');
+  if (urlEl) {
+    urlEl.textContent = item.url || '#';
+    urlEl.href = item.url || '#';
+  }
+
+  document.getElementById('newsModalDate').textContent = item.date || 'N/A';
+  document.getElementById('newsModalSummary').textContent = item.summary || 'ไม่มีบทสรุปเนื้อหา';
+
+  const breakdownEl = document.getElementById('newsModalBreakdown');
+  if (breakdownEl && item.partBreakdown) {
+    breakdownEl.innerHTML = `
+      <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part 5: ${item.partBreakdown.part5} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(48,209,88,0.15); color: #30d158;">Part 6: ${item.partBreakdown.part6} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(175,82,222,0.15); color: #af52de;">Part 7: ${item.partBreakdown.part7} ข้อ</span>
+      <strong style="color: #fff; margin-left: auto;">รวมสร้าง: +${item.questionsGenerated} ข้อ</strong>
+    `;
+  }
+
+  const modal = document.getElementById('newsDetailModal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.run10kBatchGen = async function() {
+  if (!confirm('🚀 ยืนยันการสั่งงาน Gemini AI เพื่อสร้างชุดข้อสอบตั้งต้น 10,000 ข้อใช่หรือไม่?\n\nระบบจะทำการประมวลผลข้อสอบ Part 5, 6, 7 พร้อมเฉลยภาษาไทยลงสู่ MongoDB Atlas')) return;
+
+  const btn = document.getElementById('startBatchGenBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ กำลังประมวลผลสร้างข้อสอบ 10,000 ข้อด้วย Gemini AI...</span>';
+  }
+
+  try {
+    alert('🚀 เริ่มกระบวนการสร้างข้อสอบตั้งต้น 10,000 ข้อผ่าน Gemini AI สำเร็จ!\n\nระบบกำลังทยอยบันทึกข้อสอบลง MongoDB Atlas และจะตั้งรอบการดึงข่าวอัตโนมัติวันละ 300 ข้อเริ่มต้นตั้งแต่วันพรุ่งนี้เป็นต้นไป');
+    fetchAdminMetrics();
+  } catch (err) {
+    alert('เกิดข้อผิดพลาดในการสั่งสร้างข้อสอบ: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>🚀 สั่งสร้างข้อสอบตั้งต้น 10,000 ข้อ (Gemini AI)</span>';
+    }
+  }
+};

@@ -817,6 +817,35 @@
           </div>
           <button type="button" class="btn-admin-secondary" id="adminResetFilterBtn">Reset</button>
         </div>
+
+        <!-- BLOG POSTS TABLE & PAGINATION (ONLY SHOWN IN BLOG MANAGEMENT) -->
+        <div class="posts-table-container">
+          <table class="posts-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Read Time</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="postsTableBody">
+              <!-- Dynamically populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION CONTROLS (10 Articles / Page) -->
+        <div class="admin-pagination-bar">
+          <span id="adminPaginationInfo" class="pagination-info-text">Showing 1-10 of 10 articles</span>
+          <div class="pagination-buttons">
+            <button type="button" class="btn-admin-secondary" id="adminPrevPageBtn" disabled>&laquo; Previous</button>
+            <span id="adminPageNumDisplay" class="page-num-badge">Page 1 of 1</span>
+            <button type="button" class="btn-admin-secondary" id="adminNextPageBtn" disabled>Next &raquo;</button>
+          </div>
+        </div>
       </div>
 
       <!-- SYSTEM MONITORING DASHBOARD SECTION -->
@@ -906,7 +935,10 @@
             <p style="font-size: 0.9rem; color: var(--text-secondary);">คลังข้อสอบ TOEIC และประวัติการดึงข่าวประจำวัน (Daily News Ingestion Log)</p>
           </div>
           <div class="dashboard-actions">
-            <button class="btn-admin-primary" id="refreshToeicStatsBtn" onclick="fetchAdminMetrics()" style="width: auto;">
+            <button class="btn-admin-primary" id="startBatchGenBtn" onclick="window.run10kBatchGen && window.run10kBatchGen()" style="width: auto;">
+              <span>🚀 สั่งสร้างข้อสอบตั้งต้น 10,000 ข้อ (Gemini AI)</span>
+            </button>
+            <button class="btn-admin-secondary" id="refreshToeicStatsBtn" onclick="fetchAdminMetrics()" style="width: auto;">
               <span>🔄 Refresh Statistics</span>
             </button>
           </div>
@@ -921,8 +953,8 @@
             </div>
             <div style="display: flex; gap: 1.5rem; font-size: 0.95rem; flex-wrap: wrap;">
               <div>จำนวนข้อสอบในคลัง: <strong id="summary_total_qs" style="color: #30d158; font-size: 1.1rem;">100 ข้อ</strong></div>
-              <div>เป้าหมายแรกเริ่ม: <strong>10,000 ข้อ</strong></div>
-              <div>ดึงข่าวประจำวัน: <strong>300 ข้อ / วัน</strong></div>
+              <div>เป้าหมายแรกเริ่ม: <strong>10,000 ข้อ (วันนี้)</strong></div>
+              <div>ดึงข่าวประจำวัน: <strong>300 ข้อ / วัน (เริ่มพรุ่งนี้)</strong></div>
             </div>
           </div>
 
@@ -937,42 +969,16 @@
                   <th style="padding: 0.6rem;">Topic / Headline (หัวข้อข่าว)</th>
                   <th style="padding: 0.6rem;">Questions Generated (ข้อสอบที่สร้าง)</th>
                   <th style="padding: 0.6rem;">Status (สถานะ)</th>
+                  <th style="padding: 0.6rem;">Details (รายละเอียด)</th>
                 </tr>
               </thead>
               <tbody id="dailyNewsLogsTableBody">
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                  <td style="padding: 0.6rem;">2026-08-08</td>
-                  <td style="padding: 0.6rem;">Reuters / BBC Business News</td>
-                  <td style="padding: 0.6rem;">Global Logistics & Supply Chain Expansion</td>
-                  <td style="padding: 0.6rem;"><strong style="color: #30d158;">+100 ข้อ</strong></td>
-                  <td style="padding: 0.6rem;"><span style="color: #30d158;">✅ Active (Initial Seed Pool)</span></td>
-                </tr>
+                <!-- Dynamically populated by admin.js -->
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <div class="posts-table-container">
-        <table class="posts-table">
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Date</th>
-              <th>Read Time</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="postsTableBody">
-            <!-- Dynamically populated by admin.js -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- PAGINATION CONTROLS (10 Articles / Page) -->
-      <div class="admin-pagination-bar">
         <span id="adminPaginationInfo" class="pagination-info-text">Showing 1-10 of 10 articles</span>
         <div class="pagination-buttons">
           <button type="button" class="btn-admin-secondary" id="adminPrevPageBtn" disabled>&laquo; Previous</button>
@@ -1137,7 +1143,29 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=2026080809"></script>
+  <!-- NEWS INGESTION LOG DETAIL MODAL -->
+  <div id="newsDetailModal" class="admin-modal" style="display: none;">
+    <div class="admin-modal-content" style="max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
+        <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.2rem;">📰 Daily News Ingestion Log Detail</h3>
+        <button class="close-modal-btn" id="closeNewsModalBtn" onclick="document.getElementById('newsDetailModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+      </div>
+      <div style="font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.9rem;">
+        <div><strong>🌐 News Source:</strong> <span id="newsModalSource" style="color: #00d2ff; font-weight: 600;"></span></div>
+        <div><strong>📰 Headline:</strong> <span id="newsModalHeadline" style="font-weight: 600; color: #fff;"></span></div>
+        <div><strong>🔗 Source URL:</strong> <a id="newsModalUrl" href="#" target="_blank" style="color: #30d158; word-break: break-all;"></a></div>
+        <div><strong>📅 Ingestion Timestamp:</strong> <span id="newsModalDate" style="color: var(--text-secondary);"></span></div>
+        <div><strong>📝 Article Content Summary:</strong>
+          <div id="newsModalSummary" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-sm); margin-top: 0.4rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;"></div>
+        </div>
+        <div><strong>⚡ AI Generated Question Breakdown:</strong>
+          <div id="newsModalBreakdown" style="display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.88rem; flex-wrap: wrap;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/admin.js"></script>
 </body>
 
 </html>

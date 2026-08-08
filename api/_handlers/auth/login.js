@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 require('dotenv').config();
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '@Dmin123';
 const JWT_SECRET = process.env.JWT_SECRET || 'antigravity_admin_secret_key_2026';
 
 module.exports = async (req, res) => {
@@ -21,27 +20,39 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { password } = req.body;
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) {}
+    }
+
+    const { password } = body || {};
 
     if (!password) {
       return res.status(400).json({ error: 'Password is required' });
     }
 
-    if (password !== ADMIN_PASSWORD) {
+    // Accept @Dmin123, admin1234, and custom ADMIN_PASSWORD env
+    const envPass = String(process.env.ADMIN_PASSWORD || '').trim();
+    const validPasswords = ['@Dmin123', 'admin1234'];
+    if (envPass) validPasswords.push(envPass);
+
+    if (!validPasswords.includes(password)) {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 
     // Generate unique sessionId for Single Active Session enforcement
     const sessionId = crypto.randomBytes(16).toString('hex');
 
-    // Persist active sessionId into MongoDB Atlas
+    // Persist active sessionId into MongoDB Atlas if connected
     try {
-      await connectToDatabase();
-      await AdminSession.findOneAndUpdate(
-        { key: 'active_admin_session' },
-        { sessionId, updatedAt: new Date() },
-        { upsert: true, new: true }
-      );
+      const db = await connectToDatabase();
+      if (db) {
+        await AdminSession.findOneAndUpdate(
+          { key: 'active_admin_session' },
+          { sessionId, updatedAt: new Date() },
+          { upsert: true, new: true }
+        );
+      }
     } catch (dbErr) {
       console.warn('MongoDB session save failed, using memory session:', dbErr.message);
     }
@@ -65,6 +76,6 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Login handler error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: `Login Error: ${err.message || 'Internal server error'}` });
   }
 };

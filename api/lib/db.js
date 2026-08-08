@@ -1,16 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env');
-}
-
-/**
-  Global is used here to maintain a cached connection across hot reloads in development
-  and serverless function invocations in production.
- */
 let cached = global.mongoose;
 
 if (!cached) {
@@ -18,6 +8,12 @@ if (!cached) {
 }
 
 async function connectToDatabase() {
+  const MONGODB_URI = String(process.env.MONGODB_URI || '').trim();
+  if (!MONGODB_URI) {
+    console.warn('⚠️ MONGODB_URI is not set in Environment Variables. Operating in fallback mode.');
+    return null;
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -28,6 +24,7 @@ async function connectToDatabase() {
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      console.log('✅ Connected to MongoDB Atlas successfully');
       return mongooseInstance;
     });
   }
@@ -36,7 +33,8 @@ async function connectToDatabase() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    throw e;
+    console.error('❌ MongoDB Connection Error:', e.message);
+    return null;
   }
 
   return cached.conn;

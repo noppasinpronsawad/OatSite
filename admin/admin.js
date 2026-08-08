@@ -16,11 +16,7 @@ function initAdminPanel() {
   try { initSchedulePicker(); } catch(e) { console.error('Schedule Init Error:', e); }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAdminPanel);
-} else {
-  initAdminPanel();
-}
+
 
 // Global state variables
 let autoLogoutTimer = null;
@@ -1445,3 +1441,13 @@ window.filterQuestionBank = function() {
     </div>
   `).join('');
 };
+
+/* ==========================================================================
+   Admin Panel Initialization Bootstrapper
+   Executes strictly AFTER all global window methods and handlers are defined.
+   ========================================================================== */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdminPanel);
+} else {
+  initAdminPanel();
+}

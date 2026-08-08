@@ -331,7 +331,7 @@ function initImageCropper() {
           height: 675
         });
 
-        const croppedBase64 = canvas.toDataURL('image/jpeg', 0.9);
+        const croppedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         closeCropModal();
 
         const token = localStorage.getItem('admin_token');

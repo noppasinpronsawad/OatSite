@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const loginHandler = require('./api/auth/login');
 const postsHandler = require('./api/posts/index');
 const postDetailHandler = require('./api/posts/detail');
-const uploadHandler = require('./api/upload');
+const uploadHandler = require('./api/upload/index');
 
 // API Routes
 app.all('/api/auth/login', (req, res) => loginHandler(req, res));

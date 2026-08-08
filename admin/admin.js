@@ -36,20 +36,34 @@ const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
 let isExecutingLogin = false;
 
 window.executeAdminLogin = async function executeLogin() {
-  if (isExecutingLogin) return;
+  console.log('[Login] executeAdminLogin called, isExecutingLogin=', isExecutingLogin);
+
+  if (isExecutingLogin) {
+    console.log('[Login] Already executing login, ignoring duplicate call');
+    return;
+  }
 
   const pwdEl = document.getElementById('adminPassword');
   const btnEl = document.getElementById('loginBtn');
   const password = pwdEl ? pwdEl.value.trim() : '';
 
+  console.log('[Login] Password length:', password.length, '| Button found:', !!btnEl);
+
   if (!password) {
-    alert('Please enter your admin password.');
+    showLoginAlert('⚠️ กรุณากรอกรหัสผ่านก่อน', true);
+    if (pwdEl) pwdEl.focus();
     return;
   }
 
+  // Set loading state
   isExecutingLogin = true;
-  showLoginAlert('', false);
-  if (btnEl) btnEl.disabled = true;
+  showLoginAlert('🔄 กำลังเข้าสู่ระบบ กรุณารอสักครู่...', false);
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = '🔄 กำลังเข้าสู่ระบบ...';
+  }
+
+  console.log('[Login] Sending POST /api/auth/login ...');
 
   try {
     const response = await fetch('/api/auth/login', {
@@ -58,35 +72,52 @@ window.executeAdminLogin = async function executeLogin() {
       body: JSON.stringify({ password })
     });
 
+    console.log('[Login] Response status:', response.status);
+
     let data = {};
     try {
       data = await response.json();
+      console.log('[Login] Response data keys:', Object.keys(data));
     } catch (e) {
-      console.error('Failed to parse response JSON:', e);
+      console.error('[Login] Failed to parse response JSON:', e);
     }
 
     if (response.ok && data.token) {
-      localStorage.setItem('admin_token', data.token);
-      localStorage.setItem('admin_login_time', Date.now().toString());
-      if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
+      console.log('[Login] ✅ Login successful, storing token...');
+      try {
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_login_time', Date.now().toString());
+        if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
+      } catch(e) {
+        console.error('[Login] localStorage error:', e);
+        showLoginAlert('❌ ไม่สามารถบันทึก Session ได้ กรุณาเปิดใช้ localStorage ในเบราว์เซอร์', true);
+        return;
+      }
 
+      showLoginAlert('✅ เข้าสู่ระบบสำเร็จ! กำลังโหลดข้อมูล...', false);
       if (pwdEl) pwdEl.value = '';
-      showDashboardView();
-      scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
-      loadPostsTable();
+      setTimeout(() => {
+        showDashboardView();
+        scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
+        loadPostsTable();
+      }, 500);
     } else {
-      const errMsg = data.error || (data.message ? data.message : `Authentication failed (Status ${response.status}). Please check Vercel environment variables.`);
-      showLoginAlert(errMsg, true);
-      alert(`Login Failed: ${errMsg}`);
+      const errMsg = data.error || data.message || `Authentication failed (HTTP ${response.status})`;
+      console.error('[Login] ❌ Login failed:', errMsg);
+      showLoginAlert(`❌ เข้าสู่ระบบล้มเหลว: ${errMsg}`, true);
+      if (pwdEl) { pwdEl.value = ''; pwdEl.focus(); }
     }
   } catch (err) {
-    console.error('Login error:', err);
-    const errMsg = `Network/API error: ${err.message || err}`;
-    showLoginAlert(errMsg, true);
-    alert(`Login Error: ${errMsg}`);
+    console.error('[Login] ❌ Network/API error:', err);
+    const errMsg = `ไม่สามารถเชื่อมต่อ Server ได้: ${err.message || err}`;
+    showLoginAlert(`❌ ${errMsg}`, true);
   } finally {
     isExecutingLogin = false;
-    if (btnEl) btnEl.disabled = false;
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.textContent = '🔓 Unlock CMS';
+    }
+    console.log('[Login] finally block: isExecutingLogin reset to false');
   }
 };
 
@@ -283,10 +314,20 @@ function initAuthFlow() {
     // Handle Login Submit (Prevents Native HTML Form Refresh)
     if (loginForm) {
       loginForm.addEventListener('submit', (e) => {
+        console.log('[initAuthFlow] Form submit event fired');
         e.preventDefault();
-        window.executeAdminLogin();
+        e.stopPropagation();
+        if (window.executeAdminLogin) {
+          window.executeAdminLogin();
+        } else {
+          console.error('[initAuthFlow] window.executeAdminLogin is not defined!');
+          showLoginAlert('❌ ระบบเกิดข้อผิดพลาด: Login function ไม่พร้อมใช้งาน กรุณา refresh หน้าใหม่', true);
+        }
         return false;
       });
+      console.log('[initAuthFlow] Form submit listener attached ✅');
+    } else {
+      console.error('[initAuthFlow] loginForm element NOT FOUND in DOM!');
     }
 
     if (logoutBtn) {
@@ -295,7 +336,7 @@ function initAuthFlow() {
       });
     }
   } catch(err) {
-    console.error("Critical error in initAuthFlow:", err);
+    console.error('[initAuthFlow] Critical error:', err);
   }
 }
 

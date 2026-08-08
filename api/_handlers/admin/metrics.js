@@ -68,6 +68,20 @@ module.exports = async (req, res) => {
           maskedKey: maskedGeminiKey,
           status: geminiConfigured ? 'Active & Ready for AI Gen' : 'Pending Key in Vercel',
           rateLimit: '15 RPM / 1,500 RPD (Free Tier)'
+        },
+        aiPipeline: {
+          phase1: {
+            target: 10000,
+            current: toeicCount,
+            progressPercentage: Math.min(100, (toeicCount / 10000) * 100).toFixed(1),
+            status: toeicCount >= 10000 ? 'Phase 1 Complete (10,000 / 10,000)' : `In Progress (${toeicCount.toLocaleString()} / 10,000 Qs)`
+          },
+          phase2: {
+            dailyTarget: 300,
+            cronSchedule: '0 0 * * * (Daily UTC Midnight)',
+            status: 'Ready (Automated Daily News Ingestion)',
+            lastBatchCount: 0
+          }
         }
       }
     });

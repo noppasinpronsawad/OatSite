@@ -1242,7 +1242,60 @@ function submitToeicExam() {
   document.getElementById('toeicTimerWidget').style.display = 'none';
   document.getElementById('toeicResultsScreen').style.display = 'block';
 
+  renderSkillImprovementRecommendations();
   renderDetailedReviewList();
+}
+
+function renderSkillImprovementRecommendations() {
+  const container = document.getElementById('toeicSkillRecommendations');
+  if (!container) return;
+
+  const tagErrors = {};
+  toeicQuestions.forEach(q => {
+    const userAns = toeicUserAnswers[q.question_id];
+    if (userAns !== q.correct_answer) {
+      const tags = Array.isArray(q.tags) ? q.tags : ['General'];
+      tags.forEach(t => {
+        tagErrors[t] = (tagErrors[t] || 0) + 1;
+      });
+    }
+  });
+
+  const sortedTags = Object.keys(tagErrors).sort((a, b) => tagErrors[b] - tagErrors[a]);
+
+  if (sortedTags.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 1rem; background: rgba(48, 209, 88, 0.15); border: 1px solid #30d158; border-radius: 8px; color: #30d158;">
+        🎉 <strong>ยอดเยี่ยมระดับมืออาชีพ!</strong> คุณทำข้อสอบถูกทุกข้อ ความรู้ไวยากรณ์และการอ่านภาษาอังกฤษของคุณอยู่ในระดับท็อปมาตรฐาน C1
+      </div>
+    `;
+    return;
+  }
+
+  const tagAdviceMap = {
+    'Grammar': 'ควรทบทวนเรื่องโครงสร้างไวยากรณ์ (Grammar Rules), Tenses, และการผันกริยาตามประธาน (Subject-Verb Agreement)',
+    'Vocabulary': 'ควรท่องคลังคำศัพท์ภาษาอังกฤษเชิงธุรกิจ (Business Vocabulary) และเรื่องคำพ้องความหมาย (Synonyms)',
+    'Preposition': 'ควรฝึกฝนบุพบทบอกเวลาและสถานที่ (Prepositions of Time & Place) เช่น by, until, on, within',
+    'Part of Speech': 'ควรฝึกแยกประเภทของคำ (Noun, Verb, Adjective, Adverb) และตำแหน่งการวางคำในประโยค',
+    'Business Context': 'ควรฝึกอ่านเอกสารภาษาอังกฤษในบริบทออฟฟิศ การจัดซื้อ การประชุม และอีเมลติดต่อธุรกิจ',
+    'If-Clause': 'ควรทบทวนประโยคเงื่อนไข If-Clause ทั้ง 3 รูปแบบ',
+    'Passive Voice': 'ควรทบทวนเรื่องประธานโดนกระทำ (be + V.3)',
+    'Part 6': 'ควรฝึกอ่านบทความสั้นและทักษะการเติมประโยคที่สอดคล้องกับบริบท (Sentence Insertion)',
+    'Part 7': 'ควรฝึกสแกนหาข้อมูลอย่างรวดเร็ว (Skimming & Scanning) ในอีเมล บันทึกข้อความ และเอกสารหลายฉบับ (Double/Triple Passages)'
+  };
+
+  container.innerHTML = sortedTags.slice(0, 4).map(tag => {
+    const advice = tagAdviceMap[tag] || `ควรทบทวนและฝึกทำโจทย์ในหมวด ${tag} เพิ่มเติมเพื่อลดข้อผิดพลาด`;
+    return `
+      <div style="display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid var(--border-color);">
+        <span style="font-size: 1.2rem;">📌</span>
+        <div>
+          <strong style="color: #00d2ff; font-size: 0.98rem;">ด้านที่ต้องปรับปรุง: ${escapeHTML(tag)} (ตอบผิด ${tagErrors[tag]} ข้อ)</strong>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.2rem;">${advice}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function toggleDetailedReview() {

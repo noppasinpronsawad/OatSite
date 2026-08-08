@@ -551,7 +551,7 @@
             </div>
             <div class="bento-footer">
               <div class="bento-tags">
-                <span class="bento-chip">Tax Optimization</span>
+                <span class="bento-chip">Tax</span>
               </div>
               <span class="bento-action-btn">
                 เปิดใช้งาน
@@ -588,9 +588,7 @@
             </div>
             <div class="bento-footer">
               <div class="bento-tags">
-                <span class="bento-chip">Full 100 Qs</span>
-                <span class="bento-chip">Part 5, 6, 7</span>
-                <span class="bento-chip">CEFR Mapping</span>
+                <span class="bento-chip">TOEIC Simulator</span>
               </div>
               <span class="bento-action-btn">
                 เริ่มทำข้อสอบ
@@ -1002,7 +1000,7 @@
             </div>
 
             <div style="text-align: center; margin-top: 2rem;">
-              <button type="button" class="btn-admin-primary" id="startExamBtn" style="max-width: 320px; margin: 0 auto; font-size: 1.1rem; padding: 1rem 2rem;">
+              <button type="button" class="btn-toeic-cta" id="startExamBtn" style="max-width: 320px; margin: 0 auto;">
                 🚀 เริ่มทำข้อสอบทันที
               </button>
             </div>
@@ -1048,7 +1046,7 @@
               <div id="questionPaletteGrid" class="palette-grid">
                 <!-- Dynamically generated 1-100 grid buttons -->
               </div>
-              <button type="button" class="btn-admin-primary btn-danger" id="submitExamBtn" style="width: 100%; margin-top: 1.2rem;">
+              <button type="button" class="btn-toeic-danger" id="submitExamBtn" style="width: 100%; margin-top: 1.2rem;">
                 🏁 ส่งข้อสอบ (Submit Exam)
               </button>
             </div>
@@ -1105,12 +1103,25 @@
               </div>
             </div>
 
+            <!-- Skill Improvement Recommendations Box -->
+            <div class="toeic-skills-recommendation-box" style="margin: 2rem 0; padding: 1.5rem; background: rgba(0, 210, 255, 0.05); border: 1px solid rgba(0, 210, 255, 0.25); border-radius: var(--radius-md);">
+              <h3 style="color: #00d2ff; font-size: 1.25rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                💡 คำแนะนำในการพัฒนาทักษะ (Skill Improvement Analysis)
+              </h3>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                วิเคราะห์จุดอ่อนจากข้อที่ตอบผิด และเรื่องที่คุณควรทบทวนเพิ่มเติมเพื่อยกระดับคะแนนสอบ TOEIC Reading:
+              </p>
+              <div id="toeicSkillRecommendations" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Dynamically populated by app.js submitToeicExam() -->
+              </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="result-actions">
-              <button type="button" class="btn-admin-primary" id="toggleReviewBtn" style="width: auto;">
+              <button type="button" class="btn-toeic-cta" id="toggleReviewBtn">
                 📖 ดูเฉลยรายละเอียดภาษาไทย (Review Answers)
               </button>
-              <button type="button" class="btn-admin-secondary" id="retakeExamBtn" style="width: auto;">
+              <button type="button" class="btn-toeic-secondary" id="retakeExamBtn">
                 🔄 ทำข้อสอบใหม่อีกครั้ง
               </button>
             </div>

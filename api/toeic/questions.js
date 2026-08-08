@@ -926,6 +926,53 @@ Office Logistics Manager`,
   }
 ];
 
+function shuffleQuestionChoices(q) {
+  const item = typeof q.toObject === 'function' ? q.toObject() : JSON.parse(JSON.stringify(q));
+  
+  const originalChoices = item.choices;
+  const originalCorrectKey = item.correct_answer;
+  const originalCorrectText = originalChoices ? originalChoices[originalCorrectKey] : null;
+
+  if (!originalCorrectText) return item;
+
+  const entries = [
+    { text: originalChoices.A, isCorrect: originalCorrectKey === 'A' },
+    { text: originalChoices.B, isCorrect: originalCorrectKey === 'B' },
+    { text: originalChoices.C, isCorrect: originalCorrectKey === 'C' },
+    { text: originalChoices.D, isCorrect: originalCorrectKey === 'D' }
+  ];
+
+  // Deterministic hash based on question_id so choices are varied across A, B, C, D
+  let hash = 0;
+  const str = String(item.question_id || Math.random());
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+
+  const keys = ['A', 'B', 'C', 'D'];
+  const targetCorrectIndex = Math.abs(hash) % 4;
+  const targetCorrectKey = keys[targetCorrectIndex];
+
+  const wrongEntries = entries.filter(e => !e.isCorrect);
+  const newChoices = {};
+  
+  keys.forEach(k => {
+    if (k === targetCorrectKey) {
+      newChoices[k] = originalCorrectText;
+    } else {
+      const wrong = wrongEntries.pop();
+      newChoices[k] = wrong ? wrong.text : 'Option';
+    }
+  });
+
+  return {
+    ...item,
+    choices: newChoices,
+    correct_answer: targetCorrectKey
+  };
+}
+
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -962,11 +1009,14 @@ module.exports = async (req, res) => {
       selectedQuestions = questions.slice(0, 20);
     }
 
+    // Shuffle choices evenly across A, B, C, D
+    const shuffledQuestions = selectedQuestions.map(q => shuffleQuestionChoices(q));
+
     return res.status(200).json({
       success: true,
       mode,
-      total: selectedQuestions.length,
-      questions: selectedQuestions
+      total: shuffledQuestions.length,
+      questions: shuffledQuestions
     });
   } catch (err) {
     console.error('TOEIC questions handler error:', err);

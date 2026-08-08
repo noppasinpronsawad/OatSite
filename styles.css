@@ -2887,3 +2887,79 @@ dialog.modal-spec::backdrop {
   }
 }
 
+/* High-Contrast Prominent TOEIC Action Buttons (Visible in Light & Dark Theme) */
+.btn-toeic-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 2rem;
+  background: linear-gradient(135deg, #00d2ff 0%, #0072ff 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 210, 255, 0.4);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.btn-toeic-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 210, 255, 0.6);
+  color: #ffffff !important;
+}
+
+.btn-toeic-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.8rem;
+  background: linear-gradient(135deg, #ff453a 0%, #ff2d55 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 69, 58, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-toeic-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 69, 58, 0.55);
+}
+
+.btn-toeic-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary) !important;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+}
+
+[data-theme="light"] .btn-toeic-secondary {
+  background: #e5e5ea;
+  color: #1c1c1e !important;
+  border-color: #d1d1d6;
+}
+
+.btn-toeic-secondary:hover {
+  background: rgba(0, 210, 255, 0.15);
+  border-color: #00d2ff;
+  color: #00d2ff !important;
+}
+

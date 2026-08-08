@@ -1372,10 +1372,72 @@ window.run10kBatchGen = async function() {
   } catch (err) {
     console.error('Batch gen error:', err);
     alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<span>🚀 สั่งสร้างข้อสอบตั้งต้น 10,000 ข้อ (Gemini AI)</span>';
+window.openQuestionBankModal = async function() {
+  const container = document.getElementById('qbListContainer');
+  if (container) container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">⏳ กำลังโหลดข้อสอบจาก MongoDB Atlas...</div>';
+
+  const modal = document.getElementById('questionBankModal');
+  if (modal) modal.style.display = 'flex';
+
+  try {
+    const res = await fetch('/api/toeic/questions');
+    const data = await res.json();
+
+    if (data.success && Array.isArray(data.questions)) {
+      window.cachedDbQuestions = data.questions;
+      window.filterQuestionBank();
+    } else {
+      if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">เกิดข้อผิดพลาดในการโหลดข้อสอบ</div>';
     }
+  } catch (err) {
+    console.error('Fetch DB questions error:', err);
+    if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>';
   }
+};
+
+window.filterQuestionBank = function() {
+  const questions = window.cachedDbQuestions || [];
+  const search = String(document.getElementById('qbSearchInput')?.value || '').toLowerCase().trim();
+  const partVal = String(document.getElementById('qbPartSelect')?.value || 'all');
+  const container = document.getElementById('qbListContainer');
+
+  if (!container) return;
+
+  const filtered = questions.filter(q => {
+    const matchPart = partVal === 'all' || String(q.part) === partVal;
+    const matchSearch = !search || 
+      String(q.question_text || '').toLowerCase().includes(search) || 
+      String(q.question_id || '').toLowerCase().includes(search);
+    return matchPart && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">ไม่พบข้อสอบที่ตรงตามเงื่อนไข</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.slice(0, 50).map((q, idx) => `
+    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.5rem; margin-bottom: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part ${q.part} | ${q.question_id || 'ID'}</span>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">CEFR: ${q.cefr_level || 'B2'}</span>
+      </div>
+      <div style="font-weight: 500; margin-bottom: 0.8rem; line-height: 1.5; color: #fff;">${idx + 1}. ${escapeHTML(q.question_text)}</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.88rem; margin-bottom: 0.8rem;">
+        ${['A','B','C','D'].map(k => `
+          <div style="padding: 0.4rem 0.6rem; border-radius: 4px; ${q.correct_answer === k ? 'background: rgba(48,209,88,0.2); border: 1px solid #30d158; color: #30d158; font-weight: 600;' : 'background: rgba(255,255,255,0.03); color: var(--text-secondary);'}">
+            ${k}. ${escapeHTML(q.choices?.[k] || '')} ${q.correct_answer === k ? '✓ (เฉลย)' : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      ${q.detailed_explanation ? `
+        <div style="font-size: 0.83rem; background: rgba(255,255,255,0.02); border-left: 3px solid #00d2ff; padding: 0.5rem 0.8rem; border-radius: 2px;">
+          <div style="color: #00d2ff; font-weight: 600; margin-bottom: 0.2rem;">💡 เฉลยรายละเอียดภาษาไทย:</div>
+          <div style="color: var(--text-secondary);">${escapeHTML(q.detailed_explanation.correct_reason || '')}</div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
 };

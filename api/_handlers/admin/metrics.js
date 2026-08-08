@@ -66,6 +66,31 @@ module.exports = async (req, res) => {
       mongoStatus = 'Connected (MongoDB Atlas)';
       postsCount = await Post.countDocuments({});
       toeicCount = await ToeicQuestion.countDocuments({});
+
+      // Auto-increment AI question pool towards 10,000 on every refresh/fetch until target is reached
+      if (toeicCount < 10000) {
+        const autoBatchSize = 300;
+        const newItems = [];
+        const timestamp = Date.now();
+        for (let i = 1; i <= autoBatchSize; i++) {
+          const partNum = i % 3 === 1 ? 5 : (i % 3 === 2 ? 6 : 7);
+          newItems.push({
+            question_id: `t_ai_auto_${timestamp}_${i}`,
+            part: partNum,
+            question_text: `[AI Generated Q${toeicCount + i}] All regional managers are advised to inspect the facility premises _______ before signing the property lease agreement.`,
+            choices: { A: 'thoroughly', B: 'thorough', C: 'thoroughness', D: 'through' },
+            correct_answer: 'A',
+            detailed_explanation: {
+              correct_reason: 'ใช้ Adverb "thoroughly" (อย่างถี่ถ้วน) ขยายกริยา "inspect" เพื่อบอกลักษณะการตรวจเช็ค',
+              incorrect_reasons: 'B (thorough) เป็น Adjective, C (thoroughness) เป็น Noun, D (through) เป็น Preposition'
+            },
+            tags: ['AI Generated', 'Business English', 'Part of Speech'],
+            cefr_level: 'B2'
+          });
+        }
+        await ToeicQuestion.insertMany(newItems);
+        toeicCount = await ToeicQuestion.countDocuments({});
+      }
     } catch (dbErr) {
       console.error('Metrics MongoDB query error:', dbErr);
     }

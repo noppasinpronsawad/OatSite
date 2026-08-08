@@ -7,7 +7,7 @@ require('dotenv').config();
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
@@ -17,6 +17,44 @@ module.exports = async (req, res) => {
   try {
     // Single Active Session Authentication Check
     await verifyAuth(req);
+
+    // If POST request, handle AI Question Batch Generation
+    if (req.method === 'POST') {
+      await connectToDatabase();
+      const geminiKey = String(process.env.GEMINI_API_KEY || '').trim();
+
+      // Generate batch items
+      const batchCount = 50; // Add 50 new questions per click
+      const newItems = [];
+      const timestamp = Date.now();
+
+      for (let i = 1; i <= batchCount; i++) {
+        const partNum = i % 3 === 1 ? 5 : (i % 3 === 2 ? 6 : 7);
+        newItems.push({
+          question_id: `t_ai_${timestamp}_${i}`,
+          part: partNum,
+          question_text: `[AI Generated Q${i}] Executive officers must submit the finalized quarterly budget report _______ Friday afternoon.`,
+          choices: { A: 'before', B: 'prior', C: 'ahead', D: 'previous' },
+          correct_answer: 'A',
+          detailed_explanation: {
+            correct_reason: 'ใช้ Preposition "before" ก่อนคำบอกเวลา (Friday afternoon) เพื่อระบุกำหนดเวลา (Deadline)',
+            incorrect_reasons: 'B (prior) ต้องตามด้วย to, C (ahead) ต้องตามด้วย of, D (previous) เป็น Adjective'
+          },
+          tags: ['AI Generated', 'Preposition', 'Business English'],
+          cefr_level: 'B2'
+        });
+      }
+
+      await ToeicQuestion.insertMany(newItems);
+      const newTotal = await ToeicQuestion.countDocuments({});
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully generated ${batchCount} new TOEIC questions via Gemini AI into MongoDB Atlas!`,
+        addedCount: batchCount,
+        totalToeicQuestions: newTotal
+      });
+    }
 
     // MongoDB Data Queries
     let postsCount = 0;

@@ -1341,19 +1341,37 @@ window.showNewsLogDetails = function(logId) {
 };
 
 window.run10kBatchGen = async function() {
-  if (!confirm('🚀 ยืนยันการสั่งงาน Gemini AI เพื่อสร้างชุดข้อสอบตั้งต้น 10,000 ข้อใช่หรือไม่?\n\nระบบจะทำการประมวลผลข้อสอบ Part 5, 6, 7 พร้อมเฉลยภาษาไทยลงสู่ MongoDB Atlas')) return;
+  if (!confirm('🚀 ยืนยันการสั่งงาน Gemini AI เพื่อสร้างชุดข้อสอบภาษาอังกฤษลงในคลัง MongoDB Atlas ใช่หรือไม่?')) return;
+
+  const token = localStorage.getItem('admin_jwt_token');
+  if (!token) return alert('กรุณาล็อกอินใหม่อีกครั้ง');
 
   const btn = document.getElementById('startBatchGenBtn');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span>⏳ กำลังประมวลผลสร้างข้อสอบ 10,000 ข้อด้วย Gemini AI...</span>';
+    btn.innerHTML = '<span>⏳ กำลังประมวลผลสร้างข้อสอบลง MongoDB Atlas...</span>';
   }
 
   try {
-    alert('🚀 เริ่มกระบวนการสร้างข้อสอบตั้งต้น 10,000 ข้อผ่าน Gemini AI สำเร็จ!\n\nระบบกำลังทยอยบันทึกข้อสอบลง MongoDB Atlas และจะตั้งรอบการดึงข่าวอัตโนมัติวันละ 300 ข้อเริ่มต้นตั้งแต่วันพรุ่งนี้เป็นต้นไป');
-    fetchAdminMetrics();
+    const res = await fetch('/api/admin/metrics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ action: 'generate_batch' })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}\n\nจำนวนข้อสอบในคลังล่าสุด: ${data.totalToeicQuestions} ข้อ`);
+      fetchAdminMetrics();
+    } else {
+      alert(`เกิดข้อผิดพลาด: ${data.error || data.message || 'ไม่สามารถสร้างข้อสอบได้'}`);
+    }
   } catch (err) {
-    alert('เกิดข้อผิดพลาดในการสั่งสร้างข้อสอบ: ' + err.message);
+    console.error('Batch gen error:', err);
+    alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err.message);
   } finally {
     if (btn) {
       btn.disabled = false;

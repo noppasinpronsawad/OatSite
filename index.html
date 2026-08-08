@@ -562,6 +562,45 @@
             </div>
           </a>
 
+          <!-- Bento Card 2: TOEIC Reading Test Simulator -->
+          <a href="#toeic" class="bento-card bento-square">
+            <div class="bento-glow"></div>
+            <div class="bento-header">
+              <div class="bento-badge">
+                <span class="badge-dot pulse" style="background: #00d2ff; box-shadow: 0 0 8px #00d2ff;"></span>
+                AI & EDUCATION
+              </div>
+              <span class="bento-status-tag" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff;">พร้อมใช้งาน</span>
+            </div>
+            <div class="bento-body">
+              <div class="bento-icon-wrapper" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff;">
+                <div class="bento-icon">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                  </svg>
+                </div>
+              </div>
+              <h3 class="bento-title">TOEIC Reading Test Simulator</h3>
+              <p class="bento-subtitle">100-Question Exam & CEFR Score Matrix</p>
+              <p class="bento-description">
+                จำลองสนามสอบ TOEIC Reading ครบทั้ง Part 5, 6, 7 พร้อมจับเวลา 75 นาที แปลงคะแนนเปรียบเทียบ CEFR A1-C1 และมีเฉลยละเอียดภาษาไทย
+              </p>
+            </div>
+            <div class="bento-footer">
+              <div class="bento-tags">
+                <span class="bento-chip">Full 100 Qs</span>
+                <span class="bento-chip">Part 5, 6, 7</span>
+                <span class="bento-chip">CEFR Mapping</span>
+              </div>
+              <span class="bento-action-btn">
+                เริ่มทำข้อสอบ
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </div>
+          </a>
+
         </div>
       </div>
     </section>
@@ -897,6 +936,195 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         6. TOEIC READING TEST SIMULATOR (#toeic-view)
+         ==================================================================== -->
+    <section class="page-view" id="toeic-view">
+      <div class="toeic-section">
+        <!-- Top Left Back to Showcase Navigation -->
+        <div class="toeic-top-nav">
+          <a href="#showcase" class="btn-back-showcase">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            กลับไปยัง Showcase
+          </a>
+
+          <!-- Floating Timer Widget -->
+          <div id="toeicTimerWidget" class="toeic-timer-widget" style="display: none;">
+            <span class="timer-icon">⏱️</span>
+            <span id="toeicTimeDisplay" class="timer-digits">75:00</span>
+          </div>
+        </div>
+
+        <!-- Mode Selection Header Screen -->
+        <div id="toeicStartScreen" class="toeic-start-screen">
+          <div class="toeic-hero-card">
+            <div class="toeic-badge">
+              <span class="badge-dot pulse" style="background: #00d2ff; box-shadow: 0 0 8px #00d2ff;"></span>
+              ETS TOEIC SIMULATOR 2026
+            </div>
+            <h1 class="gradient-text" style="font-size: 2.2rem; margin: 0.8rem 0;">TOEIC Reading Test Simulator</h1>
+            <p class="toeic-description">
+              ระบบจำลองการทำข้อสอบ TOEIC Reading 100 ข้อเสมือนจริง ครบทั้ง 3 พาร์ท (Part 5, 6, 7) พร้อมจับเวลา 75 นาที แปลงคะแนนเปรียบเทียบ CEFR A1-C1 และมีระบบเฉลยรายละเอียดภาษาไทยทุกข้อ
+            </p>
+
+            <!-- Mode Selector Cards -->
+            <div class="toeic-mode-grid">
+              <div class="toeic-mode-card active" id="modeFullCard" onclick="window.selectToeicMode && window.selectToeicMode('full')">
+                <div class="mode-header">
+                  <span class="mode-icon">🎯</span>
+                  <span class="mode-tag">โหมดสอบจริง</span>
+                </div>
+                <h3>Full Exam (100 ข้อ)</h3>
+                <p>ข้อสอบครบทั้ง Part 5 (30 ข้อ), Part 6 (16 ข้อ), Part 7 (54 ข้อ)</p>
+                <div class="mode-meta">
+                  <span>⏱️ 75 นาที</span>
+                  <span>📊 Scaled Score 5-495</span>
+                </div>
+              </div>
+
+              <div class="toeic-mode-card" id="modeQuickCard" onclick="window.selectToeicMode && window.selectToeicMode('quick')">
+                <div class="mode-header">
+                  <span class="mode-icon">⚡</span>
+                  <span class="mode-tag">โหมดฝึกซ้อมสั้น</span>
+                </div>
+                <h3>Quick Practice (20 ข้อ)</h3>
+                <p>ทดสอบทักษะอย่างรวดเร็ว เหมาะกับการฝึกฝนสั้นๆ ในช่วงเวลาจำกัด</p>
+                <div class="mode-meta">
+                  <span>⏱️ 15 นาที</span>
+                  <span>⚡ สรุปผลเร็ว</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+              <button type="button" class="btn-admin-primary" id="startExamBtn" style="max-width: 320px; margin: 0 auto; font-size: 1.1rem; padding: 1rem 2rem;">
+                🚀 เริ่มทำข้อสอบทันที
+              </button>
+            </div>
+          </div>
+
+          <!-- Past History Table -->
+          <div class="toeic-history-box" id="toeicHistoryBox">
+            <h3 class="gradient-text" style="font-size: 1.2rem; margin-bottom: 1rem;">📜 ประวัติการทดสอบของคุณ (History)</h3>
+            <div id="toeicHistoryList">
+              <p style="color: var(--text-secondary); font-size: 0.9rem;">ยังไม่มีประวัติการทำข้อสอบ</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Exam Workspace -->
+        <div id="toeicExamWorkspace" class="toeic-exam-workspace" style="display: none;">
+          
+          <!-- Part Switcher Navigation Tabs -->
+          <div class="toeic-part-tabs">
+            <button type="button" class="part-tab active" id="tabPart5" onclick="window.switchToeicPart && window.switchToeicPart(5)">Part 5 (Q1-30)</button>
+            <button type="button" class="part-tab" id="tabPart6" onclick="window.switchToeicPart && window.switchToeicPart(6)">Part 6 (Q31-46)</button>
+            <button type="button" class="part-tab" id="tabPart7" onclick="window.switchToeicPart && window.switchToeicPart(7)">Part 7 (Q47-100)</button>
+          </div>
+
+          <div class="toeic-workspace-grid">
+            
+            <!-- Main Question & Reading Passage Pane -->
+            <div class="toeic-question-pane" id="toeicQuestionPane">
+              <!-- Dynamically rendered by app.js -->
+            </div>
+
+            <!-- Question Palette Sidebar -->
+            <div class="toeic-palette-pane">
+              <div class="palette-header">
+                <h4>Question Navigator</h4>
+                <span id="answeredCountBadge" class="palette-count">0/100</span>
+              </div>
+              <div class="palette-legend">
+                <span><span class="dot answered"></span> ตอบแล้ว</span>
+                <span><span class="dot flagged"></span> ปักหมุด</span>
+                <span><span class="dot current"></span> ข้อปัจจุบัน</span>
+              </div>
+              <div id="questionPaletteGrid" class="palette-grid">
+                <!-- Dynamically generated 1-100 grid buttons -->
+              </div>
+              <button type="button" class="btn-admin-primary btn-danger" id="submitExamBtn" style="width: 100%; margin-top: 1.2rem;">
+                🏁 ส่งข้อสอบ (Submit Exam)
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Exam Results & Score Analysis Screen -->
+        <div id="toeicResultsScreen" class="toeic-results-screen" style="display: none;">
+          <div class="toeic-result-card">
+            <div class="result-header">
+              <span class="result-badge">EXAM RESULTS & ANALYSIS</span>
+              <h2 class="gradient-text">ผลการทดสอบ TOEIC Reading</h2>
+            </div>
+
+            <div class="result-score-grid">
+              <div class="score-box main-score">
+                <span class="score-lbl">คะแนนสอบรวม (Scaled Score)</span>
+                <div class="score-val"><span id="resScaledScore">0</span> <small>/ 495</small></div>
+                <span class="score-sub">คะแนนมาตรฐานสากล ETS</span>
+              </div>
+
+              <div class="score-box cefr-box">
+                <span class="score-lbl">ระดับภาษาอังกฤษ (CEFR Level)</span>
+                <div id="resCefrBadge" class="cefr-pill">B1 Intermediate</div>
+                <span id="resCefrDesc" class="cefr-desc">สื่อสารภาษาอังกฤษในการทำงานระดับกลางได้อย่างมีประสิทธิภาพ</span>
+              </div>
+
+              <div class="score-box raw-box">
+                <span class="score-lbl">จำนวนข้อที่ตอบถูก (Raw Score)</span>
+                <div class="raw-val"><span id="resRawScore">0</span> / <span id="resTotalQuestions">100</span> ข้อ</div>
+                <span id="resAccuracyPercent" class="accuracy-text">ความถูกต้อง 0%</span>
+              </div>
+            </div>
+
+            <!-- Part Breakdown Stats -->
+            <div class="part-breakdown-grid">
+              <div class="part-stat-card">
+                <h4>Part 5: Incomplete Sentences</h4>
+                <div class="part-bar-track"><div id="barPart5" class="part-bar-fill" style="width: 0%;"></div></div>
+                <span id="statPart5">0/30 (0%)</span>
+              </div>
+
+              <div class="part-stat-card">
+                <h4>Part 6: Text Completion</h4>
+                <div class="part-bar-track"><div id="barPart6" class="part-bar-fill" style="width: 0%;"></div></div>
+                <span id="statPart6">0/16 (0%)</span>
+              </div>
+
+              <div class="part-stat-card">
+                <h4>Part 7: Reading Comprehension</h4>
+                <div class="part-bar-track"><div id="barPart7" class="part-bar-fill" style="width: 0%;"></div></div>
+                <span id="statPart7">0/54 (0%)</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="result-actions">
+              <button type="button" class="btn-admin-primary" id="toggleReviewBtn" style="width: auto;">
+                📖 ดูเฉลยรายละเอียดภาษาไทย (Review Answers)
+              </button>
+              <button type="button" class="btn-admin-secondary" id="retakeExamBtn" style="width: auto;">
+                🔄 ทำข้อสอบใหม่อีกครั้ง
+              </button>
+            </div>
+          </div>
+
+          <!-- Detailed Explanation Review Container -->
+          <div id="toeicReviewContainer" class="toeic-review-container" style="display: none; margin-top: 2rem;">
+            <h3 class="gradient-text" style="font-size: 1.4rem; margin-bottom: 1.5rem;">📖 เฉลยและคำอธิบายอย่างละเอียด (Thai Detailed Explanations)</h3>
+            <div id="toeicReviewList" class="review-list">
+              <!-- Dynamically rendered by app.js -->
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 

@@ -15,6 +15,7 @@ const sessionHandler = require('./api/auth/session');
 const postsHandler = require('./api/posts/index');
 const postDetailHandler = require('./api/posts/detail');
 const uploadHandler = require('./api/upload/index');
+const toeicQuestionsHandler = require('./api/toeic/questions');
 
 // API Routes
 app.all('/api/auth/login', (req, res) => loginHandler(req, res));
@@ -22,6 +23,7 @@ app.all('/api/auth/session', (req, res) => sessionHandler(req, res));
 app.all('/api/posts/detail', (req, res) => postDetailHandler(req, res));
 app.all('/api/posts', (req, res) => postsHandler(req, res));
 app.all('/api/upload', (req, res) => uploadHandler(req, res));
+app.all('/api/toeic/questions', (req, res) => toeicQuestionsHandler(req, res));
 
 // Serve Static Frontend Files
 app.use(express.static(__dirname));

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDetailModal();
   initBlogModule();
   initTaxCalculator();
+  initToeicSimulator();
   initScrollEffects();
 });
 
@@ -56,6 +57,7 @@ function initRouter() {
     let targetViewId = `${hash}-view`;
     if (hash === 'about' || hash === 'resume') targetViewId = 'resume-view';
     if (hash === 'tax' || hash === 'tax-calculator') targetViewId = 'tax-view';
+    if (hash === 'toeic' || hash === 'toeic-simulator') targetViewId = 'toeic-view';
     if (hash === 'showcase') targetViewId = 'showcase-view';
 
     const targetView = document.getElementById(targetViewId);
@@ -76,7 +78,7 @@ function initRouter() {
     // Update nav links
     navLinks.forEach(link => {
       const route = link.getAttribute('data-route');
-      if (route === hash || (hash === 'resume' && route === 'about') || (hash === 'tax' && route === 'showcase')) {
+      if (route === hash || (hash === 'resume' && route === 'about') || (hash === 'tax' && route === 'showcase') || (hash === 'toeic' && route === 'showcase')) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');
@@ -844,4 +846,495 @@ function initScrollEffects() {
 function escapeHTML(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ==========================================================================
+   8. TOEIC READING TEST SIMULATOR ENGINE (Part 5, 6, 7 & CEFR Scaling)
+   ========================================================================== */
+let toeicExamMode = 'full'; // 'full' (100 Qs, 75 mins) or 'quick' (20 Qs, 15 mins)
+let toeicQuestions = [];
+let currentToeicIndex = 0;
+let toeicUserAnswers = {};
+let toeicFlagged = {};
+let toeicTimerInterval = null;
+let toeicTimeRemainingSec = 4500;
+
+// ETS TOEIC Reading Score Mapping Matrix (Raw 0-100 -> Scaled Score 5-495)
+const TOEIC_RAW_TO_SCALED = {
+  100: 495, 99: 495, 98: 490, 97: 485, 96: 475, 95: 470, 94: 460, 93: 455, 92: 450, 91: 440,
+  90: 435, 89: 430, 88: 425, 87: 420, 86: 415, 85: 410, 84: 405, 83: 400, 82: 395, 81: 390,
+  80: 385, 79: 380, 78: 375, 77: 370, 76: 365, 75: 360, 74: 355, 73: 350, 72: 345, 71: 340,
+  70: 335, 69: 330, 68: 325, 67: 320, 66: 315, 65: 310, 64: 300, 63: 295, 62: 290, 61: 280,
+  60: 275, 59: 270, 58: 265, 57: 260, 56: 255, 55: 250, 54: 245, 53: 240, 52: 235, 51: 230,
+  50: 225, 49: 220, 48: 215, 47: 210, 46: 200, 45: 195, 44: 190, 43: 185, 42: 180, 41: 170,
+  40: 165, 39: 160, 38: 155, 37: 150, 36: 145, 35: 140, 34: 135, 33: 130, 32: 125, 31: 120,
+  30: 115, 29: 110, 28: 105, 27: 100, 26: 95, 25: 90, 24: 85, 23: 80, 22: 75, 21: 70,
+  20: 60, 19: 55, 18: 50, 17: 45, 16: 40, 15: 35, 14: 30, 13: 25, 12: 20, 11: 15,
+  10: 10, 9: 5, 8: 5, 7: 5, 6: 5, 5: 5, 4: 5, 3: 5, 2: 5, 1: 5, 0: 5
+};
+
+window.selectToeicMode = function(mode) {
+  toeicExamMode = mode;
+  const fullCard = document.getElementById('modeFullCard');
+  const quickCard = document.getElementById('modeQuickCard');
+  if (fullCard && quickCard) {
+    if (mode === 'full') {
+      fullCard.classList.add('active');
+      quickCard.classList.remove('active');
+    } else {
+      quickCard.classList.add('active');
+      fullCard.classList.remove('active');
+    }
+  }
+};
+
+window.switchToeicPart = function(partNum) {
+  const tabs = document.querySelectorAll('.part-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById(`tabPart${partNum}`);
+  if (activeTab) activeTab.classList.add('active');
+
+  // Jump to first question of specified Part
+  const targetIndex = toeicQuestions.findIndex(q => q.part === partNum);
+  if (targetIndex !== -1) {
+    renderToeicQuestion(targetIndex);
+  }
+};
+
+function initToeicSimulator() {
+  renderToeicHistory();
+
+  const startExamBtn = document.getElementById('startExamBtn');
+  const submitExamBtn = document.getElementById('submitExamBtn');
+  const toggleReviewBtn = document.getElementById('toggleReviewBtn');
+  const retakeExamBtn = document.getElementById('retakeExamBtn');
+
+  if (startExamBtn) startExamBtn.addEventListener('click', startToeicExam);
+  if (submitExamBtn) submitExamBtn.addEventListener('click', () => {
+    if (confirm('คุณต้องการส่งข้อสอบและสรุปผลคะแนนใช่หรือไม่?')) {
+      submitToeicExam();
+    }
+  });
+  if (toggleReviewBtn) toggleReviewBtn.addEventListener('click', toggleDetailedReview);
+  if (retakeExamBtn) retakeExamBtn.addEventListener('click', resetToeicExam);
+}
+
+async function startToeicExam() {
+  const startScreen = document.getElementById('toeicStartScreen');
+  const workspace = document.getElementById('toeicExamWorkspace');
+  const resultsScreen = document.getElementById('toeicResultsScreen');
+  const timerWidget = document.getElementById('toeicTimerWidget');
+
+  if (startScreen) startScreen.style.display = 'none';
+  if (resultsScreen) resultsScreen.style.display = 'none';
+
+  // Fetch questions from API
+  try {
+    const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}`);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.questions)) {
+      toeicQuestions = data.questions;
+    }
+  } catch (e) {
+    console.error('Failed to load questions from API:', e);
+  }
+
+  if (!toeicQuestions || toeicQuestions.length === 0) {
+    alert('Failed to load question pool. Please refresh the page.');
+    return;
+  }
+
+  currentToeicIndex = 0;
+  toeicUserAnswers = {};
+  toeicFlagged = {};
+  toeicTimeRemainingSec = toeicExamMode === 'full' ? 4500 : 900; // 75 mins vs 15 mins
+
+  if (workspace) workspace.style.display = 'block';
+  if (timerWidget) timerWidget.style.display = 'flex';
+
+  renderQuestionPalette();
+  renderToeicQuestion(0);
+  startExamTimer();
+}
+
+function startExamTimer() {
+  if (toeicTimerInterval) clearInterval(toeicTimerInterval);
+  updateTimerDisplay();
+
+  toeicTimerInterval = setInterval(() => {
+    toeicTimeRemainingSec--;
+    updateTimerDisplay();
+
+    if (toeicTimeRemainingSec <= 0) {
+      clearInterval(toeicTimerInterval);
+      alert('⏰ หมดเวลาทำข้อสอบแล้ว! ระบบกำลังคำนวณและสรุปผลคะแนนของคุณ...');
+      submitToeicExam();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const display = document.getElementById('toeicTimeDisplay');
+  const widget = document.getElementById('toeicTimerWidget');
+  if (!display) return;
+
+  const mins = Math.floor(toeicTimeRemainingSec / 60);
+  const secs = toeicTimeRemainingSec % 60;
+  const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  display.textContent = formatted;
+
+  if (widget) {
+    if (toeicTimeRemainingSec <= 180) { // < 3 mins
+      widget.className = 'toeic-timer-widget critical';
+    } else if (toeicTimeRemainingSec <= 600) { // < 10 mins
+      widget.className = 'toeic-timer-widget warning';
+    } else {
+      widget.className = 'toeic-timer-widget';
+    }
+  }
+}
+
+function renderToeicQuestion(index) {
+  if (index < 0 || index >= toeicQuestions.length) return;
+  currentToeicIndex = index;
+  const q = toeicQuestions[index];
+
+  // Sync Part tab UI
+  const tabs = document.querySelectorAll('.part-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById(`tabPart${q.part}`);
+  if (activeTab) activeTab.classList.add('active');
+
+  const pane = document.getElementById('toeicQuestionPane');
+  if (!pane) return;
+
+  const isFlagged = !!toeicFlagged[q.question_id];
+  const selectedChoice = toeicUserAnswers[q.question_id] || '';
+
+  // Single Pane for Part 5 / Split View for Part 6 & Part 7
+  if (q.part === 5) {
+    pane.innerHTML = `
+      <div class="q-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+        <span class="q-number-badge" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: 700;">
+          Question ${index + 1} of ${toeicQuestions.length} (Part 5)
+        </span>
+        <button type="button" class="btn-flag ${isFlagged ? 'active' : ''}" onclick="toggleFlagCurrent('${q.question_id}')" style="background: none; border: 1px solid var(--border-color); color: ${isFlagged ? '#ffd60a' : 'var(--text-secondary)'}; padding: 0.35rem 0.85rem; border-radius: 20px; cursor: pointer;">
+          📌 ${isFlagged ? 'Flagged for Review' : 'Flag Question'}
+        </button>
+      </div>
+
+      <div class="q-text-box" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 1.8rem; font-weight: 500;">
+        ${escapeHTML(q.question_text)}
+      </div>
+
+      <div class="choice-list">
+        ${['A', 'B', 'C', 'D'].map(key => `
+          <div class="choice-card ${selectedChoice === key ? 'selected' : ''}" onclick="selectAnswer('${q.question_id}', '${key}')">
+            <input type="radio" name="q_${q.question_id}" value="${key}" class="choice-radio" ${selectedChoice === key ? 'checked' : ''}>
+            <span class="choice-label">(${key})</span>
+            <span class="choice-text">${escapeHTML(q.choices[key])}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="q-nav-buttons" style="display: flex; justify-content: space-between; margin-top: 2rem;">
+        <button type="button" class="btn-admin-secondary" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
+          ⬅️ Previous
+        </button>
+        <button type="button" class="btn-admin-primary" onclick="navigateQuestion(${index + 1})" ${index === toeicQuestions.length - 1 ? 'disabled' : ''}>
+          Next ➡️
+        </button>
+      </div>
+    `;
+  } else {
+    // Split View for Part 6 & 7
+    pane.innerHTML = `
+      <div class="toeic-split-view">
+        <!-- Left Pane: Reading Passage -->
+        <div class="passage-container">
+          <div class="passage-title">📖 ${escapeHTML(q.passage_title || `Part ${q.part} Reading Passage`)}</div>
+          <div class="passage-body">
+            ${q.passage_content || '<p>Read the passage and answer the question on the right.</p>'}
+          </div>
+        </div>
+
+        <!-- Right Pane: Question & Choices -->
+        <div class="passage-q-box">
+          <div class="q-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span class="q-number-badge" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: 700;">
+              Question ${index + 1} of ${toeicQuestions.length} (Part ${q.part})
+            </span>
+            <button type="button" class="btn-flag ${isFlagged ? 'active' : ''}" onclick="toggleFlagCurrent('${q.question_id}')" style="background: none; border: 1px solid var(--border-color); color: ${isFlagged ? '#ffd60a' : 'var(--text-secondary)'}; padding: 0.3rem 0.7rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem;">
+              📌 ${isFlagged ? 'Flagged' : 'Flag'}
+            </button>
+          </div>
+
+          <div class="q-text-box" style="font-size: 1.05rem; line-height: 1.5; margin-bottom: 1.2rem;">
+            ${escapeHTML(q.question_text)}
+          </div>
+
+          <div class="choice-list">
+            ${['A', 'B', 'C', 'D'].map(key => `
+              <div class="choice-card ${selectedChoice === key ? 'selected' : ''}" onclick="selectAnswer('${q.question_id}', '${key}')">
+                <input type="radio" name="q_${q.question_id}" value="${key}" class="choice-radio" ${selectedChoice === key ? 'checked' : ''}>
+                <span class="choice-label">(${key})</span>
+                <span class="choice-text">${escapeHTML(q.choices[key])}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="q-nav-buttons" style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+            <button type="button" class="btn-admin-secondary" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
+              ⬅️ Prev
+            </button>
+            <button type="button" class="btn-admin-primary" onclick="navigateQuestion(${index + 1})" ${index === toeicQuestions.length - 1 ? 'disabled' : ''}>
+              Next ➡️
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  updatePaletteHighlight();
+}
+
+window.navigateQuestion = function(index) {
+  renderToeicQuestion(index);
+};
+
+window.selectAnswer = function(qId, key) {
+  toeicUserAnswers[qId] = key;
+  renderToeicQuestion(currentToeicIndex);
+  updatePaletteHighlight();
+};
+
+window.toggleFlagCurrent = function(qId) {
+  toeicFlagged[qId] = !toeicFlagged[qId];
+  renderToeicQuestion(currentToeicIndex);
+  updatePaletteHighlight();
+};
+
+function renderQuestionPalette() {
+  const grid = document.getElementById('questionPaletteGrid');
+  if (!grid) return;
+
+  grid.innerHTML = toeicQuestions.map((q, idx) => `
+    <button type="button" id="qbtn_${idx}" class="q-btn" onclick="navigateQuestion(${idx})">
+      ${idx + 1}
+    </button>
+  `).join('');
+
+  updatePaletteHighlight();
+}
+
+function updatePaletteHighlight() {
+  toeicQuestions.forEach((q, idx) => {
+    const btn = document.getElementById(`qbtn_${idx}`);
+    if (!btn) return;
+
+    let cls = 'q-btn';
+    if (idx === currentToeicIndex) cls += ' current';
+    if (toeicUserAnswers[q.question_id]) cls += ' answered';
+    if (toeicFlagged[q.question_id]) cls += ' flagged';
+    btn.className = cls;
+  });
+
+  const countBadge = document.getElementById('answeredCountBadge');
+  if (countBadge) {
+    const answeredCount = Object.keys(toeicUserAnswers).length;
+    countBadge.textContent = `${answeredCount}/${toeicQuestions.length}`;
+  }
+}
+
+function submitToeicExam() {
+  if (toeicTimerInterval) clearInterval(toeicTimerInterval);
+
+  let rawTotal = 0;
+  let rawPart5 = 0;
+  let totalPart5 = 0;
+  let rawPart6 = 0;
+  let totalPart6 = 0;
+  let rawPart7 = 0;
+  let totalPart7 = 0;
+
+  toeicQuestions.forEach(q => {
+    const isCorrect = (toeicUserAnswers[q.question_id] === q.correct_answer);
+    if (q.part === 5) {
+      totalPart5++;
+      if (isCorrect) rawPart5++;
+    } else if (q.part === 6) {
+      totalPart6++;
+      if (isCorrect) rawPart6++;
+    } else if (q.part === 7) {
+      totalPart7++;
+      if (isCorrect) rawPart7++;
+    }
+    if (isCorrect) rawTotal++;
+  });
+
+  const totalQuestions = toeicQuestions.length;
+  const normalizedRaw = Math.min(100, Math.max(0, Math.round((rawTotal / totalQuestions) * 100)));
+  const scaledScore = TOEIC_RAW_TO_SCALED[normalizedRaw] || 5;
+
+  let cefrLevel = 'A1';
+  let cefrBadge = 'A1 Beginner';
+  let cefrDesc = 'ทักษะภาษาอังกฤษพื้นฐานเริ่มต้น ควรปูพื้นฐานไวยากรณ์เพิ่มเติม';
+  if (scaledScore >= 470) {
+    cefrLevel = 'C1';
+    cefrBadge = 'C1 Advanced';
+    cefrDesc = 'เข้าใจภาษาอังกฤษในการทำงานระดับสูง บทความซับซ้อน ได้เป็นอย่างดีเยี่ยม';
+  } else if (scaledScore >= 385) {
+    cefrLevel = 'B2';
+    cefrBadge = 'B2 Upper-Intermediate';
+    cefrDesc = 'เข้าใจประเด็นหลักของบทความธุรกิจ เข้าใจและสื่อสารได้อย่างคล่องแคล่ว';
+  } else if (scaledScore >= 275) {
+    cefrLevel = 'B1';
+    cefrBadge = 'B1 Intermediate';
+    cefrDesc = 'สื่อสารภาษาอังกฤษในการทำงานระดับกลางได้อย่างมีประสิทธิภาพ';
+  } else if (scaledScore >= 115) {
+    cefrLevel = 'A2';
+    cefrBadge = 'A2 Elementary';
+    cefrDesc = 'เข้าใจประโยคและคำศัพท์ในชีวิตประจำวันและการทำงานขั้นพื้นฐาน';
+  }
+
+  // Display Results
+  document.getElementById('resScaledScore').textContent = scaledScore;
+  document.getElementById('resRawScore').textContent = rawTotal;
+  document.getElementById('resTotalQuestions').textContent = totalQuestions;
+  
+  const accuracyPct = Math.round((rawTotal / totalQuestions) * 100);
+  document.getElementById('resAccuracyPercent').textContent = `ความถูกต้อง ${accuracyPct}%`;
+
+  const badgeEl = document.getElementById('resCefrBadge');
+  if (badgeEl) {
+    badgeEl.textContent = cefrBadge;
+  }
+  const descEl = document.getElementById('resCefrDesc');
+  if (descEl) descEl.textContent = cefrDesc;
+
+  // Render Part Breakdown Bars
+  const p5Pct = totalPart5 > 0 ? Math.round((rawPart5 / totalPart5) * 100) : 0;
+  const p6Pct = totalPart6 > 0 ? Math.round((rawPart6 / totalPart6) * 100) : 0;
+  const p7Pct = totalPart7 > 0 ? Math.round((rawPart7 / totalPart7) * 100) : 0;
+
+  document.getElementById('barPart5').style.width = `${p5Pct}%`;
+  document.getElementById('statPart5').textContent = `${rawPart5}/${totalPart5} (${p5Pct}%)`;
+
+  document.getElementById('barPart6').style.width = `${p6Pct}%`;
+  document.getElementById('statPart6').textContent = `${rawPart6}/${totalPart6} (${p6Pct}%)`;
+
+  document.getElementById('barPart7').style.width = `${p7Pct}%`;
+  document.getElementById('statPart7').textContent = `${rawPart7}/${totalPart7} (${p7Pct}%)`;
+
+  // Save Attempt to localStorage
+  saveToeicHistory({
+    date: new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    mode: toeicExamMode,
+    rawScore: rawTotal,
+    totalQuestions,
+    scaledScore,
+    cefrLevel
+  });
+
+  // Switch UI Screens
+  document.getElementById('toeicExamWorkspace').style.display = 'none';
+  document.getElementById('toeicTimerWidget').style.display = 'none';
+  document.getElementById('toeicResultsScreen').style.display = 'block';
+
+  renderDetailedReviewList();
+}
+
+function toggleDetailedReview() {
+  const container = document.getElementById('toeicReviewContainer');
+  if (container) {
+    const isHidden = (container.style.display === 'none');
+    container.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) container.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function renderDetailedReviewList() {
+  const reviewList = document.getElementById('toeicReviewList');
+  if (!reviewList) return;
+
+  reviewList.innerHTML = toeicQuestions.map((q, idx) => {
+    const userAns = toeicUserAnswers[q.question_id] || 'ยังไม่ได้ตอบ';
+    const isCorrect = (userAns === q.correct_answer);
+
+    return `
+      <div class="review-card ${isCorrect ? 'correct' : 'incorrect'}">
+        <div class="review-header" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+          <span style="font-weight: 700; color: ${isCorrect ? '#30d158' : '#ff453a'};">
+            ${isCorrect ? '✅ ถูกต้อง (Correct)' : '❌ ตอบผิด (Incorrect)'} — ข้อ ${idx + 1} (Part ${q.part})
+          </span>
+          <span style="font-size: 0.85rem; color: var(--text-tertiary);">CEFR ${q.cefr_level || 'B1'}</span>
+        </div>
+
+        <div style="font-size: 1.05rem; font-weight: 500; margin-bottom: 1rem; color: var(--text-primary);">
+          ${escapeHTML(q.question_text)}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; font-size: 0.95rem;">
+          <div>คำตอบของคุณ: <strong style="color: ${isCorrect ? '#30d158' : '#ff453a'};">(${userAns}) ${escapeHTML(q.choices[userAns] || '')}</strong></div>
+          <div>คำตอบที่ถูกต้อง: <strong style="color: #30d158;">(${q.correct_answer}) ${escapeHTML(q.choices[q.correct_answer])}</strong></div>
+        </div>
+
+        <div class="review-explanation">
+          <strong>💡 คำอธิบายเฉลยภาษาไทย:</strong><br>
+          ${escapeHTML(q.detailed_explanation ? q.detailed_explanation.correct_reason : 'ไม่มีคำอธิบายเพิ่มเติม')}<br><br>
+          <small style="color: var(--text-secondary);">${escapeHTML(q.detailed_explanation ? q.detailed_explanation.incorrect_reasons : '')}</small>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function resetToeicExam() {
+  if (toeicTimerInterval) clearInterval(toeicTimerInterval);
+  document.getElementById('toeicResultsScreen').style.display = 'none';
+  document.getElementById('toeicExamWorkspace').style.display = 'none';
+  document.getElementById('toeicReviewContainer').style.display = 'none';
+  document.getElementById('toeicTimerWidget').style.display = 'none';
+  document.getElementById('toeicStartScreen').style.display = 'block';
+  renderToeicHistory();
+}
+
+function saveToeicHistory(record) {
+  try {
+    let history = JSON.parse(localStorage.getItem('toeic_history') || '[]');
+    history.unshift(record);
+    history = history.slice(0, 10); // Keep last 10 attempts
+    localStorage.setItem('toeic_history', JSON.stringify(history));
+  } catch (e) {
+    console.error('Failed to save history to localStorage:', e);
+  }
+}
+
+function renderToeicHistory() {
+  const container = document.getElementById('toeicHistoryList');
+  if (!container) return;
+
+  try {
+    const history = JSON.parse(localStorage.getItem('toeic_history') || '[]');
+    if (history.length === 0) {
+      container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">ยังไม่มีประวัติการทำข้อสอบ</p>';
+      return;
+    }
+
+    container.innerHTML = history.map(item => `
+      <div class="history-item">
+        <div>
+          <strong style="color: #00d2ff; font-size: 1.1rem;">TOEIC Reading: ${item.scaledScore} / 495 คะแนน</strong>
+          <span style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 0.8rem;">(${item.rawScore}/${item.totalQuestions} ข้อ)</span>
+          <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 0.2rem;">📅 ${item.date} • ${item.mode === 'full' ? 'Full Exam (100 Qs)' : 'Quick Practice (20 Qs)'}</div>
+        </div>
+        <div>
+          <span class="cefr-pill" style="font-size: 0.85rem; padding: 0.25rem 0.75rem;">${item.cefrLevel}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">ยังไม่มีประวัติการทำข้อสอบ</p>';
+  }
 }

@@ -7,14 +7,20 @@
  * Author: Noppasin Pronsawad
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initAdminPanel() {
   initThemeToggle();
   initAuthFlow();
   initDashboard();
   initRichTextEditor();
   initImageCropper();
   initSchedulePicker();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdminPanel);
+} else {
+  initAdminPanel();
+}
 
 // Global state variables
 let autoLogoutTimer = null;
@@ -30,6 +36,57 @@ let filteredAdminPosts = [];
 let currentAdminPage = 1;
 const ADMIN_ITEMS_PER_PAGE = 10;
 const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
+
+window.executeAdminLogin = async function executeLogin() {
+  const pwdEl = document.getElementById('adminPassword');
+  const btnEl = document.getElementById('loginBtn');
+  const password = pwdEl ? pwdEl.value.trim() : '';
+
+  if (!password) {
+    alert('Please enter your admin password.');
+    return;
+  }
+
+  showLoginAlert('', false);
+  if (btnEl) btnEl.disabled = true;
+
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error('Failed to parse response JSON:', e);
+    }
+
+    if (response.ok && data.token) {
+      localStorage.setItem('admin_token', data.token);
+      localStorage.setItem('admin_login_time', Date.now().toString());
+      if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
+
+      if (pwdEl) pwdEl.value = '';
+      showDashboardView();
+      scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
+      loadPostsTable();
+    } else {
+      const errMsg = data.error || (data.message ? data.message : `Authentication failed (Status ${response.status}). Please check Vercel environment variables.`);
+      showLoginAlert(errMsg, true);
+      alert(`Login Failed: ${errMsg}`);
+    }
+  } catch (err) {
+    console.error('Login error:', err);
+    const errMsg = `Network/API error: ${err.message || err}`;
+    showLoginAlert(errMsg, true);
+    alert(`Login Error: ${errMsg}`);
+  } finally {
+    if (btnEl) btnEl.disabled = false;
+  }
+};
 
 window.switchAdminTab = function(tab) {
   const blogSec = document.getElementById('blogManagementSection');
@@ -214,72 +271,20 @@ function initAuthFlow() {
     forceLogout();
   }
 
-  const loginBtn = document.getElementById('loginBtn');
-
-  async function executeLogin() {
-    const password = passwordInput ? passwordInput.value.trim() : '';
-
-    if (!password) {
-      alert('Please enter your admin password.');
-      return;
-    }
-
-    showLoginAlert('', false);
-    if (loginBtn) loginBtn.disabled = true;
-
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-
-      let data = {};
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.error('Failed to parse response JSON:', e);
-      }
-
-      if (response.ok && data.token) {
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_login_time', Date.now().toString());
-        if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
-
-        if (passwordInput) passwordInput.value = '';
-        showDashboardView();
-        scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
-        loadPostsTable();
-      } else {
-        const errMsg = data.error || (data.message ? data.message : `Authentication failed (Status ${response.status}). Please check Vercel environment variables.`);
-        showLoginAlert(errMsg, true);
-        alert(`Login Failed: ${errMsg}`);
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      const errMsg = `Network/API error: ${err.message || err}`;
-      showLoginAlert(errMsg, true);
-      alert(`Login Error: ${errMsg}`);
-    } finally {
-      if (loginBtn) loginBtn.disabled = false;
-    }
-  }
-
-  window.executeAdminLogin = executeLogin;
-
   // Handle Login Submit and Button Click (Prevents Native HTML Form Refresh)
   if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      executeLogin();
+      window.executeAdminLogin();
       return false;
     });
   }
 
+  const loginBtn = document.getElementById('loginBtn');
   if (loginBtn) {
     loginBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      executeLogin();
+      window.executeAdminLogin();
       return false;
     });
   }
@@ -288,7 +293,7 @@ function initAuthFlow() {
     passwordInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        executeLogin();
+        window.executeAdminLogin();
         return false;
       }
     });

@@ -4,7 +4,7 @@
  * Author: Noppasin Pronsawad
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   initThemeToggle();
   initRouter();
   initAnimatedCounters();
@@ -13,7 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initTaxCalculator();
   initToeicSimulator();
   initScrollEffects();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 /* ==========================================================================
    1. Light / Dark Theme Switcher

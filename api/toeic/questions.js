@@ -1005,8 +1005,16 @@ module.exports = async (req, res) => {
     let selectedQuestions = questions;
 
     if (mode === 'quick') {
-      // Pick 20 questions across Parts
-      selectedQuestions = questions.slice(0, 20);
+      // Proportional 20-question sampling: 6 Part 5, 3 Part 6, 11 Part 7
+      const part5 = questions.filter(q => q.part === 5);
+      const part6 = questions.filter(q => q.part === 6);
+      const part7 = questions.filter(q => q.part === 7);
+
+      selectedQuestions = [
+        ...part5.slice(0, 6),
+        ...part6.slice(0, 3),
+        ...part7.slice(0, 11)
+      ];
     }
 
     // Shuffle choices evenly across A, B, C, D

@@ -31,6 +31,79 @@ let currentAdminPage = 1;
 const ADMIN_ITEMS_PER_PAGE = 10;
 const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
 
+window.switchAdminTab = function(tab) {
+  const blogSec = document.getElementById('blogManagementSection');
+  const sysSec = document.getElementById('systemDashboardSection');
+  const blogBtn = document.getElementById('blogMgmtTabBtn');
+  const sysBtn = document.getElementById('sysDashTabBtn');
+
+  if (tab === 'system') {
+    if (blogSec) blogSec.style.display = 'none';
+    if (sysSec) sysSec.style.display = 'block';
+    if (blogBtn) blogBtn.classList.remove('active');
+    if (sysBtn) sysBtn.classList.add('active');
+    fetchAdminMetrics();
+  } else {
+    if (sysSec) sysSec.style.display = 'none';
+    if (blogSec) blogSec.style.display = 'block';
+    if (sysBtn) sysBtn.classList.remove('active');
+    if (blogBtn) blogBtn.classList.add('active');
+  }
+};
+
+async function fetchAdminMetrics() {
+  const token = localStorage.getItem('admin_jwt_token');
+  if (!token) return;
+
+  try {
+    const res = await fetch('/api/admin/metrics', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (data.success && data.metrics) {
+      const m = data.metrics;
+      
+      // Vercel
+      if (m.vercel) {
+        document.getElementById('m_vercel_status').textContent = m.vercel.status;
+        document.getElementById('m_vercel_region').textContent = m.vercel.region;
+      }
+
+      // Cloudinary
+      if (m.cloudinary) {
+        document.getElementById('m_cloud_name').textContent = m.cloudinary.cloudName;
+      }
+
+      // MongoDB
+      if (m.mongodb) {
+        document.getElementById('m_mongo_posts').textContent = m.mongodb.totalPosts;
+        document.getElementById('m_mongo_toeic').textContent = m.mongodb.totalToeicQuestions;
+      }
+
+      // Gemini API
+      if (m.gemini) {
+        document.getElementById('m_gemini_key').textContent = m.gemini.maskedKey;
+        document.getElementById('m_gemini_status').textContent = m.gemini.status;
+        const badge = document.getElementById('m_gemini_badge');
+        if (badge) {
+          if (m.gemini.configured) {
+            badge.style.background = 'rgba(48, 209, 88, 0.15)';
+            badge.style.color = '#30d158';
+            badge.textContent = 'GEMINI ACTIVE';
+          } else {
+            badge.style.background = 'rgba(255, 69, 58, 0.15)';
+            badge.style.color = '#ff453a';
+            badge.textContent = 'KEY MISSING';
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch admin metrics:', err);
+  }
+}
+
 /* ==========================================================================
    1. Light / Dark Theme Switcher
    ========================================================================== */
@@ -222,6 +295,15 @@ function showDashboardView() {
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('dashboardView').style.display = 'block';
   startSessionHeartbeat();
+  fetchAdminMetrics();
+
+  const refreshBtn = document.getElementById('refreshMetricsBtn');
+  if (refreshBtn && !refreshBtn.dataset.bound) {
+    refreshBtn.dataset.bound = 'true';
+    refreshBtn.addEventListener('click', () => {
+      fetchAdminMetrics();
+    });
+  }
 }
 
 function showLoginAlert(msg, isError) {

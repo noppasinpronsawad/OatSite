@@ -928,6 +928,20 @@ async function startToeicExam() {
   if (startScreen) startScreen.style.display = 'none';
   if (resultsScreen) resultsScreen.style.display = 'none';
 
+  if (workspace) workspace.style.display = 'block';
+  if (timerWidget) timerWidget.style.display = 'flex';
+
+  const pane = document.getElementById('toeicQuestionPane');
+  if (pane) {
+    pane.innerHTML = `
+      <div class="toeic-loading-container" style="text-align: center; padding: 4rem 2rem;">
+        <div class="spinner-ring" style="display: inline-block; width: 48px; height: 48px; border: 4px solid rgba(0, 210, 255, 0.2); border-top-color: #00d2ff; border-radius: 50%; animation: toeicSpin 0.8s linear infinite; margin-bottom: 1.5rem;"></div>
+        <h3 style="font-size: 1.3rem; color: #00d2ff; margin-bottom: 0.5rem;">⏳ กำลังจัดเตรียมคลังข้อสอบและสุ่มโจทย์...</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">โปรดรอสักครู่ ระบบกำลังจัดสรรพาร์ทข้อสอบและเฉลยภาษาไทย</p>
+      </div>
+    `;
+  }
+
   // Fetch questions from API
   try {
     const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}`);
@@ -948,9 +962,6 @@ async function startToeicExam() {
   toeicUserAnswers = {};
   toeicFlagged = {};
   toeicTimeRemainingSec = toeicExamMode === 'full' ? 4500 : 900; // 75 mins vs 15 mins
-
-  if (workspace) workspace.style.display = 'block';
-  if (timerWidget) timerWidget.style.display = 'flex';
 
   renderQuestionPalette();
   renderToeicQuestion(0);
@@ -1037,12 +1048,12 @@ function renderToeicQuestion(index) {
         `).join('')}
       </div>
 
-      <div class="q-nav-buttons" style="display: flex; justify-content: space-between; margin-top: 2rem;">
-        <button type="button" class="btn-admin-secondary" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
-          ⬅️ Previous
+      <div class="q-nav-buttons" style="display: flex; justify-content: space-between; gap: 1rem; margin-top: 2rem;">
+        <button type="button" class="btn-q-prev" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
+          ⬅️ Previous Question
         </button>
-        <button type="button" class="btn-admin-primary" onclick="navigateQuestion(${index + 1})" ${index === toeicQuestions.length - 1 ? 'disabled' : ''}>
-          Next ➡️
+        <button type="button" class="btn-q-next" onclick="navigateQuestion(${index + 1})" ${index === toeicQuestions.length - 1 ? 'disabled' : ''}>
+          Next Question ➡️
         </button>
       </div>
     `;
@@ -1083,12 +1094,12 @@ function renderToeicQuestion(index) {
             `).join('')}
           </div>
 
-          <div class="q-nav-buttons" style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-            <button type="button" class="btn-admin-secondary" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
-              ⬅️ Prev
+          <div class="q-nav-buttons" style="display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem;">
+            <button type="button" class="btn-q-prev" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
+              ⬅️ Previous Question
             </button>
-            <button type="button" class="btn-admin-primary" onclick="navigateQuestion(${index + 1})" ${index === toeicQuestions.length - 1 ? 'disabled' : ''}>
-              Next ➡️
+            <button type="button" class="btn-q-next" onclick="navigateQuestion(${index + 1})" ${index === toeicQuestions.length - 1 ? 'disabled' : ''}>
+              Next Question ➡️
             </button>
           </div>
         </div>

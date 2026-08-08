@@ -765,41 +765,134 @@
 
     <!-- DASHBOARD CMS VIEW -->
     <div id="dashboardView" class="admin-card" style="display: none;">
-      <div class="dashboard-header">
-        <div class="dashboard-title-group">
-          <h2 class="gradient-text">Blog Management Dashboard</h2>
-          <p style="font-size: 0.9rem; color: var(--text-secondary);">Search, filter, edit, schedule & publish articles stored in MongoDB Atlas.</p>
+      
+      <!-- Top Navigation Tabs -->
+      <div class="admin-tab-nav" style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.8rem;">
+        <button type="button" class="btn-admin-secondary active" id="blogMgmtTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('blog')">
+          📰 Blog Management
+        </button>
+        <button type="button" class="btn-admin-secondary" id="sysDashTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('system')">
+          📊 System Dashboard
+        </button>
+      </div>
+
+      <!-- BLOG MANAGEMENT SECTION -->
+      <div id="blogManagementSection">
+        <div class="dashboard-header">
+          <div class="dashboard-title-group">
+            <h2 class="gradient-text">Blog Management</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Search, filter, edit, schedule & publish articles stored in MongoDB Atlas.</p>
+          </div>
+          <div class="dashboard-actions">
+            <button class="btn-admin-primary" id="openAddModalBtn" style="width: auto;">
+              <span>+ Create New Post</span>
+            </button>
+            <button class="btn-admin-secondary btn-danger" id="logoutBtn">Logout</button>
+          </div>
         </div>
-        <div class="dashboard-actions">
-          <button class="btn-admin-primary" id="openAddModalBtn" style="width: auto;">
-            <span>+ Create New Post</span>
-          </button>
-          <button class="btn-admin-secondary btn-danger" id="logoutBtn">Logout</button>
+
+        <div id="dashboardAlert" class="alert-banner"></div>
+
+        <!-- ADMIN SEARCH & FILTER BAR -->
+        <div class="admin-filter-bar">
+          <div class="filter-search-box">
+            <input type="text" id="adminSearchInput" class="admin-input" placeholder="🔍 Search articles by title or keyword...">
+          </div>
+          <div class="filter-select-box">
+            <select id="adminCategorySelect" class="admin-select">
+              <option value="all">All Categories</option>
+              <option value="Daily Life">Daily Life</option>
+              <option value="Science">Science</option>
+              <option value="Technology">Technology</option>
+              <option value="Investment">Investment</option>
+            </select>
+          </div>
+          <div class="filter-date-box">
+            <input type="text" id="adminFromDate" class="admin-input date-picker-input" placeholder="📅 From Date">
+            <span style="color: var(--text-tertiary); font-size: 0.85rem;">to</span>
+            <input type="text" id="adminToDate" class="admin-input date-picker-input" placeholder="📅 To Date">
+          </div>
+          <button type="button" class="btn-admin-secondary" id="adminResetFilterBtn">Reset</button>
         </div>
       </div>
 
-      <div id="dashboardAlert" class="alert-banner"></div>
+      <!-- SYSTEM MONITORING DASHBOARD SECTION -->
+      <div id="systemDashboardSection" style="display: none;">
+        <div class="dashboard-header">
+          <div class="dashboard-title-group">
+            <h2 class="gradient-text">System Monitoring Dashboard</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Real-time usage quotas & system health metrics for Vercel, Cloudinary, MongoDB & Gemini API.</p>
+          </div>
+          <div class="dashboard-actions">
+            <button class="btn-admin-primary" id="refreshMetricsBtn" style="width: auto;">
+              <span>🔄 Refresh Metrics</span>
+            </button>
+          </div>
+        </div>
 
-      <!-- ADMIN SEARCH & FILTER BAR -->
-      <div class="admin-filter-bar">
-        <div class="filter-search-box">
-          <input type="text" id="adminSearchInput" class="admin-input" placeholder="🔍 Search articles by title or keyword...">
+        <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+          
+          <!-- Vercel Metrics Card -->
+          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-size: 1.5rem;">▲</span>
+              <span class="timer-badge" style="background: rgba(48, 209, 88, 0.15); color: #30d158;">VERCEL ACTIVE</span>
+            </div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Vercel Serverless</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Hosting & Edge Functions Status</p>
+            <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div>Status: <strong id="m_vercel_status" style="color: #30d158;">Active (Production)</strong></div>
+              <div>Region: <strong id="m_vercel_region">Singapore (SIN1)</strong></div>
+              <div>Bandwidth: <strong>100 GB / Month (Free Tier)</strong></div>
+            </div>
+          </div>
+
+          <!-- Cloudinary Metrics Card -->
+          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-size: 1.5rem;">☁️</span>
+              <span id="m_cloud_badge" class="timer-badge" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff;">CLOUDINARY OK</span>
+            </div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Cloudinary Media</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Image Storage & Transformations</p>
+            <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div>Cloud Name: <strong id="m_cloud_name">oatsite_blog</strong></div>
+              <div>Storage Quota: <strong>25.0 GB Free Tier</strong></div>
+              <div>Transformations: <strong>25,000 / Month</strong></div>
+            </div>
+          </div>
+
+          <!-- MongoDB Metrics Card -->
+          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-size: 1.5rem;">🍃</span>
+              <span id="m_mongo_badge" class="timer-badge" style="background: rgba(48, 209, 88, 0.15); color: #30d158;">MONGODB OK</span>
+            </div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">MongoDB Atlas</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">NoSQL Database Cluster</p>
+            <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div>Total Posts: <strong id="m_mongo_posts">0</strong></div>
+              <div>TOEIC Questions: <strong id="m_mongo_toeic">100</strong></div>
+              <div>Cluster Storage: <strong>512 MB Free Tier (M0)</strong></div>
+            </div>
+          </div>
+
+          <!-- Gemini API Metrics Card -->
+          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-size: 1.5rem;">✨</span>
+              <span id="m_gemini_badge" class="timer-badge" style="background: rgba(175, 82, 222, 0.15); color: #af52de;">GEMINI READY</span>
+            </div>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Google Gemini API</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">AI Question Generator Service</p>
+            <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div>API Key Status: <strong id="m_gemini_key">AIzaSy... (Active)</strong></div>
+              <div>Generator Status: <strong id="m_gemini_status" style="color: #30d158;">Active & Ready</strong></div>
+              <div>Free Tier Limits: <strong>15 RPM / 1,500 RPD</strong></div>
+            </div>
+          </div>
+
         </div>
-        <div class="filter-select-box">
-          <select id="adminCategorySelect" class="admin-select">
-            <option value="all">All Categories</option>
-            <option value="Daily Life">Daily Life</option>
-            <option value="Science">Science</option>
-            <option value="Technology">Technology</option>
-            <option value="Investment">Investment</option>
-          </select>
-        </div>
-        <div class="filter-date-box">
-          <input type="text" id="adminFromDate" class="admin-input date-picker-input" placeholder="📅 From Date">
-          <span style="color: var(--text-tertiary); font-size: 0.85rem;">to</span>
-          <input type="text" id="adminToDate" class="admin-input date-picker-input" placeholder="📅 To Date">
-        </div>
-        <button type="button" class="btn-admin-secondary" id="adminResetFilterBtn">Reset</button>
       </div>
 
       <div class="posts-table-container">

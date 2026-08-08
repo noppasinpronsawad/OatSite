@@ -2963,3 +2963,62 @@ dialog.modal-spec::backdrop {
   color: #00d2ff !important;
 }
 
+/* TOEIC Question Navigation Buttons (High-Contrast Prominent Buttons) */
+.btn-q-prev, .btn-q-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.6rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 48px;
+}
+
+.btn-q-prev {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary) !important;
+  backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .btn-q-prev {
+  background: #e5e5ea;
+  color: #1c1c1e !important;
+  border-color: #d1d1d6;
+}
+
+.btn-q-prev:hover:not(:disabled) {
+  background: rgba(0, 210, 255, 0.15);
+  border-color: #00d2ff;
+  color: #00d2ff !important;
+  transform: translateX(-2px);
+}
+
+.btn-q-next {
+  background: linear-gradient(135deg, #00d2ff 0%, #0072ff 100%);
+  border: none;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.35);
+}
+
+.btn-q-next:hover:not(:disabled) {
+  transform: translateX(2px);
+  box-shadow: 0 6px 25px rgba(0, 210, 255, 0.55);
+}
+
+.btn-q-prev:disabled, .btn-q-next:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+@keyframes toeicSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

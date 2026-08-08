@@ -15,12 +15,7 @@ function initAdminPanel() {
   try { initImageCropper(); } catch(e) { console.error('Cropper Init Error:', e); }
   try { initSchedulePicker(); } catch(e) { console.error('Schedule Init Error:', e); }
 }
-<<<<<<< HEAD
 
-
-
-=======
->>>>>>> bdf5070efa088822db4d7f9247a1dabfe9d010dc
 // Global state variables
 let autoLogoutTimer = null;
 let sessionHeartbeatTimer = null;
@@ -39,31 +34,19 @@ const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
 let isExecutingLogin = false;
 
 window.executeAdminLogin = async function executeLogin() {
-  console.log('[Login] executeAdminLogin called, isExecutingLogin=', isExecutingLogin);
-if (isExecutingLogin) {
-console.log('[Login] Already executing, ignoring duplicate call');
-return;
-  }
-const pwdEl = document.getElementById('adminPassword');
+  if (isExecutingLogin) return;
+
+  const pwdEl = document.getElementById('adminPassword');
   const btnEl = document.getElementById('loginBtn');
   const password = pwdEl ? pwdEl.value.trim() : '';
-<<<<<<< HEAD
 
   if (!password) {
     showLoginAlert('⚠️ กรุณากรอกรหัสผ่านก่อนเข้าสู่ระบบ', true);
     if (pwdEl) pwdEl.focus();
     return;
-=======
-console.log('[Login] Password length:', password.length, '| Button found:', !!btnEl);
-if (!password) {
-showLoginAlert('Please enter your admin password.', true);
-if (pwdEl) pwdEl.focus();
-return;
->>>>>>> bdf5070efa088822db4d7f9247a1dabfe9d010dc
   }
-// Set loading state
+
   isExecutingLogin = true;
-<<<<<<< HEAD
   showLoginAlert('🔄 กำลังเข้าสู่ระบบ กรุณารอสักครู่...', false);
   if (btnEl) {
     btnEl.disabled = true;
@@ -114,63 +97,6 @@ return;
       btnEl.disabled = false;
       btnEl.innerHTML = '<span>🔓 Unlock CMS</span>';
     }
-=======
-  showLoginAlert('Logging in, please wait...', false);
-  if (btnEl) {
-btnEl.disabled = true;
-btnEl.textContent = 'Logging in...';
-  }
-console.log('[Login] Sending POST /api/auth/login ...');
-try {
-const response = await fetch('/api/auth/login', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ password })
-});
-console.log('[Login] Response status:', response.status);
-let data = {};
-try {
-data = await response.json();
-console.log('[Login] Response data keys:', Object.keys(data));
-} catch (e) {
-console.error('[Login] Failed to parse response JSON:', e);
-}
-if (response.ok && data.token) {
-console.log('[Login] Login successful, storing token...');
-try {
-localStorage.setItem('admin_token', data.token);
-localStorage.setItem('admin_login_time', Date.now().toString());
-if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
-} catch(e) {
-console.error('[Login] localStorage error:', e);
-showLoginAlert('Error: Could not save session. Please enable localStorage in your browser.', true);
-return;
-}
-showLoginAlert('Login successful! Loading dashboard...', false);
-if (pwdEl) pwdEl.value = '';
-setTimeout(function() {
-showDashboardView();
-scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
-loadPostsTable();
-}, 400);
-} else {
-var errMsg = (data && (data.error || data.message)) || ('Authentication failed (HTTP ' + response.status + ')');
-console.error('[Login] Login failed:', errMsg);
-showLoginAlert('Login failed: ' + errMsg, true);
-if (pwdEl) { pwdEl.value = ''; pwdEl.focus(); }
-}
-  } catch (err) {
-console.error('[Login] Network/API error:', err);
-var netErr = 'Network error: ' + (err.message || String(err));
-showLoginAlert(netErr, true);
-  } finally {
-isExecutingLogin = false;
-if (btnEl) {
-btnEl.disabled = false;
-btnEl.textContent = ' Unlock CMS';
-}
-console.log('[Login] finally block: isExecutingLogin reset to false');
->>>>>>> bdf5070efa088822db4d7f9247a1dabfe9d010dc
   }
 };
 
@@ -1295,7 +1221,6 @@ const modal = document.getElementById('newsDetailModal');
 };
 
 window.run10kBatchGen = async function() {
-<<<<<<< HEAD
   if (!confirm('🤖 เริ่มการสร้างชุดข้อสอบภาษาอังกฤษ TOEIC เพิ่มเติมด้วย Gemini AI ลงใน MongoDB Atlas ?')) return;
   const token = localStorage.getItem('admin_jwt_token') || localStorage.getItem('admin_token');
   if (!token) return alert('🚨 กรุณาล็อกอินใหม่อีกครั้ง');
@@ -1303,15 +1228,6 @@ window.run10kBatchGen = async function() {
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<span>⚡ กำลังสร้างคำถามใน MongoDB Atlas...</span>';
-=======
-  if (!confirm('Generate TOEIC questions batch into MongoDB Atlas?')) return;
-  const token = localStorage.getItem('admin_jwt_token') || localStorage.getItem('admin_token');
-  if (!token) return alert('Not authenticated');
-  const btn = document.getElementById('startBatchGenBtn');
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<span>Generating in MongoDB Atlas...</span>';
->>>>>>> bdf5070efa088822db4d7f9247a1dabfe9d010dc
   }
   try {
     const res = await fetch('/api/admin/metrics', {
@@ -1324,7 +1240,6 @@ window.run10kBatchGen = async function() {
     });
     const data = await res.json();
     if (res.ok && data.success) {
-<<<<<<< HEAD
       alert(`🎉 ${data.message}
 
 จำนวนคลังข้อสอบปัจจุบัน: ${data.totalToeicQuestions} ข้อ`);
@@ -1339,20 +1254,6 @@ window.run10kBatchGen = async function() {
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<span>⚡ สั่งสร้างข้อสอบเพิ่ม 10,000 ข้อ</span>';
-=======
-      alert('Done: ' + data.message + '\n\nTotal: ' + data.totalToeicQuestions + ' questions');
-      fetchAdminMetrics();
-    } else {
-      alert('Error: ' + (data.error || data.message || 'Unknown error'));
-    }
-  } catch (err) {
-    console.error('Batch gen error:', err);
-    alert('Error: ' + err.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = 'Generate Batch';
->>>>>>> bdf5070efa088822db4d7f9247a1dabfe9d010dc
     }
   }
 };
@@ -1417,15 +1318,9 @@ ${q.detailed_explanation ? `
 };
 
 /* ==========================================================================
-<<<<<<< HEAD
    Admin Panel Initialization Bootstrapper
    Executes strictly AFTER all global window methods and handlers are defined.
    ========================================================================== */
-=======
-Admin Panel Initialization Bootstrapper
-Executes strictly AFTER all global window methods and handlers are defined.
-========================================================================== */
->>>>>>> bdf5070efa088822db4d7f9247a1dabfe9d010dc
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initAdminPanel);
 } else {

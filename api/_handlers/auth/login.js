@@ -22,10 +22,27 @@ module.exports = async (req, res) => {
 
   try {
     let body = req.body || {};
+
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
     } else if (Buffer.isBuffer(body)) {
       try { body = JSON.parse(body.toString('utf-8')); } catch (e) {}
+    }
+
+    // Fallback stream parsing if req.body is unpopulated
+    if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+      try {
+        const buffers = [];
+        for await (const chunk of req) {
+          buffers.push(chunk);
+        }
+        const rawData = Buffer.concat(buffers).toString('utf-8');
+        if (rawData) {
+          body = JSON.parse(rawData);
+        }
+      } catch (streamErr) {
+        console.warn('Stream parsing fallback failed:', streamErr.message);
+      }
     }
 
     const password = String(body.password || '').trim();
@@ -79,6 +96,6 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Login handler error:', err);
-    return res.status(500).json({ error: err.message || 'Internal server error during login' });
+    return res.status(500).json({ error: `Login Error: ${err.message || String(err)}` });
   }
 };

@@ -8,12 +8,12 @@
  */
 
 function initAdminPanel() {
-  initThemeToggle();
-  initAuthFlow();
-  initDashboard();
-  initRichTextEditor();
-  initImageCropper();
-  initSchedulePicker();
+  try { initThemeToggle(); } catch(e) { console.error('Theme Init Error:', e); }
+  try { initAuthFlow(); } catch(e) { console.error('Auth Init Error:', e); }
+  try { initDashboard(); } catch(e) { console.error('Dashboard Init Error:', e); }
+  try { initRichTextEditor(); } catch(e) { console.error('Editor Init Error:', e); }
+  try { initImageCropper(); } catch(e) { console.error('Cropper Init Error:', e); }
+  try { initSchedulePicker(); } catch(e) { console.error('Schedule Init Error:', e); }
 }
 
 if (document.readyState === 'loading') {
@@ -253,56 +253,66 @@ function stopSessionHeartbeat() {
 }
 
 function initAuthFlow() {
-  const loginForm = document.getElementById('loginForm');
-  const passwordInput = document.getElementById('adminPassword');
-  const loginAlert = document.getElementById('loginAlert');
-  const logoutBtn = document.getElementById('logoutBtn');
+  try {
+    const loginForm = document.getElementById('loginForm');
+    const passwordInput = document.getElementById('adminPassword');
+    const loginAlert = document.getElementById('loginAlert');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-  // Check existing session on load
-  const token = localStorage.getItem('admin_token');
-  const loginTime = parseInt(localStorage.getItem('admin_login_time') || '0', 10);
-  const now = Date.now();
+    // Check existing session on load
+    let token = null;
+    let loginTime = 0;
+    try {
+      token = localStorage.getItem('admin_token');
+      loginTime = parseInt(localStorage.getItem('admin_login_time') || '0', 10);
+    } catch(e) {
+      console.warn("localStorage not available", e);
+    }
+    const now = Date.now();
 
-  if (token && loginTime && (now - loginTime < FORTY_FIVE_MINUTES_MS)) {
-    const remainingMs = FORTY_FIVE_MINUTES_MS - (now - loginTime);
-    showDashboardView();
-    scheduleAutoLogout(remainingMs);
-  } else {
-    forceLogout();
-  }
+    if (token && loginTime && (now - loginTime < FORTY_FIVE_MINUTES_MS)) {
+      const remainingMs = FORTY_FIVE_MINUTES_MS - (now - loginTime);
+      showDashboardView();
+      scheduleAutoLogout(remainingMs);
+    } else {
+      forceLogout();
+    }
 
-  // Handle Login Submit and Button Click (Prevents Native HTML Form Refresh)
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      window.executeAdminLogin();
-      return false;
-    });
-  }
-
-  const loginBtn = document.getElementById('loginBtn');
-  if (loginBtn) {
-    loginBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.executeAdminLogin();
-      return false;
-    });
-  }
-
-  if (passwordInput) {
-    passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+    // Handle Login Submit and Button Click (Prevents Native HTML Form Refresh)
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         window.executeAdminLogin();
         return false;
-      }
-    });
-  }
+      });
+    }
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      forceLogout();
-    });
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+      loginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.executeAdminLogin();
+        return false;
+      });
+    }
+
+    if (passwordInput) {
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          window.executeAdminLogin();
+          return false;
+        }
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        forceLogout();
+      });
+    }
+  } catch(err) {
+    console.error("Critical error in initAuthFlow:", err);
   }
 }
 

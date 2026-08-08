@@ -749,7 +749,7 @@
 
       <div id="loginAlert" class="alert-banner alert-error"></div>
 
-      <form id="loginForm">
+      <form id="loginForm" onsubmit="event.preventDefault(); window.executeAdminLogin && window.executeAdminLogin(); return false;">
         <div class="admin-form-group">
           <div>
             <label class="admin-label" for="adminPassword">Admin Password</label>
@@ -1186,7 +1186,7 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=2.5"></script>
+  <script src="/admin/admin.js?v=2.6"></script>
 </body>
 
 </html>

@@ -37,7 +37,11 @@ let currentAdminPage = 1;
 const ADMIN_ITEMS_PER_PAGE = 10;
 const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
 
+let isExecutingLogin = false;
+
 window.executeAdminLogin = async function executeLogin() {
+  if (isExecutingLogin) return;
+
   const pwdEl = document.getElementById('adminPassword');
   const btnEl = document.getElementById('loginBtn');
   const password = pwdEl ? pwdEl.value.trim() : '';
@@ -47,6 +51,7 @@ window.executeAdminLogin = async function executeLogin() {
     return;
   }
 
+  isExecutingLogin = true;
   showLoginAlert('', false);
   if (btnEl) btnEl.disabled = true;
 
@@ -84,6 +89,7 @@ window.executeAdminLogin = async function executeLogin() {
     showLoginAlert(errMsg, true);
     alert(`Login Error: ${errMsg}`);
   } finally {
+    isExecutingLogin = false;
     if (btnEl) btnEl.disabled = false;
   }
 };
@@ -278,31 +284,12 @@ function initAuthFlow() {
       forceLogout();
     }
 
-    // Handle Login Submit and Button Click (Prevents Native HTML Form Refresh)
+    // Handle Login Submit (Prevents Native HTML Form Refresh)
     if (loginForm) {
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         window.executeAdminLogin();
         return false;
-      });
-    }
-
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) {
-      loginBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.executeAdminLogin();
-        return false;
-      });
-    }
-
-    if (passwordInput) {
-      passwordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          window.executeAdminLogin();
-          return false;
-        }
       });
     }
 

@@ -334,8 +334,7 @@ function initImageCropper() {
         const croppedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         closeCropModal();
 
-        const token = localStorage.getItem('admin_token');
-        const res = await fetch('/api/upload', {
+        let res = await fetch('/api/upload', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -343,6 +342,19 @@ function initImageCropper() {
           },
           body: JSON.stringify({ image: croppedBase64 })
         });
+
+        // Robust fallback retry if Vercel route returns 404 for /api/upload
+        if (res.status === 404) {
+          console.warn('/api/upload returned 404, retrying /api/upload/index...');
+          res = await fetch('/api/upload/index', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ image: croppedBase64 })
+          });
+        }
 
         if (res.status === 401) {
           forceLogout();

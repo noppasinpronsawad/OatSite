@@ -332,8 +332,7 @@ function initImageCropper() {
         });
 
         const croppedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-        closeCropModal();
-
+        const token = localStorage.getItem('admin_token') || '';
         let res = await fetch('/api/upload', {
           method: 'POST',
           headers: {

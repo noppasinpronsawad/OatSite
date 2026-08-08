@@ -349,7 +349,20 @@ function initImageCropper() {
           return;
         }
 
-        const data = await res.json();
+        let data = {};
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          try {
+            data = await res.json();
+          } catch (e) {
+            data = { error: 'Invalid JSON response from server' };
+          }
+        } else {
+          const rawText = await res.text();
+          console.error('Server returned non-JSON error:', rawText);
+          data = { error: `Server returned HTTP status ${res.status}` };
+        }
+
         if (res.ok && data.url) {
           postImageUrlInput.value = data.url;
           imagePreviewBox.src = data.url;
@@ -357,12 +370,12 @@ function initImageCropper() {
           if (cropUrlBtn) cropUrlBtn.style.display = 'block';
           if (dropzoneText) dropzoneText.textContent = '✅ Image cropped & uploaded to Cloudinary!';
         } else {
-          alert(`Upload Error: ${data.error || 'Failed to upload'}`);
+          alert(`Upload Error: ${data.error || 'Failed to upload image'}`);
           if (dropzoneText) dropzoneText.textContent = '📸 Click or drag image file here to crop & upload';
         }
       } catch (err) {
         console.error('Crop upload error:', err);
-        alert('CORS restriction on external image URL or failed to upload cropped image.');
+        alert(`Crop upload failed: ${err.message || err}`);
         if (dropzoneText) dropzoneText.textContent = '📸 Click or drag image file here to crop & upload';
       }
     });

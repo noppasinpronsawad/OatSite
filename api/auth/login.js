@@ -34,17 +34,17 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 
-    // Generate JWT with EXACTLY 15 minutes expiration ('15m')
+    // Generate JWT with EXACTLY 45 minutes expiration ('45m')
     const token = jwt.sign(
       { role: 'admin', user: 'Noppasin P.' },
       jwtSecret,
-      { expiresIn: '15m' }
+      { expiresIn: '45m' }
     );
 
     return res.status(200).json({
       success: true,
       token,
-      expiresIn: 900, // 15 minutes in seconds
+      expiresIn: 2700, // 45 minutes in seconds
       message: 'Login successful'
     });
   } catch (err) {

@@ -28,7 +28,7 @@ let allAdminPosts = [];
 let filteredAdminPosts = [];
 let currentAdminPage = 1;
 const ADMIN_ITEMS_PER_PAGE = 10;
-const FIFTEEN_MINUTES_MS = 900000; // 15 minutes = 900,000 milliseconds
+const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
 
 /* ==========================================================================
    1. Light / Dark Theme Switcher
@@ -49,7 +49,7 @@ function initThemeToggle() {
 }
 
 /* ==========================================================================
-   2. Authentication & 15-Minute Auto-Logout Manager
+   2. Authentication & 45-Minute Auto-Logout Manager
    ========================================================================== */
 function initAuthFlow() {
   const loginForm = document.getElementById('loginForm');
@@ -62,8 +62,8 @@ function initAuthFlow() {
   const loginTime = parseInt(localStorage.getItem('admin_login_time') || '0', 10);
   const now = Date.now();
 
-  if (token && loginTime && (now - loginTime < FIFTEEN_MINUTES_MS)) {
-    const remainingMs = FIFTEEN_MINUTES_MS - (now - loginTime);
+  if (token && loginTime && (now - loginTime < FORTY_FIVE_MINUTES_MS)) {
+    const remainingMs = FORTY_FIVE_MINUTES_MS - (now - loginTime);
     showDashboardView();
     scheduleAutoLogout(remainingMs);
   } else {
@@ -103,7 +103,7 @@ function initAuthFlow() {
 
         if (passwordInput) passwordInput.value = '';
         showDashboardView();
-        scheduleAutoLogout(FIFTEEN_MINUTES_MS);
+        scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
         loadPostsTable();
       } else {
         const errMsg = data.error || `Authentication failed (Status ${response.status}). Please check environment variables on Vercel.`;
@@ -164,7 +164,7 @@ function scheduleAutoLogout(delayMs) {
   }
 
   autoLogoutTimer = setTimeout(() => {
-    alert('Security Alert: Your 15-minute admin session has expired. Please log in again.');
+    alert('Security Alert: Your 45-minute admin session has expired. Please log in again.');
     forceLogout();
   }, delayMs);
 }
@@ -178,7 +178,7 @@ function forceLogout() {
   document.getElementById('dashboardView').style.display = 'none';
 
   const timerBadge = document.getElementById('sessionTimer');
-  if (timerBadge) timerBadge.textContent = 'Session Expiry: 15 Mins';
+  if (timerBadge) timerBadge.textContent = 'Session Expiry: 45 Mins';
 }
 
 function showDashboardView() {

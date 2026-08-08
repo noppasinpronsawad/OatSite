@@ -5,27 +5,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable JSON and URL-encoded parsing for standard API endpoints
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Import Single Unified API Gateway App
+const apiApp = require('./api/index');
 
-// Require API Route Handlers
-const loginHandler = require('./api/auth/login');
-const sessionHandler = require('./api/auth/session');
-const postsHandler = require('./api/posts/index');
-const postDetailHandler = require('./api/posts/detail');
-const uploadHandler = require('./api/upload/index');
-const toeicQuestionsHandler = require('./api/toeic/questions');
-const metricsHandler = require('./api/admin/metrics');
-
-// API Routes
-app.all('/api/auth/login', (req, res) => loginHandler(req, res));
-app.all('/api/auth/session', (req, res) => sessionHandler(req, res));
-app.all('/api/posts/detail', (req, res) => postDetailHandler(req, res));
-app.all('/api/posts', (req, res) => postsHandler(req, res));
-app.all('/api/upload', (req, res) => uploadHandler(req, res));
-app.all('/api/toeic/questions', (req, res) => toeicQuestionsHandler(req, res));
-app.all('/api/admin/metrics', (req, res) => metricsHandler(req, res));
+// Mount API Gateway
+app.use(apiApp);
 
 // Serve Static Frontend Files
 app.use(express.static(__dirname));

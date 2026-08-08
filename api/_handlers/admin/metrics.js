@@ -1,7 +1,7 @@
-const { verifyAuth } = require('../lib/auth');
-const connectToDatabase = require('../lib/db');
-const Post = require('../models/Post');
-const ToeicQuestion = require('../models/ToeicQuestion');
+const { verifyAuth } = require('../../lib/auth');
+const connectToDatabase = require('../../lib/db');
+const Post = require('../../models/Post');
+const ToeicQuestion = require('../../models/ToeicQuestion');
 require('dotenv').config();
 
 module.exports = async (req, res) => {

@@ -1,5 +1,5 @@
 const cloudinary = require('cloudinary').v2;
-const { verifyAuth } = require('../lib/auth');
+const { verifyAuth } = require('../../lib/auth');
 require('dotenv').config();
 
 // Helper to extract Cloudinary public_id from URL

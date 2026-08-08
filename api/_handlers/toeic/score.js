@@ -1,7 +1,5 @@
-/**
- * ETS Standard TOEIC Reading Conversion Table (Raw Score 0-100 -> Exact Scaled Score 5-495 in increments of 5)
- */
-const RAW_TO_SCALED_MAP = {
+// ETS TOEIC Reading Scaled Score Conversion Matrix (Raw 0-100 -> Scaled Score 5-495)
+const TOEIC_RAW_TO_SCALED = {
   100: 495, 99: 495, 98: 490, 97: 485, 96: 475, 95: 470, 94: 460, 93: 455, 92: 450, 91: 440,
   90: 435, 89: 430, 88: 425, 87: 420, 86: 415, 85: 410, 84: 405, 83: 400, 82: 395, 81: 390,
   80: 385, 79: 380, 78: 375, 77: 370, 76: 365, 75: 360, 74: 355, 73: 350, 72: 345, 71: 340,
@@ -15,30 +13,29 @@ const RAW_TO_SCALED_MAP = {
 };
 
 function calculateToeicReadingScore(rawScore, totalQuestions = 100) {
-  // Normalize raw score to scale of 100 if exam was shorter (e.g. 20 Qs)
   const normalizedRaw = Math.min(100, Math.max(0, Math.round((rawScore / totalQuestions) * 100)));
-  const scaledScore = RAW_TO_SCALED_MAP[normalizedRaw] || 5;
+  const scaledScore = TOEIC_RAW_TO_SCALED[normalizedRaw] || 5;
 
   let cefrLevel = 'A1';
   let cefrBadge = 'A1 Beginner';
-  let cefrColor = '#ff9500';
+  let cefrDesc = 'ทักษะภาษาอังกฤษพื้นฐานเริ่มต้น ควรปูพื้นฐานไวยากรณ์เพิ่มเติม';
 
   if (scaledScore >= 470) {
     cefrLevel = 'C1';
     cefrBadge = 'C1 Advanced';
-    cefrColor = '#af52de';
+    cefrDesc = 'เข้าใจภาษาอังกฤษในการทำงานระดับสูง บทความซับซ้อน ได้เป็นอย่างดีเยี่ยม';
   } else if (scaledScore >= 385) {
     cefrLevel = 'B2';
     cefrBadge = 'B2 Upper-Intermediate';
-    cefrColor = '#2997ff';
+    cefrDesc = 'เข้าใจประเด็นหลักของบทความธุรกิจ เข้าใจและสื่อสารได้อย่างคล่องแคล่ว';
   } else if (scaledScore >= 275) {
     cefrLevel = 'B1';
     cefrBadge = 'B1 Intermediate';
-    cefrColor = '#30d158';
+    cefrDesc = 'สื่อสารภาษาอังกฤษในการทำงานระดับกลางได้อย่างมีประสิทธิภาพ';
   } else if (scaledScore >= 115) {
     cefrLevel = 'A2';
     cefrBadge = 'A2 Elementary';
-    cefrColor = '#ffd60a';
+    cefrDesc = 'เข้าใจประโยคและคำศัพท์ในชีวิตประจำวันและการทำงานขั้นพื้นฐาน';
   }
 
   return {
@@ -48,8 +45,11 @@ function calculateToeicReadingScore(rawScore, totalQuestions = 100) {
     scaledScore,
     cefrLevel,
     cefrBadge,
-    cefrColor
+    cefrDesc
   };
 }
 
-module.exports = { calculateToeicReadingScore, RAW_TO_SCALED_MAP };
+module.exports = {
+  TOEIC_RAW_TO_SCALED,
+  calculateToeicReadingScore
+};

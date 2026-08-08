@@ -1,7 +1,7 @@
-const connectToDatabase = require('../lib/db');
-const Post = require('../models/Post');
-const { verifyAuth } = require('../lib/auth');
-const initialBlogPosts = require('../../blog-data');
+const connectToDatabase = require('../../lib/db');
+const Post = require('../../models/Post');
+const { verifyAuth } = require('../../lib/auth');
+const initialBlogPosts = require('../../../blog-data');
 
 // Helper to format date as "07 Aug 2026"
 function formatFullDate(dateObj) {
@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
       const isSeedRequested = req.query.seed === 'true';
       if (isSeedRequested) {
         try {
-          verifyAuth(req);
+          await verifyAuth(req);
         } catch (authErr) {
           return res.status(401).json({ error: 'Unauthorized: Admin authentication required to re-seed database' });
         }
@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
     // POST /api/posts (Protected by JWT)
     if (req.method === 'POST') {
       try {
-        verifyAuth(req);
+        await verifyAuth(req);
       } catch (authErr) {
         return res.status(authErr.statusCode || 401).json({ error: authErr.message });
       }

@@ -1,8 +1,6 @@
-const { verifyAuth } = require('../lib/auth');
-require('dotenv').config();
+const { verifyAuth } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -12,17 +10,16 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const decoded = await verifyAuth(req);
+    const auth = await verifyAuth(req);
     return res.status(200).json({
       success: true,
       active: true,
-      user: decoded.user || 'Noppasin P.',
-      sessionId: decoded.sessionId
+      sessionId: auth.sessionId
     });
-  } catch (authErr) {
-    return res.status(authErr.statusCode || 401).json({
-      error: authErr.message,
-      isSessionOverride: !!authErr.isSessionOverride
+  } catch (err) {
+    return res.status(err.statusCode || 401).json({
+      error: err.message,
+      isSessionOverride: !!err.isSessionOverride
     });
   }
 };

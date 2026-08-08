@@ -1,8 +1,8 @@
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
-const connectToDatabase = require('../lib/db');
-const Post = require('../models/Post');
-const { verifyAuth } = require('../lib/auth');
+const connectToDatabase = require('../../lib/db');
+const Post = require('../../models/Post');
+const { verifyAuth } = require('../../lib/auth');
 require('dotenv').config();
 
 // Helper to format date as "07 Aug 2026"

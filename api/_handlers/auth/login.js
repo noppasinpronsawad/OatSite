@@ -1,0 +1,70 @@
+const connectToDatabase = require('../../lib/db');
+const AdminSession = require('../../models/AdminSession');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+require('dotenv').config();
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '@Dmin123';
+const JWT_SECRET = process.env.JWT_SECRET || 'antigravity_admin_secret_key_2026';
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    if (password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ error: 'Invalid admin password' });
+    }
+
+    // Generate unique sessionId for Single Active Session enforcement
+    const sessionId = crypto.randomBytes(16).toString('hex');
+
+    // Persist active sessionId into MongoDB Atlas
+    try {
+      await connectToDatabase();
+      await AdminSession.findOneAndUpdate(
+        { key: 'active_admin_session' },
+        { sessionId, updatedAt: new Date() },
+        { upsert: true, new: true }
+      );
+    } catch (dbErr) {
+      console.warn('MongoDB session save failed, using memory session:', dbErr.message);
+    }
+
+    // Also update in-memory active sessionId fallback
+    global.activeAdminSessionId = sessionId;
+
+    // Generate 45-minute JWT Token with sessionId
+    const token = jwt.sign(
+      { role: 'admin', authenticated: true, sessionId },
+      JWT_SECRET,
+      { expiresIn: '45m' }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Authentication successful',
+      token,
+      sessionId,
+      expiresInSeconds: 2700 // 45 minutes
+    });
+  } catch (err) {
+    console.error('Login handler error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

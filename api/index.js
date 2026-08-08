@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Require Internal Route Handlers from underscored _handlers directory (ignored by Vercel function auto-builder)
+// Require Internal Route Handlers from _handlers directory
 const loginHandler = require('./_handlers/auth/login');
 const sessionHandler = require('./_handlers/auth/session');
 const postsHandler = require('./_handlers/posts/index');
@@ -26,18 +26,38 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Routes Routing
-app.all('/api/auth/login', (req, res) => loginHandler(req, res));
-app.all('/api/auth/session', (req, res) => sessionHandler(req, res));
-app.all('/api/posts/detail', (req, res) => postDetailHandler(req, res));
-app.all('/api/posts', (req, res) => postsHandler(req, res));
-app.all('/api/upload', (req, res) => uploadHandler(req, res));
-app.all('/api/toeic/questions', (req, res) => toeicQuestionsHandler(req, res));
-app.all('/api/admin/metrics', (req, res) => metricsHandler(req, res));
+// Async Route Dispatcher Wrapper (Catch all unhandled errors cleanly)
+const wrapHandler = (handler) => async (req, res, next) => {
+  try {
+    await handler(req, res);
+  } catch (err) {
+    console.error('Route handler error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: `API Handler Error: ${err.message || String(err)}` });
+    }
+  }
+};
+
+// API Routes Routing (Matches full /api/ path, route alias, and sub-path)
+app.all(['/api/auth/login', '/auth/login', '/login'], wrapHandler(loginHandler));
+app.all(['/api/auth/session', '/auth/session', '/session'], wrapHandler(sessionHandler));
+app.all(['/api/posts/detail', '/posts/detail', '/detail'], wrapHandler(postDetailHandler));
+app.all(['/api/posts', '/posts'], wrapHandler(postsHandler));
+app.all(['/api/upload', '/upload'], wrapHandler(uploadHandler));
+app.all(['/api/toeic/questions', '/toeic/questions', '/questions'], wrapHandler(toeicQuestionsHandler));
+app.all(['/api/admin/metrics', '/admin/metrics', '/metrics'], wrapHandler(metricsHandler));
 
 // Health check endpoint
-app.get('/api', (req, res) => {
+app.get(['/api', '/'], (req, res) => {
   res.status(200).json({ status: 'OK', message: 'OatSite Unified API Gateway is running' });
+});
+
+// Express Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled API Exception:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: `Server Error: ${err.message || String(err)}` });
+  }
 });
 
 // Export single Express app serverless function for Vercel

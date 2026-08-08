@@ -214,7 +214,7 @@ function initAuthFlow() {
         scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
         loadPostsTable();
       } else {
-        const errMsg = data.error || `Authentication failed (Status ${response.status}). Please check environment variables on Vercel.`;
+        const errMsg = data.error || (data.message ? data.message : `Authentication failed (Status ${response.status}). Please check Vercel environment variables.`);
         showLoginAlert(errMsg, true);
         alert(`Login Failed: ${errMsg}`);
       }

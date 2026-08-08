@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { DEFAULT_JWT_SECRET } = require('../../lib/auth');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
+const JWT_SECRET = String(process.env.JWT_SECRET || DEFAULT_JWT_SECRET).trim().replace(/^["']|["']$/g, '');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

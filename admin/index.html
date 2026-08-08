@@ -714,6 +714,48 @@
       }
     }
   </style>
+
+  <style>
+    .alert-banner {
+      padding: 0.9rem 1.2rem;
+      border-radius: 8px;
+      margin-bottom: 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: none;
+      transition: all 0.3s ease;
+    }
+    .alert-error {
+      background: rgba(255, 69, 58, 0.18) !important;
+      border: 1px solid #ff453a !important;
+      color: #ff453a !important;
+    }
+    .alert-info, .alert-loading {
+      background: rgba(0, 210, 255, 0.18) !important;
+      border: 1px solid #00d2ff !important;
+      color: #00d2ff !important;
+    }
+    .alert-success {
+      background: rgba(48, 209, 88, 0.18) !important;
+      border: 1px solid #30d158 !important;
+      color: #30d158 !important;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spinner-icon {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+  </style>
 </head>
 
 <body>
@@ -1186,7 +1228,56 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=3.4"></script>
-</body>
+  <!-- DAILY NEWS LOG DETAIL MODAL -->
+  <div id="newsDetailModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="admin-modal-content" style="width: 90%; max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 12px; padding: 1.8rem; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem;">
+        <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.25rem; font-weight: 700;">📰 Daily News Ingestion Log Detail</h3>
+        <button type="button" class="close-modal-btn" id="closeNewsModalBtn" onclick="document.getElementById('newsDetailModal').style.display='none'" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+      </div>
+      <div style="font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.9rem;">
+        <div><strong>🌐 News Source:</strong> <span id="newsModalSource" style="color: #00d2ff; font-weight: 600;"></span></div>
+        <div><strong>📰 Headline:</strong> <span id="newsModalHeadline" style="font-weight: 600; color: #fff;"></span></div>
+        <div><strong>🔗 Source URL:</strong> <a id="newsModalUrl" href="#" target="_blank" style="color: #30d158; word-break: break-all;"></a></div>
+        <div><strong>📅 Ingestion Timestamp:</strong> <span id="newsModalDate" style="color: var(--text-secondary, #aaa);"></span></div>
+        <div><strong>📝 Article Content Summary:</strong>
+          <div id="newsModalSummary" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color, #333); padding: 1rem; border-radius: 8px; margin-top: 0.4rem; color: #ddd; font-size: 0.88rem; line-height: 1.5;"></div>
+        </div>
+        <div><strong>⚡ AI Generated Question Breakdown:</strong>
+          <div id="newsModalBreakdown" style="display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.88rem; flex-wrap: wrap;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- QUESTION BANK INSPECTOR MODAL (VIEW ALL QUESTIONS IN DB) -->
+  <div id="questionBankModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="admin-modal-content" style="width: 92%; max-width: 850px; max-height: 85vh; overflow-y: auto; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card, #1c1c1e); z-index: 10;">
+        <div>
+          <h3 class="gradient-text" style="font-size: 1.25rem; margin-bottom: 0.2rem; font-weight: 700;">📚 TOEIC Question Bank Inspector (MongoDB Atlas)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary, #aaa);">ตรวจสอบรายการข้อสอบ ตัวเลือกคำตอบ และเฉลยภาษาไทยในระบบ DB</p>
+        </div>
+        <button type="button" class="close-modal-btn" onclick="document.getElementById('questionBankModal').style.display='none'" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+      </div>
+
+      <!-- Search & Part Filter -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+        <input type="text" id="qbSearchInput" oninput="window.filterQuestionBank && window.filterQuestionBank()" class="admin-input" placeholder="🔍 ค้นหาคำถาม หรือ Keyword..." style="flex: 1; min-width: 200px;">
+        <select id="qbPartSelect" onchange="window.filterQuestionBank && window.filterQuestionBank()" class="admin-select" style="width: auto;">
+          <option value="all">ทุก Part (Part 5, 6, 7)</option>
+          <option value="5">Part 5 (Incomplete Sentences)</option>
+          <option value="6">Part 6 (Text Completion)</option>
+          <option value="7">Part 7 (Reading Comprehension)</option>
+        </select>
+      </div>
+
+      <div id="qbListContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Dynamically populated by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/admin.js?v=3.5"></script>
+</body>
 </html>

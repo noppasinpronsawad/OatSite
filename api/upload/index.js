@@ -30,7 +30,11 @@ module.exports = async (req, res) => {
     const apiSecret = String(process.env.CLOUDINARY_API_SECRET || '').trim();
 
     if (!cloudName || !apiKey || !apiSecret) {
-      return res.status(500).json({ error: 'Cloudinary credentials missing in Vercel Environment Variables' });
+      const missing = [];
+      if (!cloudName) missing.push('CLOUDINARY_CLOUD_NAME');
+      if (!apiKey) missing.push('CLOUDINARY_API_KEY');
+      if (!apiSecret) missing.push('CLOUDINARY_API_SECRET');
+      return res.status(500).json({ error: `Cloudinary Configuration Error: Missing ${missing.join(', ')} in Vercel Environment Variables` });
     }
 
     cloudinary.config({

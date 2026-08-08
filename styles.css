@@ -2844,3 +2844,46 @@ dialog.modal-spec::backdrop {
   line-height: 1.6;
 }
 
+/* TOEIC Mobile Responsiveness Polish */
+@media (max-width: 768px) {
+  .toeic-section {
+    padding-top: 85px;
+    padding-bottom: 50px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .toeic-hero-card {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .toeic-question-pane {
+    padding: 1.2rem;
+  }
+
+  .passage-container {
+    max-height: 280px;
+    font-size: 0.9rem;
+    padding: 1rem;
+  }
+
+  .choice-card {
+    padding: 0.85rem 1rem;
+    min-height: 52px;
+  }
+
+  .score-val {
+    font-size: 2.2rem;
+  }
+
+  .cefr-pill {
+    font-size: 1.1rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .toeic-timer-widget {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.95rem;
+  }
+}
+

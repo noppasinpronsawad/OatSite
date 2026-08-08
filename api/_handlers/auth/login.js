@@ -31,12 +31,11 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
 
-    // Accept @Dmin123, admin1234, and custom ADMIN_PASSWORD env
-    const envPass = String(process.env.ADMIN_PASSWORD || '').trim();
-    const validPasswords = ['@Dmin123', 'admin1234'];
-    if (envPass) validPasswords.push(envPass);
+    // Priority #1: Read ADMIN_PASSWORD from Environment Variables (Vercel)
+    // Fallback: Default to '@Dmin123' if environment variable is not configured
+    const EXPECTED_PASSWORD = String(process.env.ADMIN_PASSWORD || '@Dmin123').trim();
 
-    if (!validPasswords.includes(password)) {
+    if (password !== EXPECTED_PASSWORD) {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 

@@ -16,11 +16,7 @@ function initAdminPanel() {
   try { initSchedulePicker(); } catch(e) { console.error('Schedule Init Error:', e); }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAdminPanel);
-} else {
-  initAdminPanel();
-}
+
 
 // Global state variables
 let autoLogoutTimer = null;
@@ -47,13 +43,17 @@ window.executeAdminLogin = async function executeLogin() {
   const password = pwdEl ? pwdEl.value.trim() : '';
 
   if (!password) {
-    alert('Please enter your admin password.');
+    showLoginAlert('⚠️ กรุณากรอกรหัสผ่านก่อนเข้าสู่ระบบ', true);
+    if (pwdEl) pwdEl.focus();
     return;
   }
 
   isExecutingLogin = true;
-  showLoginAlert('', false);
-  if (btnEl) btnEl.disabled = true;
+  showLoginAlert('🔄 กำลังเข้าสู่ระบบ กรุณารอสักครู่...', false);
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<span>🔄 กำลังเข้าสู่ระบบ...</span>';
+  }
 
   try {
     const response = await fetch('/api/auth/login', {
@@ -74,23 +74,31 @@ window.executeAdminLogin = async function executeLogin() {
       localStorage.setItem('admin_login_time', Date.now().toString());
       if (data.sessionId) localStorage.setItem('admin_session_id', data.sessionId);
 
+      showLoginAlert('✅ เข้าสู่ระบบสำเร็จ! กำลังเปิดหน้า Dashboard...', false);
       if (pwdEl) pwdEl.value = '';
-      showDashboardView();
-      scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
-      loadPostsTable();
+      setTimeout(() => {
+        showDashboardView();
+        scheduleAutoLogout(FORTY_FIVE_MINUTES_MS);
+        loadPostsTable();
+      }, 400);
     } else {
-      const errMsg = data.error || (data.message ? data.message : `Authentication failed (Status ${response.status}). Please check Vercel environment variables.`);
-      showLoginAlert(errMsg, true);
-      alert(`Login Failed: ${errMsg}`);
+      const errMsg = data.error || (data.message ? data.message : `Authentication failed (Status ${response.status})`);
+      showLoginAlert(`❌ รหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาด: ${errMsg}`, true);
+      if (pwdEl) {
+        pwdEl.value = '';
+        pwdEl.focus();
+      }
     }
   } catch (err) {
     console.error('Login error:', err);
-    const errMsg = `Network/API error: ${err.message || err}`;
-    showLoginAlert(errMsg, true);
-    alert(`Login Error: ${errMsg}`);
+    const errMsg = `ไม่สามารถเชื่อมต่อกับ Server ได้: ${err.message || err}`;
+    showLoginAlert(`❌ ${errMsg}`, true);
   } finally {
     isExecutingLogin = false;
-    if (btnEl) btnEl.disabled = false;
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = '<span>🔓 Unlock CMS</span>';
+    }
   }
 };
 
@@ -1345,17 +1353,14 @@ window.showNewsLogDetails = function(logId) {
 };
 
 window.run10kBatchGen = async function() {
-  if (!confirm('🚀 ยืนยันการสั่งงาน Gemini AI เพื่อสร้างชุดข้อสอบภาษาอังกฤษลงในคลัง MongoDB Atlas ใช่หรือไม่?')) return;
-
-  const token = localStorage.getItem('admin_jwt_token');
-  if (!token) return alert('กรุณาล็อกอินใหม่อีกครั้ง');
-
+  if (!confirm('🤖 เริ่มการสร้างชุดข้อสอบภาษาอังกฤษ TOEIC เพิ่มเติมด้วย Gemini AI ลงใน MongoDB Atlas ?')) return;
+  const token = localStorage.getItem('admin_jwt_token') || localStorage.getItem('admin_token');
+  if (!token) return alert('🚨 กรุณาล็อกอินใหม่อีกครั้ง');
   const btn = document.getElementById('startBatchGenBtn');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span>⏳ กำลังประมวลผลสร้างข้อสอบลง MongoDB Atlas...</span>';
+    btn.innerHTML = '<span>⚡ กำลังสร้างคำถามใน MongoDB Atlas...</span>';
   }
-
   try {
     const res = await fetch('/api/admin/metrics', {
       method: 'POST',
@@ -1365,17 +1370,26 @@ window.run10kBatchGen = async function() {
       },
       body: JSON.stringify({ action: 'generate_batch' })
     });
-
     const data = await res.json();
     if (res.ok && data.success) {
-      alert(`🎉 ${data.message}\n\nจำนวนข้อสอบในคลังล่าสุด: ${data.totalToeicQuestions} ข้อ`);
+      alert(`🎉 ${data.message}
+
+จำนวนคลังข้อสอบปัจจุบัน: ${data.totalToeicQuestions} ข้อ`);
       fetchAdminMetrics();
     } else {
-      alert(`เกิดข้อผิดพลาด: ${data.error || data.message || 'ไม่สามารถสร้างข้อสอบได้'}`);
+      alert(`❌ ข้อผิดพลาด: ${data.error || data.message || 'ไม่สามารถสร้างข้อสอบได้'}`);
     }
   } catch (err) {
     console.error('Batch gen error:', err);
-    alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err.message);
+    alert('❌ ข้อผิดพลาด: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>⚡ สั่งสร้างข้อสอบเพิ่ม 10,000 ข้อ</span>';
+    }
+  }
+};
+
 window.openQuestionBankModal = async function() {
   const container = document.getElementById('qbListContainer');
   if (container) container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">⏳ กำลังโหลดข้อสอบจาก MongoDB Atlas...</div>';
@@ -1445,3 +1459,13 @@ window.filterQuestionBank = function() {
     </div>
   `).join('');
 };
+
+/* ==========================================================================
+   Admin Panel Initialization Bootstrapper
+   Executes strictly AFTER all global window methods and handlers are defined.
+   ========================================================================== */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdminPanel);
+} else {
+  initAdminPanel();
+}

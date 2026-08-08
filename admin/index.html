@@ -767,12 +767,15 @@
     <div id="dashboardView" class="admin-card" style="display: none;">
       
       <!-- Top Navigation Tabs -->
-      <div class="admin-tab-nav" style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.8rem;">
+      <div class="admin-tab-nav" style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.8rem; flex-wrap: wrap;">
         <button type="button" class="btn-admin-secondary active" id="blogMgmtTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('blog')">
           📰 Blog Management
         </button>
+        <button type="button" class="btn-admin-secondary" id="toeicStatsTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('toeic')">
+          📈 TOEIC Statistics
+        </button>
         <button type="button" class="btn-admin-secondary" id="sysDashTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('system')">
-          📊 System Dashboard
+          ⚙️ System Dashboard
         </button>
       </div>
 
@@ -892,49 +895,61 @@
             </div>
           </div>
 
-          <!-- Question Pool & Daily News Ingestion Log Section -->
-          <div style="margin-top: 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
-            
-            <!-- Summary Banner -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-              <div>
-                <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem;">📚 TOEIC Question Pool & News Ingestion Logs</h3>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">สรุปจำนวนข้อสอบในคลังปัจจุบัน และประวัติการดึงข่าวประจำวัน (Daily News Ingestion Log)</p>
-              </div>
-              <div style="display: flex; gap: 1.5rem; font-size: 0.95rem;">
-                <div>จำนวนข้อสอบในคลัง: <strong id="summary_total_qs" style="color: #30d158; font-size: 1.1rem;">100 ข้อ</strong></div>
-                <div>เป้าหมายแรกเริ่ม: <strong>10,000 ข้อ</strong></div>
-                <div>ดึงข่าวประจำวัน: <strong>300 ข้อ / วัน</strong></div>
-              </div>
-            </div>
+        </div>
+      </div>
 
-            <!-- Daily News Log Table -->
-            <h4 style="font-size: 1rem; margin-bottom: 0.8rem; color: var(--text-primary);">📰 Log การดึงข่าวประจำวัน (Daily News Fetching Log)</h4>
-            <div style="overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
-                <thead>
-                  <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
-                    <th style="padding: 0.6rem;">Date (วันที่)</th>
-                    <th style="padding: 0.6rem;">News Source (แหล่งข่าว)</th>
-                    <th style="padding: 0.6rem;">Topic / Headline (หัวข้อข่าว)</th>
-                    <th style="padding: 0.6rem;">Questions Generated (ข้อสอบที่สร้าง)</th>
-                    <th style="padding: 0.6rem;">Status (สถานะ)</th>
-                  </tr>
-                </thead>
-                <tbody id="dailyNewsLogsTableBody">
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 0.6rem;">2026-08-08</td>
-                    <td style="padding: 0.6rem;">Reuters / BBC Business News</td>
-                    <td style="padding: 0.6rem;">Global Logistics & Supply Chain Expansion</td>
-                    <td style="padding: 0.6rem;"><strong style="color: #30d158;">+100 ข้อ</strong></td>
-                    <td style="padding: 0.6rem;"><span style="color: #30d158;">✅ Active (Initial Seed Pool)</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <!-- DEDICATED TOEIC STATISTICS SECTION -->
+      <div id="toeicStatsSection" style="display: none;">
+        <div class="dashboard-header">
+          <div class="dashboard-title-group">
+            <h2 class="gradient-text">TOEIC Statistics & AI Ingestion Analytics</h2>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">คลังข้อสอบ TOEIC และประวัติการดึงข่าวประจำวัน (Daily News Ingestion Log)</p>
+          </div>
+          <div class="dashboard-actions">
+            <button class="btn-admin-primary" id="refreshToeicStatsBtn" onclick="fetchAdminMetrics()" style="width: auto;">
+              <span>🔄 Refresh Statistics</span>
+            </button>
+          </div>
+        </div>
 
+        <!-- Question Pool Summary Banner -->
+        <div style="margin-top: 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+            <div>
+              <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem;">📚 TOEIC Question Pool Analytics</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">จำนวนข้อสอบในคลังปัจจุบันเทียบกับเป้าหมายระบบ</p>
+            </div>
+            <div style="display: flex; gap: 1.5rem; font-size: 0.95rem; flex-wrap: wrap;">
+              <div>จำนวนข้อสอบในคลัง: <strong id="summary_total_qs" style="color: #30d158; font-size: 1.1rem;">100 ข้อ</strong></div>
+              <div>เป้าหมายแรกเริ่ม: <strong>10,000 ข้อ</strong></div>
+              <div>ดึงข่าวประจำวัน: <strong>300 ข้อ / วัน</strong></div>
+            </div>
           </div>
 
+          <!-- Daily News Log Table -->
+          <h4 style="font-size: 1rem; margin-bottom: 0.8rem; color: var(--text-primary);">📰 Log การดึงข่าวประจำวัน (Daily News Fetching Log)</h4>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                  <th style="padding: 0.6rem;">Date (วันที่)</th>
+                  <th style="padding: 0.6rem;">News Source (แหล่งข่าว)</th>
+                  <th style="padding: 0.6rem;">Topic / Headline (หัวข้อข่าว)</th>
+                  <th style="padding: 0.6rem;">Questions Generated (ข้อสอบที่สร้าง)</th>
+                  <th style="padding: 0.6rem;">Status (สถานะ)</th>
+                </tr>
+              </thead>
+              <tbody id="dailyNewsLogsTableBody">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 0.6rem;">2026-08-08</td>
+                  <td style="padding: 0.6rem;">Reuters / BBC Business News</td>
+                  <td style="padding: 0.6rem;">Global Logistics & Supply Chain Expansion</td>
+                  <td style="padding: 0.6rem;"><strong style="color: #30d158;">+100 ข้อ</strong></td>
+                  <td style="padding: 0.6rem;"><span style="color: #30d158;">✅ Active (Initial Seed Pool)</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

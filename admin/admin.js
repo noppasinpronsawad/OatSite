@@ -34,19 +34,30 @@ const FORTY_FIVE_MINUTES_MS = 2700000; // 45 minutes = 2,700,000 milliseconds
 window.switchAdminTab = function(tab) {
   const blogSec = document.getElementById('blogManagementSection');
   const sysSec = document.getElementById('systemDashboardSection');
+  const toeicSec = document.getElementById('toeicStatsSection');
+
   const blogBtn = document.getElementById('blogMgmtTabBtn');
   const sysBtn = document.getElementById('sysDashTabBtn');
+  const toeicBtn = document.getElementById('toeicStatsTabBtn');
+
+  if (blogSec) blogSec.style.display = 'none';
+  if (sysSec) sysSec.style.display = 'none';
+  if (toeicSec) toeicSec.style.display = 'none';
+
+  if (blogBtn) blogBtn.classList.remove('active');
+  if (sysBtn) sysBtn.classList.remove('active');
+  if (toeicBtn) toeicBtn.classList.remove('active');
 
   if (tab === 'system') {
-    if (blogSec) blogSec.style.display = 'none';
     if (sysSec) sysSec.style.display = 'block';
-    if (blogBtn) blogBtn.classList.remove('active');
     if (sysBtn) sysBtn.classList.add('active');
     fetchAdminMetrics();
+  } else if (tab === 'toeic') {
+    if (toeicSec) toeicSec.style.display = 'block';
+    if (toeicBtn) toeicBtn.classList.add('active');
+    fetchAdminMetrics();
   } else {
-    if (sysSec) sysSec.style.display = 'none';
     if (blogSec) blogSec.style.display = 'block';
-    if (sysBtn) sysBtn.classList.remove('active');
     if (blogBtn) blogBtn.classList.add('active');
   }
 };

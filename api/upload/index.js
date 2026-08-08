@@ -69,6 +69,8 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Cloudinary upload error:', err);
-    return res.status(500).json({ error: err.message || 'Image upload failed' });
+    const maskStr = (str) => str && str.length > 4 ? (str.substring(0, 3) + '***' + str.substring(str.length - 2)) : (str || 'EMPTY');
+    const debugInfo = `[cloud_name="${maskStr(cloudName)}", api_key="${maskStr(apiKey)}"]`;
+    return res.status(500).json({ error: `Cloudinary API Error: ${err.message || 'Image upload failed'} ${debugInfo}` });
   }
 };

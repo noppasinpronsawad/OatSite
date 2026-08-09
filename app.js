@@ -907,6 +907,24 @@ window.switchToeicPart = function(partNum) {
   }
 };
 
+
+// Auto-clear legacy/outdated test history from older version once to ensure pristine fresh state on all devices
+(function clearOutdatedToeicStorage() {
+  try {
+    const versionKey = 'toeic_pool_version';
+    const currentVersion = '4.9_pristine';
+    if (localStorage.getItem(versionKey) !== currentVersion) {
+      localStorage.removeItem('toeic_history');
+      localStorage.removeItem('toeic_saved_progress');
+      localStorage.setItem(versionKey, currentVersion);
+      console.log('[TOEIC Simulator] Cleared outdated legacy test history for fresh pristine v4.9 experience.');
+    }
+  } catch (e) {
+    console.error('Storage reset error:', e);
+  }
+})();
+
+
 function initToeicSimulator() {
   renderToeicHistory();
 

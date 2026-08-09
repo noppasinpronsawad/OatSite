@@ -20,7 +20,7 @@ const PRESEEDED_QUESTIONS = [
     correct_answer: 'A',
     cefr_level: 'B2',
     tags: ['Part of Speech'],
-    detailed_explanation: { correct_reason: "ใช้กริยาวิเศษณ์ (Adverb) 'thoroughly' เพื่อ ขยายกริยา 'inspect'" }
+    detailed_explanation: { correct_reason: "ใช้กริยาวิเศษณ์ (Adverb) 'thoroughly' เพื่อขยายกริยา 'inspect'" }
   },
   {
     question_id: 'q-503',
@@ -63,6 +63,47 @@ const PRESEEDED_QUESTIONS = [
     detailed_explanation: { correct_reason: "ใช้คำคุณศัพท์ 'additional' ขยายคำนาม 'documents'" }
   },
   {
+    question_id: 'q-507',
+    part: 5,
+    question_text: 'The new automated invoicing system will be fully operational _______ the end of this month.',
+    choices: { A: 'by', B: 'since', C: 'for', D: 'during' },
+    correct_answer: 'A',
+    cefr_level: 'B1',
+    tags: ['Preposition'],
+    detailed_explanation: { correct_reason: "ใช้ 'by' เพื่อระบุเส้นตายเวลาในการทำงานเสร็จ" }
+  },
+  {
+    question_id: 'q-508',
+    part: 5,
+    question_text: 'Board members voted _______ to approve the revised corporate restructuring plan.',
+    choices: { A: 'unanimously', B: 'unanimous', C: 'unanimity', D: 'unanimousness' },
+    correct_answer: 'A',
+    cefr_level: 'C1',
+    tags: ['Part of Speech'],
+    detailed_explanation: { correct_reason: "ใช้กริยาวิเศษณ์ 'unanimously' เพื่อขยายกริยา 'voted'" }
+  },
+  {
+    question_id: 'q-509',
+    part: 5,
+    question_text: 'Please review the client feedback summary _______ submitting the final contract proposal.',
+    choices: { A: 'before', B: 'between', C: 'among', D: 'during' },
+    correct_answer: 'A',
+    cefr_level: 'A2',
+    tags: ['Preposition'],
+    detailed_explanation: { correct_reason: "ใช้ 'before' นำหน้าคำกริยาเติม -ing (Gerund) เพื่อบอกลำดับเวลา" }
+  },
+  {
+    question_id: 'q-510',
+    part: 5,
+    question_text: 'The chief executive officer delivered an _______ speech at the annual shareholders conference.',
+    choices: { A: 'inspiring', B: 'inspiration', C: 'inspirational', D: 'inspire' },
+    correct_answer: 'C',
+    cefr_level: 'B2',
+    tags: ['Vocabulary'],
+    detailed_explanation: { correct_reason: "ใช้คำคุณศัพท์ 'inspirational' ขยายคำนาม 'speech'" }
+  },
+
+  {
     question_id: 'q-601',
     part: 6,
     passage_title: 'MEMORANDUM: Workplace Remote Access Policy 2026',
@@ -77,7 +118,7 @@ const PRESEEDED_QUESTIONS = [
     correct_answer: 'A',
     cefr_level: 'B2',
     tags: ['Part 6'],
-    detailed_explanation: { correct_reason: "ประโยค A สอดคล้องกับเนื้อหาการแจ้งเตือนเวลาเปิดใช้งานระบบหลังจากการปิดปรับปรุง VPN" }
+    detailed_explanation: { correct_reason: "ประโยค A สอดคล้องกับเนื้อหาการแจ้งเตือนเวลาเปิดใช้งานระบบหลังการปรับปรุง" }
   },
   {
     question_id: 'q-602',
@@ -111,8 +152,26 @@ const PRESEEDED_QUESTIONS = [
     correct_answer: 'A',
     cefr_level: 'B2',
     tags: ['Part 6'],
-    detailed_explanation: { correct_reason: "ในบันทึกข้อความระบุชัดเจนว่าพนักงานควรรีบเซฟไฟล์งานลงเครื่องก่อนช่วงปิดปรับปรุงระบบ" }
+    detailed_explanation: { correct_reason: "ในบันทึกข้อความระบุชัดเจนว่าพนักงานควรรีบเซฟไฟล์งานลงเครื่องก่อนปิดปรับปรุง" }
   },
+  {
+    question_id: 'q-604',
+    part: 6,
+    passage_title: 'MEMORANDUM: Workplace Remote Access Policy 2026',
+    passage_content: '<p><strong>To:</strong> All Staff Members<br><strong>From:</strong> IT Infrastructure Team<br><strong>Date:</strong> August 8, 2026<br><strong>Subject:</strong> System Upgrade & Multi-Factor Authentication</p><p>Please be advised that our core network servers will undergo scheduled maintenance this coming Saturday from 10:00 PM to 4:00 AM. During this period, remote VPN access will be temporarily unavailable. Employees should ensure that all critical files are saved locally prior to the maintenance window. [1] _______ We appreciate your cooperation in keeping our data infrastructure secure.</p>',
+    question_text: 'The word "critical" in paragraph 1 is closest in meaning to:',
+    choices: {
+      A: 'essential',
+      B: 'faulty',
+      C: 'dangerous',
+      D: 'optional'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B2',
+    tags: ['Part 6'],
+    detailed_explanation: { correct_reason: "คำว่า 'critical' ในบริบทนี้หมายถึง 'จำเป็น/สำคัญยิ่ง' ซึ่งตรงกับ 'essential'" }
+  },
+
   {
     question_id: 'q-701',
     part: 7,
@@ -163,20 +222,160 @@ const PRESEEDED_QUESTIONS = [
     cefr_level: 'B1',
     tags: ['Part 7'],
     detailed_explanation: { correct_reason: "ในสัญญาจะมีการสร้างสถานีชาร์จความเร็วสูงทั้งหมด 45 สถานี" }
+  },
+  {
+    question_id: 'q-704',
+    part: 7,
+    passage_title: 'PRESS RELEASE: Sustainable Energy Partnership Announcement',
+    passage_content: '<p><strong>HELSINKI — August 5, 2026</strong> — Nordic CleanTech Solutions today signed a landmark 50-million-euro contract with Global Logistics Inc. to deploy zero-emission electric delivery fleets across major European distribution centers. Under the terms of the five-year agreement, Nordic CleanTech will deliver 1,200 commercial electric vans and build 45 ultra-fast charging hubs.</p><p>"This partnership accelerates our transition toward carbon-neutral supply chain operations," stated Marcus Lindqvist, Chief Sustainability Officer at Global Logistics. Initial fleet deployment is scheduled to begin in Stockholm and Copenhagen by Q4 2026, followed by expansion into Hamburg and Rotterdam in early 2027.</p>',
+    question_text: 'Who is Marcus Lindqvist?',
+    choices: {
+      A: 'Chief Sustainability Officer at Global Logistics',
+      B: 'CEO of Nordic CleanTech Solutions',
+      C: 'Mayor of Stockholm',
+      D: 'Lead Architect for charging hubs'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B1',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "ในคำโควตระบุว่า Marcus Lindqvist มีตำแหน่งเป็น Chief Sustainability Officer ของ Global Logistics" }
+  },
+  {
+    question_id: 'q-705',
+    part: 7,
+    passage_title: 'PRESS RELEASE: Sustainable Energy Partnership Announcement',
+    passage_content: '<p><strong>HELSINKI — August 5, 2026</strong> — Nordic CleanTech Solutions today signed a landmark 50-million-euro contract with Global Logistics Inc. to deploy zero-emission electric delivery fleets across major European distribution centers. Under the terms of the five-year agreement, Nordic CleanTech will deliver 1,200 commercial electric vans and build 45 ultra-fast charging hubs.</p><p>"This partnership accelerates our transition toward carbon-neutral supply chain operations," stated Marcus Lindqvist, Chief Sustainability Officer at Global Logistics. Initial fleet deployment is scheduled to begin in Stockholm and Copenhagen by Q4 2026, followed by expansion into Hamburg and Rotterdam in early 2027.</p>',
+    question_text: 'When will fleet expansion into Hamburg and Rotterdam take place?',
+    choices: {
+      A: 'Early 2027',
+      B: 'Q4 2026',
+      C: 'Late 2028',
+      D: 'August 2025'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B2',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "ในข่าวระบุการขยายไปยังเมืองฮัมบวร์กและร็อตเทอร์ดามจะเกิดขึ้นต้นปี 2027" }
+  },
+  {
+    question_id: 'q-706',
+    part: 7,
+    passage_title: 'EMAIL CORRESPONDENCE: Project Timeline Adjustment',
+    passage_content: '<p><strong>From:</strong> sarah.jenkins@innovatetech.com<br><strong>To:</strong> david.chen@innovatetech.com<br><strong>Date:</strong> August 7, 2026<br><strong>Subject:</strong> Revised Software Release Schedule</p><p>Hi David,</p><p>Following our client sync this morning, we need to push back the beta launch date by two weeks. The quality assurance team discovered edge-case bugs in the payment integration module during automated stress testing.</p><p>Could you please update the master roadmap document and notify the frontend engineering squad? We will hold a brief standup meeting tomorrow at 9:30 AM to reassign sprint tickets.</p><p>Best regards,<br>Sarah Jenkins<br>Lead Product Manager</p>',
+    question_text: 'Why is the software release date being delayed?',
+    choices: {
+      A: 'Quality assurance found bugs in the payment integration module',
+      B: 'The project budget was significantly reduced',
+      C: 'The client cancelled the software contract',
+      D: 'The lead product manager is taking medical leave'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B2',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "อีเมลระบุสาเหตุการเลื่อนวันเลขาว่าเกิดจากทีม QA ตรวจพบบั๊กในโมดูลชำระเงิน" }
+  },
+  {
+    question_id: 'q-707',
+    part: 7,
+    passage_title: 'EMAIL CORRESPONDENCE: Project Timeline Adjustment',
+    passage_content: '<p><strong>From:</strong> sarah.jenkins@innovatetech.com<br><strong>To:</strong> david.chen@innovatetech.com<br><strong>Date:</strong> August 7, 2026<br><strong>Subject:</strong> Revised Software Release Schedule</p><p>Hi David,</p><p>Following our client sync this morning, we need to push back the beta launch date by two weeks. The quality assurance team discovered edge-case bugs in the payment integration module during automated stress testing.</p><p>Could you please update the master roadmap document and notify the frontend engineering squad? We will hold a brief standup meeting tomorrow at 9:30 AM to reassign sprint tickets.</p><p>Best regards,<br>Sarah Jenkins<br>Lead Product Manager</p>',
+    question_text: 'By how much time is the beta launch date delayed?',
+    choices: {
+      A: 'Two weeks',
+      B: 'One month',
+      C: 'Three days',
+      D: 'Six months'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B1',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "ในเนื้อหาระบุว่าต้องเลื่อนวันเปิดตัวเวอร์ชันเบต้าออกไป 2 สัปดาห์ (two weeks)" }
+  },
+  {
+    question_id: 'q-708',
+    part: 7,
+    passage_title: 'EMAIL CORRESPONDENCE: Project Timeline Adjustment',
+    passage_content: '<p><strong>From:</strong> sarah.jenkins@innovatetech.com<br><strong>To:</strong> david.chen@innovatetech.com<br><strong>Date:</strong> August 7, 2026<br><strong>Subject:</strong> Revised Software Release Schedule</p><p>Hi David,</p><p>Following our client sync this morning, we need to push back the beta launch date by two weeks. The quality assurance team discovered edge-case bugs in the payment integration module during automated stress testing.</p><p>Could you please update the master roadmap document and notify the frontend engineering squad? We will hold a brief standup meeting tomorrow at 9:30 AM to reassign sprint tickets.</p><p>Best regards,<br>Sarah Jenkins<br>Lead Product Manager</p>',
+    question_text: 'What time will tomorrow’s standup meeting take place?',
+    choices: {
+      A: '9:30 AM',
+      B: '10:00 AM',
+      C: '2:00 PM',
+      D: '8:30 AM'
+    },
+    correct_answer: 'A',
+    cefr_level: 'A2',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "ช่วงท้ายอีเมลระบุเวลาประชุมสแตนด์อัปพรุ่งนี้ที่ 9:30 AM" }
+  },
+  {
+    question_id: 'q-709',
+    part: 7,
+    passage_title: 'EMAIL CORRESPONDENCE: Project Timeline Adjustment',
+    passage_content: '<p><strong>From:</strong> sarah.jenkins@innovatetech.com<br><strong>To:</strong> david.chen@innovatetech.com<br><strong>Date:</strong> August 7, 2026<br><strong>Subject:</strong> Revised Software Release Schedule</p><p>Hi David,</p><p>Following our client sync this morning, we need to push back the beta launch date by two weeks. The quality assurance team discovered edge-case bugs in the payment integration module during automated stress testing.</p><p>Could you please update the master roadmap document and notify the frontend engineering squad? We will hold a brief standup meeting tomorrow at 9:30 AM to reassign sprint tickets.</p><p>Best regards,<br>Sarah Jenkins<br>Lead Product Manager</p>',
+    question_text: 'What is David requested to update?',
+    choices: {
+      A: 'The master roadmap document',
+      B: 'The company financial balance sheet',
+      C: 'The catering order for lunch',
+      D: 'The server security passwords'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B1',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "ซาร่าห์ขอให้เดวิดอัปเดตเอกสารแผนงานหลัก (master roadmap document)" }
+  },
+  {
+    question_id: 'q-710',
+    part: 7,
+    passage_title: 'EMAIL CORRESPONDENCE: Project Timeline Adjustment',
+    passage_content: '<p><strong>From:</strong> sarah.jenkins@innovatetech.com<br><strong>To:</strong> david.chen@innovatetech.com<br><strong>Date:</strong> August 7, 2026<br><strong>Subject:</strong> Revised Software Release Schedule</p><p>Hi David,</p><p>Following our client sync this morning, we need to push back the beta launch date by two weeks. The quality assurance team discovered edge-case bugs in the payment integration module during automated stress testing.</p><p>Could you please update the master roadmap document and notify the frontend engineering squad? We will hold a brief standup meeting tomorrow at 9:30 AM to reassign sprint tickets.</p><p>Best regards,<br>Sarah Jenkins<br>Lead Product Manager</p>',
+    question_text: 'What is Sarah Jenkins’ job title?',
+    choices: {
+      A: 'Lead Product Manager',
+      B: 'Chief Executive Officer',
+      C: 'Frontend Engineer',
+      D: 'Database Administrator'
+    },
+    correct_answer: 'A',
+    cefr_level: 'A2',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "คำลงท้ายลงตำแหน่งว่า Lead Product Manager" }
+  },
+  {
+    question_id: 'q-711',
+    part: 7,
+    passage_title: 'EMAIL CORRESPONDENCE: Project Timeline Adjustment',
+    passage_content: '<p><strong>From:</strong> sarah.jenkins@innovatetech.com<br><strong>To:</strong> david.chen@innovatetech.com<br><strong>Date:</strong> August 7, 2026<br><strong>Subject:</strong> Revised Software Release Schedule</p><p>Hi David,</p><p>Following our client sync this morning, we need to push back the beta launch date by two weeks. The quality assurance team discovered edge-case bugs in the payment integration module during automated stress testing.</p><p>Could you please update the master roadmap document and notify the frontend engineering squad? We will hold a brief standup meeting tomorrow at 9:30 AM to reassign sprint tickets.</p><p>Best regards,<br>Sarah Jenkins<br>Lead Product Manager</p>',
+    question_text: 'The word "discovered" in paragraph 1 is closest in meaning to:',
+    choices: {
+      A: 'found',
+      B: 'hidden',
+      C: 'ignored',
+      D: 'created'
+    },
+    correct_answer: 'A',
+    cefr_level: 'B1',
+    tags: ['Part 7'],
+    detailed_explanation: { correct_reason: "คำว่า 'discovered' แปลว่า ตรวจพบ/ค้นพบ ซึ่งตรงกับคำว่า 'found'" }
   }
 ];
+
+function shuffleArray(arr) {
+  const newArr = [...arr];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+}
 
 function shuffleQuestionChoices(q) {
   const choices = q.choices || {};
   const keys = ['A', 'B', 'C', 'D'];
   const originalCorrectText = choices[q.correct_answer] || choices['A'] || '';
 
-  const shuffledKeys = [...keys];
-  for (let i = shuffledKeys.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledKeys[i], shuffledKeys[j]] = [shuffledKeys[j], shuffledKeys[i]];
-  }
-
+  const shuffledKeys = shuffleArray(keys);
   const newChoices = {};
   let newCorrectKey = 'A';
 
@@ -217,16 +416,14 @@ module.exports = async function handler(req, res) {
       await connectToDatabase();
 
       if (mode === 'quick') {
-        // Target: 6 Part 5, 3 Part 6, 11 Part 7 (Total 20)
-        const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 15 } }]);
-        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 8 } }]);
-        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 20 } }]);
+        const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 20 } }]);
+        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 10 } }]);
+        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 25 } }]);
         questions = [...part5, ...part6, ...part7];
       } else {
-        // Full 100 Qs: 30 Part 5, 16 Part 6, 54 Part 7
-        const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 30 } }]);
-        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 16 } }]);
-        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 54 } }]);
+        const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 40 } }]);
+        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 20 } }]);
+        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 60 } }]);
         questions = [...part5, ...part6, ...part7];
       }
 
@@ -242,11 +439,14 @@ module.exports = async function handler(req, res) {
       questions = PRESEEDED_QUESTIONS;
     }
 
+    // Merge with PRESEEDED_QUESTIONS to guarantee massive pool
+    const combinedPool = shuffleArray(questions.concat(PRESEEDED_QUESTIONS));
+
     // Clean AI Generated prefix and Deduplicate
     const seenTexts = new Set();
     const cleanUniqueQuestions = [];
 
-    for (const qObj of questions) {
+    for (const qObj of combinedPool) {
       const q = qObj._doc || qObj;
       const rawText = String(q.question_text || '');
       const cleanedText = rawText.replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
@@ -261,43 +461,46 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    let selectedQuestions = cleanUniqueQuestions;
+    let selectedQuestions = [];
 
     if (mode === 'quick') {
-      const part5 = selectedQuestions.filter(q => q.part === 5);
-      const part6 = selectedQuestions.filter(q => q.part === 6);
-      const part7 = selectedQuestions.filter(q => q.part === 7);
+      // 100% GUARANTEE EXACTLY 20 QUESTIONS: 6 Part 5, 3 Part 6, 11 Part 7
+      let p5 = cleanUniqueQuestions.filter(q => q.part === 5);
+      let p6 = cleanUniqueQuestions.filter(q => q.part === 6);
+      let p7 = cleanUniqueQuestions.filter(q => q.part === 7);
+
+      p5 = shuffleArray(p5);
+      p6 = shuffleArray(p6);
+      p7 = shuffleArray(p7);
 
       selectedQuestions = [
-        ...part5.slice(0, 6),
-        ...part6.slice(0, 3),
-        ...part7.slice(0, 11)
+        ...p5.slice(0, 6),
+        ...p6.slice(0, 3),
+        ...p7.slice(0, 11)
       ];
 
-      // Array Padding: If deduplication dropped length below 20, pad with remaining pool items
+      // Array Padding: If length < 20, pad from any remaining items in pool
       if (selectedQuestions.length < 20) {
-        const pool = PRESEEDED_QUESTIONS.concat(cleanUniqueQuestions);
-        for (const p of pool) {
+        const remaining = shuffleArray(cleanUniqueQuestions);
+        for (const item of remaining) {
           if (selectedQuestions.length >= 20) break;
-          const cleanPText = String(p.question_text || '').replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
-          if (!selectedQuestions.some(existing => existing.question_text === cleanPText)) {
-            selectedQuestions.push({
-              ...p,
-              question_text: cleanPText
-            });
+          if (!selectedQuestions.some(sq => sq.question_text === item.question_text)) {
+            selectedQuestions.push(item);
           }
         }
       }
+    } else {
+      selectedQuestions = cleanUniqueQuestions.slice(0, 100);
     }
 
-    // Shuffle choices evenly across A, B, C, D
-    const shuffledQuestions = selectedQuestions.map(q => shuffleQuestionChoices(q));
+    // Shuffle choices evenly across A, B, C, D and randomize order of questions
+    const finalQuestions = shuffleArray(selectedQuestions).map(q => shuffleQuestionChoices(q));
 
     return res.status(200).json({
       success: true,
       mode,
-      total: shuffledQuestions.length,
-      questions: shuffledQuestions
+      total: finalQuestions.length,
+      questions: finalQuestions
     });
   } catch (err) {
     console.error('TOEIC questions handler error:', err);

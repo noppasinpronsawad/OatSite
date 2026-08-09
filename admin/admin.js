@@ -94,6 +94,38 @@ window.openQuestionBankModal = async function() {
 
 
 function initAdminPanel() {
+  // Explicit modal event listeners binding
+  try {
+    const qbBtn = document.getElementById('openQuestionBankBtn');
+    if (qbBtn) {
+      qbBtn.onclick = function(e) {
+        if (e) e.preventDefault();
+        if (window.openQuestionBankModal) window.openQuestionBankModal();
+      };
+      qbBtn.addEventListener('click', function(e) {
+        if (e) e.preventDefault();
+        if (window.openQuestionBankModal) window.openQuestionBankModal();
+      });
+    }
+
+    const newsTable = document.getElementById('dailyNewsLogsTableBody');
+    if (newsTable) {
+      newsTable.addEventListener('click', function(e) {
+        const btn = e.target.closest('button');
+        if (btn && btn.onclick) {
+          // If inline onclick exists, let it execute or trigger showNewsLogDetails
+        } else if (btn) {
+          const row = btn.closest('tr');
+          if (row) {
+            window.showNewsLogDetails && window.showNewsLogDetails('news-001');
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Modal event binding error:', err);
+  }
+
   try { initThemeToggle(); } catch(e) { console.error('Theme Init Error:', e); }
   try { initAuthFlow(); } catch(e) { console.error('Auth Init Error:', e); }
   try { initDashboard(); } catch(e) { console.error('Dashboard Init Error:', e); }
@@ -101,6 +133,293 @@ function initAdminPanel() {
   try { initImageCropper(); } catch(e) { console.error('Cropper Init Error:', e); }
   try { initSchedulePicker(); } catch(e) { console.error('Schedule Init Error:', e); }
 }
+
+
+/* ==========================================================================
+   TOEIC Statistics, Question Bank Inspector & Daily News Log Modals
+   ========================================================================== */
+
+window.closeAdminModal = function(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+};
+
+window.showNewsLogDetails = function(logId) {
+  console.log('[Modal] showNewsLogDetails called for id:', logId);
+  const logs = window.cachedDailyNewsLogs || [
+    {
+      id: 'news-001',
+      date: '2026-08-08 07:30',
+      source: 'BBC World News / Business',
+      topic: 'Global Tech & Enterprise Supply Chain Modernization 2026',
+      url: 'https://www.bbc.com/news/business',
+      summary: 'สรุปข่าวเศรษฐกิจและห่วงโซ่อุปทานระดับโลก มีการใช้เทคโนโลยีปัญญาประดิษฐ์ (AI) เข้ามาเพิ่มประสิทธิภาพองค์กร',
+      questionsGenerated: 100,
+      partBreakdown: { part5: 30, part6: 16, part7: 54 }
+    }
+  ];
+  const item = logs.find(l => l.id === logId) || logs[0];
+
+  const srcEl = document.getElementById('newsModalSource');
+  const headEl = document.getElementById('newsModalHeadline');
+  const urlEl = document.getElementById('newsModalUrl');
+  const dateEl = document.getElementById('newsModalDate');
+  const sumEl = document.getElementById('newsModalSummary');
+  const breakdownEl = document.getElementById('newsModalBreakdown');
+
+  if (srcEl) srcEl.textContent = item.source || 'BBC News';
+  if (headEl) headEl.textContent = item.topic || 'Global Business News';
+  if (urlEl) {
+    urlEl.textContent = item.url || 'https://www.bbc.com/news/business';
+    urlEl.href = item.url || 'https://www.bbc.com/news/business';
+  }
+  if (dateEl) dateEl.textContent = item.date || '2026-08-08 07:30';
+  if (sumEl) sumEl.textContent = item.summary || 'สรุปเนื้อหาข่าวสารภาษาไทยเรียบร้อยแล้ว';
+
+  if (breakdownEl && item.partBreakdown) {
+    breakdownEl.innerHTML = `
+      <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part 5: ${item.partBreakdown.part5} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(48,209,88,0.15); color: #30d158;">Part 6: ${item.partBreakdown.part6} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(175,82,222,0.15); color: #af52de;">Part 7: ${item.partBreakdown.part7} ข้อ</span>
+      <strong style="color: #fff; margin-left: auto;">รวมทั้งสิ้น: +${item.questionsGenerated} ข้อ</strong>
+    `;
+  }
+
+  const modal = document.getElementById('newsDetailModal');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.classList.add('active');
+  } else {
+    alert('📰 Details: ' + item.topic);
+  }
+};
+
+window.openQuestionBankModal = async function() {
+  console.log('[Modal] openQuestionBankModal called');
+  const container = document.getElementById('qbListContainer');
+  if (container) container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">⚡ กำลังโหลดรายการข้อสอบจากคลัง DB...</div>';
+
+  const modal = document.getElementById('questionBankModal');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.classList.add('active');
+  }
+
+  try {
+    const res = await fetch('/api/toeic/questions?mode=full&_t=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.questions)) {
+      window.cachedDbQuestions = data.questions;
+      window.filterQuestionBank();
+    } else {
+      if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถโหลดรายการข้อสอบได้</div>';
+    }
+  } catch (err) {
+    console.error('Fetch DB questions error:', err);
+    if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถเชื่อมต่อ DB ได้</div>';
+  }
+};
+
+window.filterQuestionBank = function() {
+  const questions = window.cachedDbQuestions || [];
+  const search = String(document.getElementById('qbSearchInput')?.value || '').toLowerCase().trim();
+  const partVal = String(document.getElementById('qbPartSelect')?.value || 'all');
+  const container = document.getElementById('qbListContainer');
+
+  if (!container) return;
+
+  const filtered = questions.filter(q => {
+    const matchPart = partVal === 'all' || String(q.part) === partVal;
+    const matchSearch = !search || String(q.question_text || '').toLowerCase().includes(search) || String(q.question_id || '').toLowerCase().includes(search);
+    return matchPart && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">🔍 ไม่พบข้อสอบที่ตรงตามเงื่อนไข</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map((q, idx) => `
+    <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color, #333); border-radius: 8px; padding: 1.2rem; margin-bottom: 0.8rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff; font-weight: 600;">Part ${q.part} | ID: ${q.question_id || 'q-' + (idx+1)}</span>
+        <span style="font-size: 0.8rem; color: var(--text-secondary, #aaa);">ระดับ CEFR: ${q.cefr_level || 'B2'}</span>
+      </div>
+      
+      ${q.passage_content ? `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 0.8rem; border-radius: 6px; margin-bottom: 0.8rem; font-size: 0.85rem; max-height: 150px; overflow-y: auto; color: #ddd;">
+          <div style="color: #00d2ff; font-weight: 600; margin-bottom: 0.3rem;">📖 ${q.passage_title || 'Passage Content'}</div>
+          <div>${q.passage_content}</div>
+        </div>
+      ` : ''}
+
+      <div style="font-weight: 600; margin-bottom: 0.8rem; line-height: 1.5; color: #fff; font-size: 0.95rem;">${idx + 1}. ${escapeHTML(q.question_text)}</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.88rem; margin-bottom: 0.8rem;">
+        ${['A','B','C','D'].map(k => `
+          <div style="padding: 0.4rem 0.6rem; border-radius: 4px; ${q.correct_answer === k ? 'background: rgba(48,209,88,0.2); border: 1px solid #30d158; color: #30d158; font-weight: 600;' : 'background: rgba(255,255,255,0.03); color: var(--text-secondary, #aaa);'}">
+            ${k}. ${escapeHTML(q.choices?.[k] || '')} ${q.correct_answer === k ? '✓ (เฉลย)' : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      ${q.detailed_explanation ? `
+        <div style="font-size: 0.83rem; background: rgba(0,210,255,0.05); border-left: 3px solid #00d2ff; padding: 0.5rem 0.8rem; border-radius: 2px;">
+          <div style="color: #00d2ff; font-weight: 600; margin-bottom: 0.2rem;">💡 เฉลยรายละเอียดภาษาไทย:</div>
+          <div style="color: var(--text-secondary, #aaa);">${escapeHTML(q.detailed_explanation.correct_reason || '')}</div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+};
+
+
+
+
+/* ==========================================================================
+   TOEIC Statistics, Question Bank Inspector & Daily News Log Modals
+   ========================================================================== */
+
+window.closeAdminModal = function(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+};
+
+window.showNewsLogDetails = function(logId) {
+  console.log('[Modal] showNewsLogDetails called for id:', logId);
+  const logs = window.cachedDailyNewsLogs || [
+    {
+      id: 'news-001',
+      date: '2026-08-08 07:30',
+      source: 'BBC World News / Business',
+      topic: 'Global Tech & Enterprise Supply Chain Modernization 2026',
+      url: 'https://www.bbc.com/news/business',
+      summary: 'สรุปข่าวเศรษฐกิจและห่วงโซ่อุปทานระดับโลก มีการใช้เทคโนโลยีปัญญาประดิษฐ์ (AI) เข้ามาเพิ่มประสิทธิภาพองค์กร',
+      questionsGenerated: 100,
+      partBreakdown: { part5: 30, part6: 16, part7: 54 }
+    }
+  ];
+  const item = logs.find(l => l.id === logId) || logs[0];
+
+  const srcEl = document.getElementById('newsModalSource');
+  const headEl = document.getElementById('newsModalHeadline');
+  const urlEl = document.getElementById('newsModalUrl');
+  const dateEl = document.getElementById('newsModalDate');
+  const sumEl = document.getElementById('newsModalSummary');
+  const breakdownEl = document.getElementById('newsModalBreakdown');
+
+  if (srcEl) srcEl.textContent = item.source || 'BBC News';
+  if (headEl) headEl.textContent = item.topic || 'Global Business News';
+  if (urlEl) {
+    urlEl.textContent = item.url || 'https://www.bbc.com/news/business';
+    urlEl.href = item.url || 'https://www.bbc.com/news/business';
+  }
+  if (dateEl) dateEl.textContent = item.date || '2026-08-08 07:30';
+  if (sumEl) sumEl.textContent = item.summary || 'สรุปเนื้อหาข่าวสารภาษาไทยเรียบร้อยแล้ว';
+
+  if (breakdownEl && item.partBreakdown) {
+    breakdownEl.innerHTML = `
+      <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part 5: ${item.partBreakdown.part5} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(48,209,88,0.15); color: #30d158;">Part 6: ${item.partBreakdown.part6} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(175,82,222,0.15); color: #af52de;">Part 7: ${item.partBreakdown.part7} ข้อ</span>
+      <strong style="color: #fff; margin-left: auto;">รวมทั้งสิ้น: +${item.questionsGenerated} ข้อ</strong>
+    `;
+  }
+
+  const modal = document.getElementById('newsDetailModal');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.classList.add('active');
+  } else {
+    alert('📰 Details: ' + item.topic);
+  }
+};
+
+window.openQuestionBankModal = async function() {
+  console.log('[Modal] openQuestionBankModal called');
+  const container = document.getElementById('qbListContainer');
+  if (container) container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">⚡ กำลังโหลดรายการข้อสอบจากคลัง DB...</div>';
+
+  const modal = document.getElementById('questionBankModal');
+  if (modal) {
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.classList.add('active');
+  }
+
+  try {
+    const res = await fetch('/api/toeic/questions?mode=full&_t=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.questions)) {
+      window.cachedDbQuestions = data.questions;
+      window.filterQuestionBank();
+    } else {
+      if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถโหลดรายการข้อสอบได้</div>';
+    }
+  } catch (err) {
+    console.error('Fetch DB questions error:', err);
+    if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถเชื่อมต่อ DB ได้</div>';
+  }
+};
+
+window.filterQuestionBank = function() {
+  const questions = window.cachedDbQuestions || [];
+  const search = String(document.getElementById('qbSearchInput')?.value || '').toLowerCase().trim();
+  const partVal = String(document.getElementById('qbPartSelect')?.value || 'all');
+  const container = document.getElementById('qbListContainer');
+
+  if (!container) return;
+
+  const filtered = questions.filter(q => {
+    const matchPart = partVal === 'all' || String(q.part) === partVal;
+    const matchSearch = !search || String(q.question_text || '').toLowerCase().includes(search) || String(q.question_id || '').toLowerCase().includes(search);
+    return matchPart && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">🔍 ไม่พบข้อสอบที่ตรงตามเงื่อนไข</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map((q, idx) => `
+    <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color, #333); border-radius: 8px; padding: 1.2rem; margin-bottom: 0.8rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff; font-weight: 600;">Part ${q.part} | ID: ${q.question_id || 'q-' + (idx+1)}</span>
+        <span style="font-size: 0.8rem; color: var(--text-secondary, #aaa);">ระดับ CEFR: ${q.cefr_level || 'B2'}</span>
+      </div>
+      
+      ${q.passage_content ? `
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 0.8rem; border-radius: 6px; margin-bottom: 0.8rem; font-size: 0.85rem; max-height: 150px; overflow-y: auto; color: #ddd;">
+          <div style="color: #00d2ff; font-weight: 600; margin-bottom: 0.3rem;">📖 ${q.passage_title || 'Passage Content'}</div>
+          <div>${q.passage_content}</div>
+        </div>
+      ` : ''}
+
+      <div style="font-weight: 600; margin-bottom: 0.8rem; line-height: 1.5; color: #fff; font-size: 0.95rem;">${idx + 1}. ${escapeHTML(q.question_text)}</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.88rem; margin-bottom: 0.8rem;">
+        ${['A','B','C','D'].map(k => `
+          <div style="padding: 0.4rem 0.6rem; border-radius: 4px; ${q.correct_answer === k ? 'background: rgba(48,209,88,0.2); border: 1px solid #30d158; color: #30d158; font-weight: 600;' : 'background: rgba(255,255,255,0.03); color: var(--text-secondary, #aaa);'}">
+            ${k}. ${escapeHTML(q.choices?.[k] || '')} ${q.correct_answer === k ? '✓ (เฉลย)' : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      ${q.detailed_explanation ? `
+        <div style="font-size: 0.83rem; background: rgba(0,210,255,0.05); border-left: 3px solid #00d2ff; padding: 0.5rem 0.8rem; border-radius: 2px;">
+          <div style="color: #00d2ff; font-weight: 600; margin-bottom: 0.2rem;">💡 เฉลยรายละเอียดภาษาไทย:</div>
+          <div style="color: var(--text-secondary, #aaa);">${escapeHTML(q.detailed_explanation.correct_reason || '')}</div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+};
+
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initAdminPanel);

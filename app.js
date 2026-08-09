@@ -950,7 +950,7 @@ async function startToeicExam() {
 
   // Fetch questions from API
   try {
-    const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}`);
+    const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}&_t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if (data.success && Array.isArray(data.questions)) {
       toeicQuestions = data.questions;
@@ -1027,11 +1027,9 @@ function renderToeicQuestion(index) {
 
   const isFlagged = !!toeicFlagged[q.question_id];
   const selectedChoice = toeicUserAnswers[q.question_id] || '';
-
-  // Clean AI Generated prefix if present
   const cleanQText = String(q.question_text || '').replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
 
-  // Part 5 Layout
+  // Part 5 Layout (Single Pane)
   if (q.part === 5) {
     pane.innerHTML = `
       <div class="q-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
@@ -1067,32 +1065,41 @@ function renderToeicQuestion(index) {
       </div>
     `;
   } else {
-    // Top-Bottom Layout for Part 6 & Part 7 (Article Top + Guidance Right, Question Bottom)
+    // PASSAGE RETENTION LOGIC (Part 6 & Part 7)
+    // Find passage_title and passage_content from current question or look backwards to parent question
+    let passageTitle = q.passage_title || '';
+    let passageContent = q.passage_content || '';
+
+    if (!passageContent) {
+      for (let i = index - 1; i >= 0; i--) {
+        const prevQ = toeicQuestions[i];
+        if (prevQ.part === q.part && prevQ.passage_content) {
+          passageTitle = prevQ.passage_title || passageTitle;
+          passageContent = prevQ.passage_content;
+          break;
+        }
+      }
+    }
+
+    if (!passageContent) {
+      passageTitle = `Part ${q.part} Reading Passage`;
+      passageContent = '<p>Read the passage carefully and select the best answer for each question below.</p>';
+    }
+
+    // Top-Bottom Layout with NO Guidance Panel (100% Full Width Passage Box)
     pane.innerHTML = `
       <div class="toeic-passage-layout">
-        <!-- TOP SECTION: Article (Left) + Guidance Card (Right) -->
-        <div class="passage-top-row" style="display: grid; grid-template-columns: 1fr 280px; gap: 1.2rem; margin-bottom: 1.5rem;">
-          
-          <!-- Article / Reading Passage Box (Sticky Top) -->
-          <div class="passage-container" style="max-height: 320px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.2rem;">
-            <div class="passage-title" style="font-weight: 700; color: #00d2ff; margin-bottom: 0.6rem; font-size: 1.05rem;">📖 ${escapeHTML(q.passage_title || `Part ${q.part} Reading Passage`)}</div>
-            <div class="passage-body" style="font-size: 0.92rem; line-height: 1.6; color: var(--text-primary);">
-              ${q.passage_content || '<p>Read the passage and answer the questions below.</p>'}
+        <!-- TOP SECTION: Full-Width Reading Passage Box -->
+        <div class="passage-top-row" style="margin-bottom: 1.5rem;">
+          <div class="passage-container" style="max-height: 350px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; width: 100%;">
+            <div class="passage-title" style="font-weight: 700; color: #00d2ff; margin-bottom: 0.8rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: space-between;">
+              <span>📖 ${escapeHTML(passageTitle)}</span>
+              <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 400;">Part ${q.part} (${q.part === 6 ? 'Text Completion' : 'Reading Comprehension'})</span>
+            </div>
+            <div class="passage-body" style="font-size: 0.95rem; line-height: 1.65; color: var(--text-primary);">
+              ${passageContent}
             </div>
           </div>
-
-          <!-- Total Question Guidance Card (Sticky Right) -->
-          <div class="passage-guidance-card" style="background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.25); border-radius: 12px; padding: 1.2rem; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <div style="font-size: 0.78rem; text-transform: uppercase; color: #00d2ff; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.4rem;">Passage Progress & Guidance</div>
-              <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Question ${index + 1} of ${toeicQuestions.length}</div>
-              <div style="font-size: 0.85rem; color: var(--text-secondary);">Part ${q.part} (${q.part === 6 ? 'Text Completion' : 'Reading Comprehension'})</div>
-            </div>
-            <div style="margin-top: 1rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">
-              💡 บทความจะแสดงค้างไว้อย่างต่อเนื่องจนกว่าจะจบชุดคำถามของบทความนี้
-            </div>
-          </div>
-
         </div>
 
         <!-- BOTTOM SECTION: Question & Answer Choices -->

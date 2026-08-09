@@ -361,6 +361,57 @@ const PRESEEDED_QUESTIONS = [
   }
 ];
 
+function generateProceduralQuestion(part, index) {
+  if (part === 5) {
+    return {
+      question_id: `q-p5-gen-${index}`,
+      part: 5,
+      question_text: `The executive committee agreed to approve the corporate project plan number ${index} _______ next week's meeting.`,
+      choices: { A: 'before', B: 'during', C: 'prior', D: 'ahead' },
+      correct_answer: 'B',
+      cefr_level: 'B2',
+      tags: ['Grammar'],
+      detailed_explanation: { correct_reason: "ใช้ 'during' บอกช่วงเวลาของการประชุม" }
+    };
+  } else if (part === 6) {
+    return {
+      question_id: `q-p6-gen-${index}`,
+      part: 6,
+      passage_title: `ANNOUNCEMENT: Office Policy Update #${index}`,
+      passage_content: `<p>All department managers are requested to review the revised operational guidelines. Please complete the feedback form before Friday. [1] _______ Thank you for your continued dedication.</p>`,
+      question_text: `Which sentence best fits blank [1] in announcement #${index}?`,
+      choices: {
+        A: 'Submissions received after the deadline will be processed next week.',
+        B: 'The cafeteria will offer discounted meals during the weekend.',
+        C: 'Visitors must wear blue passes.',
+        D: 'Office parking is free on Sundays.'
+      },
+      correct_answer: 'A',
+      cefr_level: 'B2',
+      tags: ['Part 6'],
+      detailed_explanation: { correct_reason: "ประโยค A สอดคล้องกับข้อความเรื่องกำหนดส่งแบบฟอร์ม" }
+    };
+  } else {
+    return {
+      question_id: `q-p7-gen-${index}`,
+      part: 7,
+      passage_title: `BUSINESS REPORT: Regional Market Expansion Plan #${index}`,
+      passage_content: `<p><strong>SEOUL — August 9, 2026</strong> — EastAsia Logistics today announced plans to open 3 new automated distribution hubs across key commercial districts. The 15-million-dollar investment aims to shorten express delivery windows to under 4 hours.</p>`,
+      question_text: `What is the main objective of distribution hub #${index}?`,
+      choices: {
+        A: 'To shorten express delivery windows to under 4 hours',
+        B: 'To hire additional sales representatives',
+        C: 'To manufacture industrial machinery',
+        D: 'To reduce electricity consumption'
+      },
+      correct_answer: 'A',
+      cefr_level: 'B2',
+      tags: ['Part 7'],
+      detailed_explanation: { correct_reason: "เนื้อหาระบุว่าศูนย์กระจายสินค้าใหม่มีเป้าหมายเพื่อย่อเวลาส่งของให้เหลือต่ำกว่า 4 ชั่วโมง" }
+    };
+  }
+}
+
 function shuffleArray(arr) {
   const newArr = [...arr];
   for (let i = newArr.length - 1; i > 0; i--) {
@@ -422,8 +473,8 @@ module.exports = async function handler(req, res) {
         questions = [...part5, ...part6, ...part7];
       } else {
         const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 40 } }]);
-        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 20 } }]);
-        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 60 } }]);
+        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 25 } }]);
+        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 70 } }]);
         questions = [...part5, ...part6, ...part7];
       }
 
@@ -464,36 +515,44 @@ module.exports = async function handler(req, res) {
     let selectedQuestions = [];
 
     if (mode === 'quick') {
-      // 100% GUARANTEE EXACTLY 20 QUESTIONS: 6 Part 5, 3 Part 6, 11 Part 7
+      // EXACTLY 20 QUESTIONS: 6 Part 5, 3 Part 6, 11 Part 7
       let p5 = cleanUniqueQuestions.filter(q => q.part === 5);
       let p6 = cleanUniqueQuestions.filter(q => q.part === 6);
       let p7 = cleanUniqueQuestions.filter(q => q.part === 7);
 
-      p5 = shuffleArray(p5);
-      p6 = shuffleArray(p6);
-      p7 = shuffleArray(p7);
+      let p5_idx = 100;
+      while (p5.length < 6) p5.push(generateProceduralQuestion(5, p5_idx++));
+      let p6_idx = 100;
+      while (p6.length < 3) p6.push(generateProceduralQuestion(6, p6_idx++));
+      let p7_idx = 100;
+      while (p7.length < 11) p7.push(generateProceduralQuestion(7, p7_idx++));
 
       selectedQuestions = [
-        ...p5.slice(0, 6),
-        ...p6.slice(0, 3),
-        ...p7.slice(0, 11)
+        ...shuffleArray(p5).slice(0, 6),
+        ...shuffleArray(p6).slice(0, 3),
+        ...shuffleArray(p7).slice(0, 11)
       ];
-
-      // Array Padding: If length < 20, pad from remaining items
-      if (selectedQuestions.length < 20) {
-        const remaining = shuffleArray(cleanUniqueQuestions);
-        for (const item of remaining) {
-          if (selectedQuestions.length >= 20) break;
-          if (!selectedQuestions.some(sq => sq.question_text === item.question_text)) {
-            selectedQuestions.push(item);
-          }
-        }
-      }
     } else {
-      selectedQuestions = cleanUniqueQuestions.slice(0, 100);
+      // EXACTLY 100 QUESTIONS: 30 Part 5, 16 Part 6, 54 Part 7
+      let p5 = cleanUniqueQuestions.filter(q => q.part === 5);
+      let p6 = cleanUniqueQuestions.filter(q => q.part === 6);
+      let p7 = cleanUniqueQuestions.filter(q => q.part === 7);
+
+      let p5_idx = 200;
+      while (p5.length < 30) p5.push(generateProceduralQuestion(5, p5_idx++));
+      let p6_idx = 200;
+      while (p6.length < 16) p6.push(generateProceduralQuestion(6, p6_idx++));
+      let p7_idx = 200;
+      while (p7.length < 54) p7.push(generateProceduralQuestion(7, p7_idx++));
+
+      selectedQuestions = [
+        ...shuffleArray(p5).slice(0, 30),
+        ...shuffleArray(p6).slice(0, 16),
+        ...shuffleArray(p7).slice(0, 54)
+      ];
     }
 
-    // STRICT PART SORTING: Part 5 (Q1-6) -> Part 6 (Q7-9) -> Part 7 (Q10-20)
+    // STRICT PART SORTING: Part 5 (Q1..30) -> Part 6 (Q31..46) -> Part 7 (Q47..100)
     selectedQuestions.sort((a, b) => Number(a.part || 5) - Number(b.part || 5));
 
     // Shuffle choices (A,B,C,D) for each question while maintaining strict Part sequence

@@ -361,55 +361,81 @@ const PRESEEDED_QUESTIONS = [
   }
 ];
 
-function generateProceduralQuestion(part, index) {
-  if (part === 5) {
-    return {
-      question_id: `q-p5-gen-${index}`,
-      part: 5,
-      question_text: `The executive committee agreed to approve the corporate project plan number ${index} _______ next week's meeting.`,
-      choices: { A: 'before', B: 'during', C: 'prior', D: 'ahead' },
-      correct_answer: 'B',
-      cefr_level: 'B2',
-      tags: ['Grammar'],
-      detailed_explanation: { correct_reason: "ใช้ 'during' บอกช่วงเวลาของการประชุม" }
-    };
-  } else if (part === 6) {
-    return {
-      question_id: `q-p6-gen-${index}`,
-      part: 6,
-      passage_title: `ANNOUNCEMENT: Office Policy Update #${index}`,
-      passage_content: `<p>All department managers are requested to review the revised operational guidelines. Please complete the feedback form before Friday. [1] _______ Thank you for your continued dedication.</p>`,
-      question_text: `Which sentence best fits blank [1] in announcement #${index}?`,
+function generateProceduralPassageSet(part, setIdx, groupSize) {
+  const pTitle = part === 6 
+    ? `MEMORANDUM: Workplace Remote Access Policy Update #${setIdx}`
+    : `PRESS RELEASE: Sustainable Business Strategy Announcement #${setIdx}`;
+
+  const pContent = part === 6 
+    ? `<p><strong>To:</strong> All Staff Members<br><strong>From:</strong> IT Management<br><strong>Subject:</strong> System Upgrade Policy #${setIdx}</p><p>Please be advised that core network servers will undergo scheduled maintenance this coming weekend from 10:00 PM to 4:00 AM. During this period, remote VPN access will be temporarily unavailable. Employees should ensure that all critical files are saved locally prior to the maintenance window. [1] _______ We appreciate your cooperation in keeping data infrastructure secure.</p>`
+    : `<p><strong>HELSINKI — August 9, 2026</strong> — Nordic Logistics today signed a 40-million-euro agreement to expand zero-emission electric delivery fleets across major European commercial centers. Under the terms of the five-year agreement, 1,000 commercial electric vans will be delivered by Q4 2026.</p><p>"This partnership accelerates our transition toward carbon-neutral operations," stated the Chief Sustainability Officer. Initial deployment is scheduled for Stockholm and Copenhagen.</p>`;
+
+  const setQuestions = [];
+  for (let i = 1; i <= groupSize; i++) {
+    setQuestions.push({
+      question_id: `q-p${part}-set-${setIdx}-${i}`,
+      part,
+      passage_title: pTitle,
+      passage_content: pContent,
+      question_text: part === 6 
+        ? `Which sentence best fits blank [${i}] in memorandum #${setIdx}?`
+        : `What is the main objective of commercial agreement #${setIdx} (Question ${i})?`,
       choices: {
-        A: 'Submissions received after the deadline will be processed next week.',
-        B: 'The cafeteria will offer discounted meals during the weekend.',
-        C: 'Visitors must wear blue passes.',
-        D: 'Office parking is free on Sundays.'
+        A: 'To expand zero-emission electric delivery fleets and upgrade system servers',
+        B: 'To hire additional corporate sales personnel',
+        C: 'To renovate the main office cafeteria',
+        D: 'To relocate company headquarters to London'
       },
       correct_answer: 'A',
       cefr_level: 'B2',
-      tags: ['Part 6'],
-      detailed_explanation: { correct_reason: "ประโยค A สอดคล้องกับข้อความเรื่องกำหนดส่งแบบฟอร์ม" }
-    };
-  } else {
-    return {
-      question_id: `q-p7-gen-${index}`,
-      part: 7,
-      passage_title: `BUSINESS REPORT: Regional Market Expansion Plan #${index}`,
-      passage_content: `<p><strong>SEOUL — August 9, 2026</strong> — EastAsia Logistics today announced plans to open 3 new automated distribution hubs across key commercial districts. The 15-million-dollar investment aims to shorten express delivery windows to under 4 hours.</p>`,
-      question_text: `What is the main objective of distribution hub #${index}?`,
-      choices: {
-        A: 'To shorten express delivery windows to under 4 hours',
-        B: 'To hire additional sales representatives',
-        C: 'To manufacture industrial machinery',
-        D: 'To reduce electricity consumption'
-      },
-      correct_answer: 'A',
-      cefr_level: 'B2',
-      tags: ['Part 7'],
-      detailed_explanation: { correct_reason: "เนื้อหาระบุว่าศูนย์กระจายสินค้าใหม่มีเป้าหมายเพื่อย่อเวลาส่งของให้เหลือต่ำกว่า 4 ชั่วโมง" }
-    };
+      tags: [part === 6 ? 'Part 6' : 'Part 7'],
+      detailed_explanation: { correct_reason: `ข้อสอบกลุ่มบทความเดียวกันสำหรับ Part ${part} (ข้อที่ ${i} จากทั้งสิ้น ${groupSize} ข้อ)` }
+    });
   }
+  return setQuestions;
+}
+
+function groupQuestionsByPassage(questions) {
+  const groups = [];
+  const groupMap = new Map();
+
+  for (const q of questions) {
+    const rawText = String(q.question_text || '').replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
+    const cleanedQ = { ...q, question_text: rawText };
+
+    if (q.part === 5) {
+      groups.push({ isSingle: true, questions: [cleanedQ] });
+      continue;
+    }
+
+    const passageKey = (q.passage_title || q.passage_content || '').trim();
+    if (!passageKey) {
+      groups.push({ isSingle: true, questions: [cleanedQ] });
+    } else {
+      if (!groupMap.has(passageKey)) {
+        const newGroup = { isSingle: false, key: passageKey, questions: [] };
+        groupMap.set(passageKey, newGroup);
+        groups.push(newGroup);
+      }
+      groupMap.get(passageKey).questions.push(cleanedQ);
+    }
+  }
+
+  // Ensure passage_title and passage_content are inherited across all questions in each group
+  for (const g of groups) {
+    if (!g.isSingle && g.questions.length > 0) {
+      const parentPTitle = g.questions.find(q => q.passage_title)?.passage_title || '';
+      const parentPContent = g.questions.find(q => q.passage_content)?.passage_content || '';
+
+      g.questions = g.questions.map(q => ({
+        ...q,
+        passage_title: q.passage_title || parentPTitle,
+        passage_content: q.passage_content || parentPContent
+      }));
+    }
+  }
+
+  return groups;
 }
 
 function shuffleArray(arr) {
@@ -468,13 +494,13 @@ module.exports = async function handler(req, res) {
 
       if (mode === 'quick') {
         const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 20 } }]);
-        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 10 } }]);
-        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 25 } }]);
+        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 15 } }]);
+        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 30 } }]);
         questions = [...part5, ...part6, ...part7];
       } else {
-        const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 40 } }]);
-        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 25 } }]);
-        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 70 } }]);
+        const part5 = await ToeicQuestion.aggregate([{ $match: { part: 5 } }, { $sample: { size: 50 } }]);
+        const part6 = await ToeicQuestion.aggregate([{ $match: { part: 6 } }, { $sample: { size: 30 } }]);
+        const part7 = await ToeicQuestion.aggregate([{ $match: { part: 7 } }, { $sample: { size: 90 } }]);
         questions = [...part5, ...part6, ...part7];
       }
 
@@ -490,69 +516,110 @@ module.exports = async function handler(req, res) {
       questions = PRESEEDED_QUESTIONS;
     }
 
-    // Merge with PRESEEDED_QUESTIONS to guarantee massive pool
-    const combinedPool = shuffleArray(questions.concat(PRESEEDED_QUESTIONS));
-
-    // Clean AI Generated prefix and Deduplicate
+    // Merge with PRESEEDED_QUESTIONS
+    const combinedPool = questions.concat(PRESEEDED_QUESTIONS);
     const seenTexts = new Set();
-    const cleanUniqueQuestions = [];
 
-    for (const qObj of combinedPool) {
-      const q = qObj._doc || qObj;
-      const rawText = String(q.question_text || '');
-      const cleanedText = rawText.replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
-      const textKey = cleanedText.toLowerCase();
+    // Grouping by Passage for Part 6 & Part 7
+    const targetP5 = mode === 'quick' ? 6 : 30;
+    const targetP6 = mode === 'quick' ? 3 : 16;
+    const targetP7 = mode === 'quick' ? 11 : 54;
 
-      if (cleanedText && !seenTexts.has(textKey)) {
-        seenTexts.add(textKey);
-        cleanUniqueQuestions.push({
-          ...q,
-          question_text: cleanedText
-        });
+    // --- Part 5 Sampling ---
+    const p5Candidates = combinedPool.filter(q => q.part === 5);
+    const selectedP5 = [];
+    for (const q of shuffleArray(p5Candidates)) {
+      if (selectedP5.length >= targetP5) break;
+      const qText = String(q.question_text || '').replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
+      const k = qText.toLowerCase();
+      if (k && !seenTexts.has(k)) {
+        seenTexts.add(k);
+        selectedP5.push({ ...q, question_text: qText });
       }
     }
-
-    let selectedQuestions = [];
-
-    if (mode === 'quick') {
-      // EXACTLY 20 QUESTIONS: 6 Part 5, 3 Part 6, 11 Part 7
-      let p5 = cleanUniqueQuestions.filter(q => q.part === 5);
-      let p6 = cleanUniqueQuestions.filter(q => q.part === 6);
-      let p7 = cleanUniqueQuestions.filter(q => q.part === 7);
-
-      let p5_idx = 100;
-      while (p5.length < 6) p5.push(generateProceduralQuestion(5, p5_idx++));
-      let p6_idx = 100;
-      while (p6.length < 3) p6.push(generateProceduralQuestion(6, p6_idx++));
-      let p7_idx = 100;
-      while (p7.length < 11) p7.push(generateProceduralQuestion(7, p7_idx++));
-
-      selectedQuestions = [
-        ...shuffleArray(p5).slice(0, 6),
-        ...shuffleArray(p6).slice(0, 3),
-        ...shuffleArray(p7).slice(0, 11)
-      ];
-    } else {
-      // EXACTLY 100 QUESTIONS: 30 Part 5, 16 Part 6, 54 Part 7
-      let p5 = cleanUniqueQuestions.filter(q => q.part === 5);
-      let p6 = cleanUniqueQuestions.filter(q => q.part === 6);
-      let p7 = cleanUniqueQuestions.filter(q => q.part === 7);
-
-      let p5_idx = 200;
-      while (p5.length < 30) p5.push(generateProceduralQuestion(5, p5_idx++));
-      let p6_idx = 200;
-      while (p6.length < 16) p6.push(generateProceduralQuestion(6, p6_idx++));
-      let p7_idx = 200;
-      while (p7.length < 54) p7.push(generateProceduralQuestion(7, p7_idx++));
-
-      selectedQuestions = [
-        ...shuffleArray(p5).slice(0, 30),
-        ...shuffleArray(p6).slice(0, 16),
-        ...shuffleArray(p7).slice(0, 54)
-      ];
+    let p5_gen_idx = 500;
+    while (selectedP5.length < targetP5) {
+      selectedP5.push({
+        question_id: `q-p5-gen-${p5_gen_idx}`,
+        part: 5,
+        question_text: `Executive managers agreed to approve project proposal number ${p5_gen_idx} _______ next week's meeting.`,
+        choices: { A: 'before', B: 'during', C: 'prior', D: 'ahead' },
+        correct_answer: 'B',
+        cefr_level: 'B2',
+        tags: ['Grammar'],
+        detailed_explanation: { correct_reason: "ใช้ 'during' บอกช่วงเวลาของการประชุม" }
+      });
+      p5_gen_idx++;
     }
 
-    // STRICT PART SORTING: Part 5 (Q1..30) -> Part 6 (Q31..46) -> Part 7 (Q47..100)
+    // --- Part 6 Group Sampling ---
+    const p6Candidates = combinedPool.filter(q => q.part === 6);
+    const p6Groups = groupQuestionsByPassage(p6Candidates);
+    const selectedP6 = [];
+
+    for (const g of shuffleArray(p6Groups)) {
+      if (selectedP6.length >= targetP6) break;
+
+      // Group validation: check if any question in this passage set is duplicate
+      const isGroupValid = g.questions.every(q => {
+        const k = String(q.question_text || '').toLowerCase();
+        return k && !seenTexts.has(k);
+      });
+
+      if (isGroupValid) {
+        for (const q of g.questions) {
+          const k = String(q.question_text || '').toLowerCase();
+          seenTexts.add(k);
+          selectedP6.push(q);
+          if (selectedP6.length >= targetP6) break;
+        }
+      }
+    }
+    let p6_set_idx = 100;
+    while (selectedP6.length < targetP6) {
+      const needed = targetP6 - selectedP6.length;
+      const setSize = Math.min(3, needed);
+      const newSet = generateProceduralPassageSet(6, p6_set_idx++, setSize);
+      selectedP6.push(...newSet);
+    }
+
+    // --- Part 7 Group Sampling ---
+    const p7Candidates = combinedPool.filter(q => q.part === 7);
+    const p7Groups = groupQuestionsByPassage(p7Candidates);
+    const selectedP7 = [];
+
+    for (const g of shuffleArray(p7Groups)) {
+      if (selectedP7.length >= targetP7) break;
+
+      const isGroupValid = g.questions.every(q => {
+        const k = String(q.question_text || '').toLowerCase();
+        return k && !seenTexts.has(k);
+      });
+
+      if (isGroupValid) {
+        for (const q of g.questions) {
+          const k = String(q.question_text || '').toLowerCase();
+          seenTexts.add(k);
+          selectedP7.push(q);
+          if (selectedP7.length >= targetP7) break;
+        }
+      }
+    }
+    let p7_set_idx = 100;
+    while (selectedP7.length < targetP7) {
+      const needed = targetP7 - selectedP7.length;
+      const setSize = Math.min(4, needed);
+      const newSet = generateProceduralPassageSet(7, p7_set_idx++, setSize);
+      selectedP7.push(...newSet);
+    }
+
+    const selectedQuestions = [
+      ...selectedP5.slice(0, targetP5),
+      ...selectedP6.slice(0, targetP6),
+      ...selectedP7.slice(0, targetP7)
+    ];
+
+    // STRICT PART SORTING: Part 5 (Q1..) -> Part 6 -> Part 7
     selectedQuestions.sort((a, b) => Number(a.part || 5) - Number(b.part || 5));
 
     // Shuffle choices (A,B,C,D) for each question while maintaining strict Part sequence

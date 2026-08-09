@@ -713,7 +713,15 @@
         padding: 0.5rem 0.4rem;
       }
     }
-  </style>
+  
+    /* Force Modal Visibility Specificity */
+    .admin-modal.active, #newsDetailModal.active, #questionBankModal.active {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      z-index: 999999 !important;
+    }
+</style>
 
   <style>
     .alert-banner {
@@ -1178,7 +1186,7 @@
   </div>
 
   <!-- NEWS INGESTION LOG DETAIL MODAL -->
-  <div id="newsDetailModal" class="admin-modal" style="display: none;">
+  <div id="newsDetailModal" class="admin-modal" style="">
     <div class="admin-modal-content" style="max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
         <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.2rem;">📰 Daily News Ingestion Log Detail</h3>
@@ -1200,7 +1208,7 @@
   </div>
 
   <!-- DAILY NEWS LOG DETAIL MODAL -->
-  <div id="newsDetailModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+  <div id="newsDetailModal" class="admin-modal" style=" position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
     <div class="admin-modal-content" style="width: 90%; max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem;">
         <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.25rem; font-weight: 700;">📰 Daily News Ingestion Log Detail</h3>
@@ -1222,7 +1230,7 @@
   </div>
 
   <!-- QUESTION BANK INSPECTOR MODAL (VIEW ALL QUESTIONS IN DB) -->
-  <div id="questionBankModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+  <div id="questionBankModal" class="admin-modal" style=" position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
     <div class="admin-modal-content" style="width: 92%; max-width: 850px; max-height: 85vh; overflow-y: auto; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card, #1c1c1e); z-index: 10;">
         <div>
@@ -1249,6 +1257,6 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=4.4"></script>
+  <script src="/admin/admin.js?v=4.5"></script>
 </body>
 </html>

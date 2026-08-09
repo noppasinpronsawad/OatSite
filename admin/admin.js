@@ -59,7 +59,7 @@ window.showNewsLogDetails = function(logId) {
 
   const modal = document.getElementById('newsDetailModal');
   if (modal) {
-    modal.style.display = 'flex';
+    modal.style.setProperty('display', 'flex', 'important'); modal.classList.add('active');
     modal.classList.add('active');
   } else {
     alert('📰 Details: ' + item.topic);
@@ -73,7 +73,7 @@ window.openQuestionBankModal = async function() {
 
   const modal = document.getElementById('questionBankModal');
   if (modal) {
-    modal.style.display = 'flex';
+    modal.style.setProperty('display', 'flex', 'important'); modal.classList.add('active');
     modal.classList.add('active');
   }
 

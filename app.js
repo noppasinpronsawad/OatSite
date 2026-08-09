@@ -1287,20 +1287,9 @@ function renderSkillImprovementRecommendations() {
   const container = document.getElementById('toeicSkillRecommendations');
   if (!container) return;
 
-  const tagErrors = {};
-  toeicQuestions.forEach(q => {
-    const userAns = toeicUserAnswers[q.question_id];
-    if (userAns !== q.correct_answer) {
-      const tags = Array.isArray(q.tags) ? q.tags : ['General'];
-      tags.forEach(t => {
-        tagErrors[t] = (tagErrors[t] || 0) + 1;
-      });
-    }
-  });
+  const incorrectQuestions = toeicQuestions.filter(q => toeicUserAnswers[q.question_id] !== q.correct_answer);
 
-  const sortedTags = Object.keys(tagErrors).sort((a, b) => tagErrors[b] - tagErrors[a]);
-
-  if (sortedTags.length === 0) {
+  if (incorrectQuestions.length === 0) {
     container.innerHTML = `
       <div style="padding: 1rem; background: rgba(48, 209, 88, 0.15); border: 1px solid #30d158; border-radius: 8px; color: #30d158;">
         🎉 <strong>ยอดเยี่ยมระดับมืออาชีพ!</strong> คุณทำข้อสอบถูกทุกข้อ ความรู้ไวยากรณ์และการอ่านภาษาอังกฤษของคุณอยู่ในระดับท็อปมาตรฐาน C1
@@ -1308,6 +1297,17 @@ function renderSkillImprovementRecommendations() {
     `;
     return;
   }
+
+  // Count primary topic for each incorrect question
+  const topicCountMap = {};
+  incorrectQuestions.forEach(q => {
+    const primaryTopic = (Array.isArray(q.tags) && q.tags.length > 0) ? q.tags[0] : 'General Grammar';
+    topicCountMap[primaryTopic] = (topicCountMap[primaryTopic] || 0) + 1;
+  });
+
+  const sortedTopics = Object.keys(topicCountMap).sort((a, b) => topicCountMap[b] - topicCountMap[a]);
+  // Limit topics shown to not exceed the actual number of incorrect questions
+  const displayTopics = sortedTopics.slice(0, Math.min(sortedTopics.length, incorrectQuestions.length));
 
   const tagAdviceMap = {
     'Grammar': 'ควรทบทวนเรื่องโครงสร้างไวยากรณ์ (Grammar Rules), Tenses, และการผันกริยาตามประธาน (Subject-Verb Agreement)',
@@ -1317,18 +1317,20 @@ function renderSkillImprovementRecommendations() {
     'Business Context': 'ควรฝึกอ่านเอกสารภาษาอังกฤษในบริบทออฟฟิศ การจัดซื้อ การประชุม และอีเมลติดต่อธุรกิจ',
     'If-Clause': 'ควรทบทวนประโยคเงื่อนไข If-Clause ทั้ง 3 รูปแบบ',
     'Passive Voice': 'ควรทบทวนเรื่องประธานโดนกระทำ (be + V.3)',
+    'Gerund': 'ควรทบทวนและฝึกทำโจทย์ในหมวด Gerund และ Infinitive เพิ่มเติม',
+    'Adjective': 'ควรทบทวนคำคุณศัพท์และการขยายคำนามในประโยค',
     'Part 6': 'ควรฝึกอ่านบทความสั้นและทักษะการเติมประโยคที่สอดคล้องกับบริบท (Sentence Insertion)',
-    'Part 7': 'ควรฝึกสแกนหาข้อมูลอย่างรวดเร็ว (Skimming & Scanning) ในอีเมล บันทึกข้อความ และเอกสารหลายฉบับ (Double/Triple Passages)'
+    'Part 7': 'ควรฝึกสแกนหาข้อมูลอย่างรวดเร็ว (Skimming & Scanning) ในอีเมล บันทึกข้อความ และเอกสารหลายฉบับ'
   };
 
-  container.innerHTML = sortedTags.slice(0, 4).map(tag => {
-    const advice = tagAdviceMap[tag] || `ควรทบทวนและฝึกทำโจทย์ในหมวด ${tag} เพิ่มเติมเพื่อลดข้อผิดพลาด`;
+  container.innerHTML = displayTopics.map(topic => {
+    const advice = tagAdviceMap[topic] || `ควรทบทวนและฝึกทำโจทย์ในหมวด ${topic} เพิ่มเติมเพื่อลดข้อผิดพลาด`;
     return `
-      <div style="display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid var(--border-color);">
+      <div style="display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.85rem 1.2rem; background: rgba(255, 255, 255, 0.04); border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 0.6rem;">
         <span style="font-size: 1.2rem;">📌</span>
         <div>
-          <strong style="color: #00d2ff; font-size: 0.98rem;">ด้านที่ต้องปรับปรุง: ${escapeHTML(tag)} (ตอบผิด ${tagErrors[tag]} ข้อ)</strong>
-          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.2rem;">${advice}</p>
+          <strong style="color: #00d2ff; font-size: 0.98rem;">ด้านที่ต้องปรับปรุง: ${escapeHTML(topic)} (ตอบผิด ${topicCountMap[topic]} ข้อ)</strong>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.4;">${advice}</p>
         </div>
       </div>
     `;

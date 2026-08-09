@@ -7,6 +7,92 @@
  * Author: Noppasin Pronsawad
  */
 
+
+window.closeAdminModal = function(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+};
+
+window.showNewsLogDetails = function(logId) {
+  console.log('[Modal] showNewsLogDetails called for id:', logId);
+  const logs = window.cachedDailyNewsLogs || [
+    {
+      id: 'news-001',
+      date: '2026-08-08 07:30',
+      source: 'BBC World News / Business',
+      topic: 'Global Tech & Enterprise Supply Chain Modernization 2026',
+      url: 'https://www.bbc.com/news/business',
+      summary: 'สรุปข่าวเศรษฐกิจและห่วงโซ่อุปทานระดับโลก มีการใช้เทคโนโลยีปัญญาประดิษฐ์ (AI) เข้ามาเพิ่มประสิทธิภาพองค์กร',
+      questionsGenerated: 100,
+      partBreakdown: { part5: 30, part6: 30, part7: 40 }
+    }
+  ];
+  const item = logs.find(l => l.id === logId) || logs[0];
+
+  const srcEl = document.getElementById('newsModalSource');
+  const headEl = document.getElementById('newsModalHeadline');
+  const urlEl = document.getElementById('newsModalUrl');
+  const dateEl = document.getElementById('newsModalDate');
+  const sumEl = document.getElementById('newsModalSummary');
+  const breakdownEl = document.getElementById('newsModalBreakdown');
+
+  if (srcEl) srcEl.textContent = item.source || 'BBC News';
+  if (headEl) headEl.textContent = item.topic || 'Global Business News';
+  if (urlEl) {
+    urlEl.textContent = item.url || 'https://www.bbc.com/news/business';
+    urlEl.href = item.url || 'https://www.bbc.com/news/business';
+  }
+  if (dateEl) dateEl.textContent = item.date || '2026-08-08 07:30';
+  if (sumEl) sumEl.textContent = item.summary || 'สรุปเนื้อหาข่าวสารภาษาไทยเรียบร้อยแล้ว';
+
+  if (breakdownEl && item.partBreakdown) {
+    breakdownEl.innerHTML = `
+      <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part 5: ${item.partBreakdown.part5} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(48,209,88,0.15); color: #30d158;">Part 6: ${item.partBreakdown.part6} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(175,82,222,0.15); color: #af52de;">Part 7: ${item.partBreakdown.part7} ข้อ</span>
+      <strong style="color: #fff; margin-left: auto;">รวมทั้งสิ้น: +${item.questionsGenerated} ข้อ</strong>
+    `;
+  }
+
+  const modal = document.getElementById('newsDetailModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  } else {
+    alert('📰 Details: ' + item.topic);
+  }
+};
+
+window.openQuestionBankModal = async function() {
+  console.log('[Modal] openQuestionBankModal called');
+  const container = document.getElementById('qbListContainer');
+  if (container) container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">⚡ กำลังโหลดรายการข้อสอบจาก MongoDB Atlas...</div>';
+
+  const modal = document.getElementById('questionBankModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+
+  try {
+    const res = await fetch('/api/toeic/questions?_t=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.questions)) {
+      window.cachedDbQuestions = data.questions;
+      window.filterQuestionBank();
+    } else {
+      if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถโหลดรายการข้อสอบได้</div>';
+    }
+  } catch (err) {
+    console.error('Fetch DB questions error:', err);
+    if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถเชื่อมต่อ DB ได้</div>';
+  }
+};
+
+
 function initAdminPanel() {
   try { initThemeToggle(); } catch(e) { console.error('Theme Init Error:', e); }
   try { initAuthFlow(); } catch(e) { console.error('Auth Init Error:', e); }

@@ -1200,11 +1200,11 @@
   </div>
 
   <!-- DAILY NEWS LOG DETAIL MODAL -->
-  <div id="newsDetailModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-    <div class="admin-modal-content" style="width: 90%; max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 12px; padding: 1.8rem; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+  <div id="newsDetailModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="admin-modal-content" style="width: 90%; max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem;">
         <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.25rem; font-weight: 700;">📰 Daily News Ingestion Log Detail</h3>
-        <button type="button" class="close-modal-btn" id="closeNewsModalBtn" onclick="document.getElementById('newsDetailModal').style.display='none'" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+        <button type="button" class="close-modal-btn" id="closeNewsModalBtn" onclick="window.closeAdminModal('newsDetailModal')" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
       </div>
       <div style="font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.9rem;">
         <div><strong>🌐 News Source:</strong> <span id="newsModalSource" style="color: #00d2ff; font-weight: 600;"></span></div>
@@ -1222,14 +1222,14 @@
   </div>
 
   <!-- QUESTION BANK INSPECTOR MODAL (VIEW ALL QUESTIONS IN DB) -->
-  <div id="questionBankModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-    <div class="admin-modal-content" style="width: 92%; max-width: 850px; max-height: 85vh; overflow-y: auto; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+  <div id="questionBankModal" class="admin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="admin-modal-content" style="width: 92%; max-width: 850px; max-height: 85vh; overflow-y: auto; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card, #1c1c1e); z-index: 10;">
         <div>
           <h3 class="gradient-text" style="font-size: 1.25rem; margin-bottom: 0.2rem; font-weight: 700;">📚 TOEIC Question Bank Inspector (MongoDB Atlas)</h3>
           <p style="font-size: 0.85rem; color: var(--text-secondary, #aaa);">ตรวจสอบรายการข้อสอบ ตัวเลือกคำตอบ และเฉลยภาษาไทยในระบบ DB</p>
         </div>
-        <button type="button" class="close-modal-btn" onclick="document.getElementById('questionBankModal').style.display='none'" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+        <button type="button" class="close-modal-btn" onclick="window.closeAdminModal('questionBankModal')" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
       </div>
 
       <!-- Search & Part Filter -->
@@ -1249,6 +1249,6 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=4.2"></script>
+  <script src="/admin/admin.js?v=4.3"></script>
 </body>
 </html>

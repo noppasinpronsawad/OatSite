@@ -479,7 +479,7 @@ module.exports = async function handler(req, res) {
         ...p7.slice(0, 11)
       ];
 
-      // Array Padding: If length < 20, pad from any remaining items in pool
+      // Array Padding: If length < 20, pad from remaining items
       if (selectedQuestions.length < 20) {
         const remaining = shuffleArray(cleanUniqueQuestions);
         for (const item of remaining) {
@@ -493,8 +493,11 @@ module.exports = async function handler(req, res) {
       selectedQuestions = cleanUniqueQuestions.slice(0, 100);
     }
 
-    // Shuffle choices evenly across A, B, C, D and randomize order of questions
-    const finalQuestions = shuffleArray(selectedQuestions).map(q => shuffleQuestionChoices(q));
+    // STRICT PART SORTING: Part 5 (Q1-6) -> Part 6 (Q7-9) -> Part 7 (Q10-20)
+    selectedQuestions.sort((a, b) => Number(a.part || 5) - Number(b.part || 5));
+
+    // Shuffle choices (A,B,C,D) for each question while maintaining strict Part sequence
+    const finalQuestions = selectedQuestions.map(q => shuffleQuestionChoices(q));
 
     return res.status(200).json({
       success: true,

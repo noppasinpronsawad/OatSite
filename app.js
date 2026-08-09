@@ -1011,6 +1011,16 @@ function updateTimerDisplay() {
   }
 }
 
+
+function isPlaceholderPassage(str) {
+  if (!str) return true;
+  const clean = String(str).replace(/<[^>]*>/g, '').trim().toLowerCase();
+  if (!clean || clean.length < 35) return true;
+  if (clean.includes('see double passage above') || clean.includes('see passage above') || clean.includes('see text above')) return true;
+  return false;
+}
+
+
 function renderToeicQuestion(index) {
   if (index < 0 || index >= toeicQuestions.length) return;
   currentToeicIndex = index;
@@ -1070,13 +1080,26 @@ function renderToeicQuestion(index) {
     let passageTitle = q.passage_title || '';
     let passageContent = q.passage_content || '';
 
-    if (!passageContent) {
+    if (isPlaceholderPassage(passageContent)) {
+      passageContent = '';
+      // Search backward for real passage content in same Part
       for (let i = index - 1; i >= 0; i--) {
         const prevQ = toeicQuestions[i];
-        if (prevQ.part === q.part && prevQ.passage_content) {
+        if (prevQ.part === q.part && prevQ.passage_content && !isPlaceholderPassage(prevQ.passage_content)) {
           passageTitle = prevQ.passage_title || passageTitle;
           passageContent = prevQ.passage_content;
           break;
+        }
+      }
+      // If not found backward, search forward in same Part
+      if (!passageContent) {
+        for (let i = index + 1; i < toeicQuestions.length; i++) {
+          const nextQ = toeicQuestions[i];
+          if (nextQ.part === q.part && nextQ.passage_content && !isPlaceholderPassage(nextQ.passage_content)) {
+            passageTitle = nextQ.passage_title || passageTitle;
+            passageContent = nextQ.passage_content;
+            break;
+          }
         }
       }
     }

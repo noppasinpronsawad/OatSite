@@ -404,6 +404,14 @@ function generateProceduralPassageSet(part, setIdx, groupSize) {
   return setQuestions;
 }
 
+function isPlaceholderText(str) {
+  if (!str) return true;
+  const clean = String(str).replace(/<[^>]*>/g, '').trim().toLowerCase();
+  if (!clean || clean.length < 35) return true;
+  if (clean.includes('see double passage above') || clean.includes('see passage above') || clean.includes('see text above')) return true;
+  return false;
+}
+
 function groupQuestionsByPassage(questions) {
   const groups = [];
   const groupMap = new Map();
@@ -417,9 +425,20 @@ function groupQuestionsByPassage(questions) {
       continue;
     }
 
-    const passageKey = (q.passage_title || q.passage_content || '').trim();
-    if (!passageKey) {
-      groups.push({ isSingle: true, questions: [cleanedQ] });
+    const passageKey = (q.passage_title || q.passage_content || '').trim().toLowerCase();
+    if (!passageKey || isPlaceholderText(q.passage_content)) {
+      // Group by passage_title if available
+      const titleKey = String(q.passage_title || '').trim().toLowerCase();
+      if (titleKey) {
+        if (!groupMap.has(titleKey)) {
+          const newGroup = { isSingle: false, key: titleKey, questions: [] };
+          groupMap.set(titleKey, newGroup);
+          groups.push(newGroup);
+        }
+        groupMap.get(titleKey).questions.push(cleanedQ);
+      } else {
+        groups.push({ isSingle: true, questions: [cleanedQ] });
+      }
     } else {
       if (!groupMap.has(passageKey)) {
         const newGroup = { isSingle: false, key: passageKey, questions: [] };
@@ -433,12 +452,12 @@ function groupQuestionsByPassage(questions) {
   for (const g of groups) {
     if (!g.isSingle && g.questions.length > 0) {
       const parentPTitle = g.questions.find(q => q.passage_title)?.passage_title || '';
-      const parentPContent = g.questions.find(q => q.passage_content)?.passage_content || '';
+      const parentPContent = g.questions.find(q => q.passage_content && !isPlaceholderText(q.passage_content))?.passage_content || '';
 
       g.questions = g.questions.map(q => ({
         ...q,
         passage_title: q.passage_title || parentPTitle,
-        passage_content: q.passage_content || parentPContent
+        passage_content: (isPlaceholderText(q.passage_content) ? parentPContent : q.passage_content) || parentPContent
       }));
     }
   }

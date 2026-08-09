@@ -47,18 +47,21 @@ module.exports = async (req, res) => {
     // Generate unique sessionId for Single Active Session enforcement
     const sessionId = crypto.randomBytes(16).toString('hex');
 
-    // Persist active sessionId into MongoDB Atlas if connected
+        // Persist active sessionId into MongoDB Atlas if connected (Ultra-Resilient)
     try {
-      const db = await connectToDatabase();
-      if (db) {
+      const db = await Promise.race([
+        connectToDatabase(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 2500))
+      ]);
+      if (db && AdminSession) {
         await AdminSession.findOneAndUpdate(
           { key: 'admin_active_session' },
           { activeSessionId: sessionId, lastLoginAt: new Date() },
           { upsert: true, new: true }
-        );
+        ).catch(e => console.warn('AdminSession update warning:', e.message));
       }
     } catch (dbErr) {
-      console.warn('MongoDB session save failed, using memory session:', dbErr.message);
+      console.warn('MongoDB session save skipped, using in-memory session:', dbErr.message);
     }
 
     // Also update in-memory active sessionId fallback

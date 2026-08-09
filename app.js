@@ -1028,7 +1028,10 @@ function renderToeicQuestion(index) {
   const isFlagged = !!toeicFlagged[q.question_id];
   const selectedChoice = toeicUserAnswers[q.question_id] || '';
 
-  // Single Pane for Part 5 / Split View for Part 6 & Part 7
+  // Clean AI Generated prefix if present
+  const cleanQText = String(q.question_text || '').replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
+
+  // Part 5 Layout
   if (q.part === 5) {
     pane.innerHTML = `
       <div class="q-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
@@ -1041,7 +1044,7 @@ function renderToeicQuestion(index) {
       </div>
 
       <div class="q-text-box" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 1.8rem; font-weight: 500;">
-        ${escapeHTML(q.question_text)}
+        ${escapeHTML(cleanQText)}
       </div>
 
       <div class="choice-list">
@@ -1064,30 +1067,47 @@ function renderToeicQuestion(index) {
       </div>
     `;
   } else {
-    // Split View for Part 6 & 7
+    // Top-Bottom Layout for Part 6 & Part 7 (Article Top + Guidance Right, Question Bottom)
     pane.innerHTML = `
-      <div class="toeic-split-view">
-        <!-- Left Pane: Reading Passage -->
-        <div class="passage-container">
-          <div class="passage-title">📖 ${escapeHTML(q.passage_title || `Part ${q.part} Reading Passage`)}</div>
-          <div class="passage-body">
-            ${q.passage_content || '<p>Read the passage and answer the question on the right.</p>'}
+      <div class="toeic-passage-layout">
+        <!-- TOP SECTION: Article (Left) + Guidance Card (Right) -->
+        <div class="passage-top-row" style="display: grid; grid-template-columns: 1fr 280px; gap: 1.2rem; margin-bottom: 1.5rem;">
+          
+          <!-- Article / Reading Passage Box (Sticky Top) -->
+          <div class="passage-container" style="max-height: 320px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.2rem;">
+            <div class="passage-title" style="font-weight: 700; color: #00d2ff; margin-bottom: 0.6rem; font-size: 1.05rem;">📖 ${escapeHTML(q.passage_title || `Part ${q.part} Reading Passage`)}</div>
+            <div class="passage-body" style="font-size: 0.92rem; line-height: 1.6; color: var(--text-primary);">
+              ${q.passage_content || '<p>Read the passage and answer the questions below.</p>'}
+            </div>
           </div>
+
+          <!-- Total Question Guidance Card (Sticky Right) -->
+          <div class="passage-guidance-card" style="background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.25); border-radius: 12px; padding: 1.2rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="font-size: 0.78rem; text-transform: uppercase; color: #00d2ff; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.4rem;">Passage Progress & Guidance</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Question ${index + 1} of ${toeicQuestions.length}</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">Part ${q.part} (${q.part === 6 ? 'Text Completion' : 'Reading Comprehension'})</div>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;">
+              💡 บทความจะแสดงค้างไว้อย่างต่อเนื่องจนกว่าจะจบชุดคำถามของบทความนี้
+            </div>
+          </div>
+
         </div>
 
-        <!-- Right Pane: Question & Choices -->
-        <div class="passage-q-box">
+        <!-- BOTTOM SECTION: Question & Answer Choices -->
+        <div class="passage-bottom-question" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
           <div class="q-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <span class="q-number-badge" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: 700;">
               Question ${index + 1} of ${toeicQuestions.length} (Part ${q.part})
             </span>
-            <button type="button" class="btn-flag ${isFlagged ? 'active' : ''}" onclick="toggleFlagCurrent('${q.question_id}')" style="background: none; border: 1px solid var(--border-color); color: ${isFlagged ? '#ffd60a' : 'var(--text-secondary)'}; padding: 0.3rem 0.7rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem;">
+            <button type="button" class="btn-flag ${isFlagged ? 'active' : ''}" onclick="toggleFlagCurrent('${q.question_id}')" style="background: none; border: 1px solid var(--border-color); color: ${isFlagged ? '#ffd60a' : 'var(--text-secondary)'}; padding: 0.3rem 0.75rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem;">
               📌 ${isFlagged ? 'Flagged' : 'Flag'}
             </button>
           </div>
 
-          <div class="q-text-box" style="font-size: 1.05rem; line-height: 1.5; margin-bottom: 1.2rem;">
-            ${escapeHTML(q.question_text)}
+          <div class="q-text-box" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem; font-weight: 500;">
+            ${escapeHTML(cleanQText)}
           </div>
 
           <div class="choice-list">
@@ -1100,7 +1120,7 @@ function renderToeicQuestion(index) {
             `).join('')}
           </div>
 
-          <div class="q-nav-buttons" style="display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem;">
+          <div class="q-nav-buttons" style="display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.8rem;">
             <button type="button" class="btn-q-prev" onclick="navigateQuestion(${index - 1})" ${index === 0 ? 'disabled' : ''}>
               ⬅️ Previous Question
             </button>

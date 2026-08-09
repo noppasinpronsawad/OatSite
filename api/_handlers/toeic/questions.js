@@ -1017,8 +1017,27 @@ module.exports = async (req, res) => {
       ];
     }
 
+    // Clean AI Generated prefix and Deduplicate by question text
+    const seenTexts = new Set();
+    const cleanUniqueQuestions = [];
+
+    for (const qObj of selectedQuestions) {
+      const q = qObj._doc || qObj;
+      const rawText = String(q.question_text || '');
+      const cleanedText = rawText.replace(/^\[AI Generated Q?\d*\]\s*/i, '').trim();
+      const textKey = cleanedText.toLowerCase();
+
+      if (cleanedText && !seenTexts.has(textKey)) {
+        seenTexts.add(textKey);
+        cleanUniqueQuestions.push({
+          ...q,
+          question_text: cleanedText
+        });
+      }
+    }
+
     // Shuffle choices evenly across A, B, C, D
-    const shuffledQuestions = selectedQuestions.map(q => shuffleQuestionChoices(q));
+    const shuffledQuestions = cleanUniqueQuestions.map(q => shuffleQuestionChoices(q));
 
     return res.status(200).json({
       success: true,

@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
         newItems.push({
           question_id: `t_ai_${timestamp}_${i}`,
           part: partNum,
-          question_text: `[AI Generated Q${i}] Executive officers must submit the finalized quarterly budget report _______ Friday afternoon.`,
+          question_text: `Executive officers must submit the finalized quarterly budget report _______ Friday afternoon.`,
           choices: { A: 'before', B: 'prior', C: 'ahead', D: 'previous' },
           correct_answer: 'A',
           detailed_explanation: {
@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
           newItems.push({
             question_id: `t_ai_auto_${timestamp}_${i}`,
             part: partNum,
-            question_text: `[AI Generated Q${toeicCount + i}] All regional managers are advised to inspect the facility premises _______ before signing the property lease agreement.`,
+            question_text: `Executive officers must submit the finalized quarterly budget report _______ Friday afternoon.`,
             choices: { A: 'thoroughly', B: 'thorough', C: 'thoroughness', D: 'through' },
             correct_answer: 'A',
             detailed_explanation: {

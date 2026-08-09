@@ -1429,6 +1429,116 @@ window.openQuestionBankModal = async function() {
   }
 };
 
+/* ==========================================================================
+   News Log Detail Modal & 10,000 Questions Generator Actions
+   ========================================================================== */
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+window.showNewsLogDetails = function(logId) {
+  console.log('[Modal] showNewsLogDetails called for id:', logId);
+  const logs = window.cachedDailyNewsLogs || [];
+  const item = logs.find(l => l.id === logId) || logs[0];
+  if (!item) return alert('⚠️ ไม่พบรายละเอียด Log ข่าวนี้');
+
+  const srcEl = document.getElementById('newsModalSource');
+  const headEl = document.getElementById('newsModalHeadline');
+  const urlEl = document.getElementById('newsModalUrl');
+  const dateEl = document.getElementById('newsModalDate');
+  const sumEl = document.getElementById('newsModalSummary');
+  const breakdownEl = document.getElementById('newsModalBreakdown');
+
+  if (srcEl) srcEl.textContent = item.source || 'N/A';
+  if (headEl) headEl.textContent = item.topic || 'N/A';
+  if (urlEl) {
+    urlEl.textContent = item.url || '#';
+    urlEl.href = item.url || '#';
+  }
+  if (dateEl) dateEl.textContent = item.date || 'N/A';
+  if (sumEl) sumEl.textContent = item.summary || 'ไม่มีบทสรุปย่อ';
+
+  if (breakdownEl && item.partBreakdown) {
+    breakdownEl.innerHTML = `
+      <span class="timer-badge" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part 5: ${item.partBreakdown.part5} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(48,209,88,0.15); color: #30d158;">Part 6: ${item.partBreakdown.part6} ข้อ</span>
+      <span class="timer-badge" style="background: rgba(175,82,222,0.15); color: #af52de;">Part 7: ${item.partBreakdown.part7} ข้อ</span>
+      <strong style="color: #fff; margin-left: auto;">รวมทั้งสิ้น: +${item.questionsGenerated} ข้อ</strong>
+    `;
+  }
+
+  const modal = document.getElementById('newsDetailModal');
+  if (modal) {
+    modal.style.display = 'flex';
+  } else {
+    console.error('[Modal] newsDetailModal element not found in DOM!');
+  }
+};
+
+window.run10kBatchGen = async function() {
+  if (!confirm('🤖 เริ่มการสร้างชุดข้อสอบภาษาอังกฤษ TOEIC เพิ่มเติมด้วย Gemini AI ลงใน MongoDB Atlas ?')) return;
+  const token = localStorage.getItem('admin_jwt_token') || localStorage.getItem('admin_token');
+  if (!token) return alert('🚨 กรุณาล็อกอินใหม่อีกครั้ง');
+  const btn = document.getElementById('startBatchGenBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⚡ กำลังสร้างคำถามใน MongoDB Atlas...</span>';
+  }
+  try {
+    const res = await fetch('/api/admin/metrics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ action: 'generate_batch' })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`🎉 ${data.message}\n\nจำนวนคลังข้อสอบปัจจุบัน: ${data.totalToeicQuestions} ข้อ`);
+      fetchAdminMetrics();
+    } else {
+      alert(`❌ ข้อผิดพลาด: ${data.error || data.message || 'ไม่สามารถสร้างข้อสอบได้'}`);
+    }
+  } catch (err) {
+    console.error('Batch gen error:', err);
+    alert('❌ ข้อผิดพลาด: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>⚡ สั่งสร้างข้อสอบเพิ่ม 10,000 ข้อ</span>';
+    }
+  }
+};
+
+window.openQuestionBankModal = async function() {
+  console.log('[Modal] openQuestionBankModal called');
+  const container = document.getElementById('qbListContainer');
+  if (container) container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">⚡ กำลังโหลดรายการข้อสอบจาก MongoDB Atlas...</div>';
+
+  const modal = document.getElementById('questionBankModal');
+  if (modal) {
+    modal.style.display = 'flex';
+  } else {
+    console.error('[Modal] questionBankModal element not found in DOM!');
+  }
+
+  try {
+    const res = await fetch('/api/toeic/questions');
+    const data = await res.json();
+    if (data.success && Array.isArray(data.questions)) {
+      window.cachedDbQuestions = data.questions;
+      window.filterQuestionBank();
+    } else {
+      if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถโหลดรายการข้อสอบได้</div>';
+    }
+  } catch (err) {
+    console.error('Fetch DB questions error:', err);
+    if (container) container.innerHTML = '<div style="color: #ff453a; text-align: center;">❌ ไม่สามารถเชื่อมต่อ DB ได้</div>';
+  }
+};
+
 window.filterQuestionBank = function() {
   const questions = window.cachedDbQuestions || [];
   const search = String(document.getElementById('qbSearchInput')?.value || '').toLowerCase().trim();

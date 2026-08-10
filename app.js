@@ -322,7 +322,7 @@ function initBlogModule() {
     });
   }
 
-  function openArticleModal(post) {
+  async function openArticleModal(post) {
     if (!articleModal) return;
 
     const titleEl = document.getElementById('articleModalTitle');
@@ -339,11 +339,37 @@ function initBlogModule() {
     if (dateEl) dateEl.textContent = formatFullDisplayDate(post);
     if (readTimeEl) readTimeEl.textContent = post.readTime || '5 min read';
     
-    // Header Image inside Modal if present
-    const imgHeader = post.image ? `<img src="${post.image}" class="article-modal-header-img" alt="${post.title}">` : '';
-    if (bodyEl) bodyEl.innerHTML = imgHeader + post.content;
+    // Show loading state while fetching full content
+    if (bodyEl) {
+      bodyEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">⏳ Loading article content...</p>';
+    }
 
     articleModal.showModal();
+
+    // Fetch full content by ID
+    let fullContent = post.content;
+    const postId = post.id || post._id;
+    
+    if (!fullContent && postId) {
+      try {
+        const response = await fetch(`/api/posts/detail?id=${postId}`);
+        if (response.ok) {
+          const detail = await response.json();
+          fullContent = detail.content;
+        } else {
+          fullContent = '<p style="color: red; text-align: center;">Failed to load article content.</p>';
+        }
+      } catch (err) {
+        console.error('Error fetching post detail:', err);
+        fullContent = '<p style="color: red; text-align: center;">Error loading article content.</p>';
+      }
+    } else if (!fullContent) {
+      fullContent = '<p style="color: red; text-align: center;">Content unavailable.</p>';
+    }
+
+    // Header Image inside Modal if present
+    const imgHeader = post.image ? `<img src="${post.image}" class="article-modal-header-img" alt="${post.title}">` : '';
+    if (bodyEl) bodyEl.innerHTML = imgHeader + fullContent;
   }
 
   if (closeArticleBtn && articleModal) {

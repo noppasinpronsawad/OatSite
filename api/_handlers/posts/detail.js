@@ -83,6 +83,17 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Valid Post ID is required' });
     }
 
+    // GET /api/posts/detail?id=:id -> Get Post By ID
+    if (req.method === 'GET') {
+      const post = await Post.findById(id);
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+      const obj = post.toObject();
+      obj.id = obj._id.toString();
+      return res.status(200).json(obj);
+    }
+
     // PUT /api/posts/detail?id=:id -> Update Post
     if (req.method === 'PUT') {
       const { title, category, summary, content, image, date, readTime, publishAt } = body;

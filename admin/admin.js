@@ -1,17 +1,17 @@
 /**
- * Admin Panel JavaScript Architecture v10.0 (Bulletproof Release)
- * Immediate News Log Rendering, Multi-Session Alert Enforcement & Rich Article Support
+ * Admin Panel JavaScript Architecture v11.0 (Master Restored Edition)
+ * Tab-Isolated Session Enforcement, MongoDB Atlas Article Integration & 10,480 TOEIC Qs Analytics
  * Author: Noppasin Pronsawad
  */
 
 let isExecutingLogin = false;
 
-// Cross-Tab Multi-Device Session Enforcement Listener
+// Layer 1: Cross-Tab Storage Event Listener (Fires immediately when another tab logs in)
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key === 'admin_session_id' && e.newValue) {
-      const myActiveSession = localStorage.getItem('my_active_session');
-      if (myActiveSession && e.newValue !== myActiveSession) {
+      const tabSession = sessionStorage.getItem('my_active_session');
+      if (tabSession && e.newValue !== tabSession) {
         alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์/แท็บอื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
         window.executeLogout();
       }
@@ -53,7 +53,10 @@ window.executeAdminLogin = async function executeLogin() {
     const activeSessionId = sessionIdStr || ('session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
     localStorage.setItem('admin_token', tokenStr || 'fallback_admin_token');
     localStorage.setItem('admin_jwt_token', tokenStr || 'fallback_admin_token');
-    localStorage.setItem('my_active_session', activeSessionId);
+
+    // Tab-Isolated Storage: Store tab session in sessionStorage (unique per tab)
+    sessionStorage.setItem('my_active_session', activeSessionId);
+    // Shared Storage: Update shared admin_session_id in localStorage (triggers storage event in other tabs)
     localStorage.setItem('admin_session_id', activeSessionId);
 
     if (alertBox) {
@@ -122,7 +125,7 @@ window.executeLogout = function() {
   localStorage.removeItem('admin_token');
   localStorage.removeItem('admin_jwt_token');
   localStorage.removeItem('admin_session_id');
-  localStorage.removeItem('my_active_session');
+  sessionStorage.removeItem('my_active_session');
 
   if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
 
@@ -195,7 +198,6 @@ async function fetchAdminMetrics() {
     `).join('');
   }
 
-  // Render logs immediately!
   renderLogs(defaultLogs);
 
   const summaryQs = document.getElementById('summary_total_qs');
@@ -492,23 +494,23 @@ window.deleteBlogPost = function(postId) {
   fetchBlogPosts();
 };
 
-// Item 3: Bulletproof 2-Second Session Monitoring Loop
+// Layer 2: 1.5-Second Interval Tab-Isolated Session Enforcement Loop
 function startSessionMonitoring() {
   if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
 
   window.sessionMonitorInterval = setInterval(() => {
-    const mySessionId = localStorage.getItem('my_active_session');
-    const currentGlobalSession = localStorage.getItem('admin_session_id');
+    const tabSession = sessionStorage.getItem('my_active_session');
+    const globalSession = localStorage.getItem('admin_session_id');
 
-    if (mySessionId && currentGlobalSession && mySessionId !== currentGlobalSession) {
+    if (tabSession && globalSession && tabSession !== globalSession) {
       clearInterval(window.sessionMonitorInterval);
       alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์อื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
       window.executeLogout();
     }
-  }, 2000);
+  }, 1500);
 }
 
-// Fetch & Render Blog Posts in Admin CMS (Item 1)
+// Fetch & Render Blog Posts from MongoDB Atlas & Fallback (Item 3)
 async function fetchBlogPosts() {
   const tableBody = document.getElementById('postsTableBody');
   const paginationInfo = document.getElementById('adminPaginationInfo');

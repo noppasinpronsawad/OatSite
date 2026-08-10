@@ -212,6 +212,15 @@ function initBlogModule() {
       }
     } catch (err) {
       console.warn('API /api/posts unreachable, using fallback blog-data.js:', err);
+      let customPosts = [];
+      try {
+        customPosts = JSON.parse(localStorage.getItem('custom_user_posts') || '[]');
+      } catch (e) {}
+
+      if (Array.isArray(customPosts) && customPosts.length > 0) {
+        const customIds = new Set(customPosts.map(cp => cp.id));
+        activePostsData = [...customPosts, ...activePostsData.filter(p => !customIds.has(p.id || p._id))];
+      }
     } finally {
       renderBlog();
     }

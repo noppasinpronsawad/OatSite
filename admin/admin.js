@@ -26,20 +26,28 @@ window.executeAdminLogin = async function executeLogin() {
 
   const password = passwordInput.value.trim();
 
+  // Item 1: Instantly disable button and show checking feedback message
   if (btnEl) {
     btnEl.disabled = true;
-    btnEl.innerHTML = '<span>⚡ Checking credentials...</span>';
+    btnEl.innerHTML = '<span class="spinner-icon"></span> ⏳ กำลังตรวจสอบรหัสผ่าน...';
+  }
+  if (alertBox) {
+    alertBox.className = 'alert-banner alert-loading';
+    alertBox.innerHTML = '<span class="spinner-icon"></span> กำลังตรวจสอบรหัสผ่านและยืนยันเซสชัน...';
+    alertBox.style.display = 'block';
   }
 
-  function grantAdminAccess(tokenStr) {
+  function grantAdminAccess(tokenStr, sessionIdStr) {
+    const activeSessionId = sessionIdStr || ('session_' + Date.now());
+    localStorage.setItem('admin_token', tokenStr || 'fallback_admin_token');
+    localStorage.setItem('admin_jwt_token', tokenStr || 'fallback_admin_token');
+    localStorage.setItem('admin_session_id', activeSessionId);
+
     if (alertBox) {
       alertBox.className = 'alert-banner alert-success';
       alertBox.textContent = '✅ ยืนยันตัวตนสำเร็จ กำลังเข้าสู่ระบบ...';
       alertBox.style.display = 'block';
     }
-
-    localStorage.setItem('admin_token', tokenStr || 'fallback_admin_token');
-    localStorage.setItem('admin_jwt_token', tokenStr || 'fallback_admin_token');
 
     setTimeout(() => {
       const loginView = document.getElementById('loginView') || document.getElementById('loginOverlay');
@@ -50,12 +58,14 @@ window.executeAdminLogin = async function executeLogin() {
 
       fetchAdminMetrics();
       fetchBlogPosts();
+      startSessionMonitoring(activeSessionId);
+
       isExecutingLogin = false;
       if (btnEl) {
         btnEl.disabled = false;
         btnEl.innerHTML = '<span>🔓 Unlock CMS</span>';
       }
-    }, 400);
+    }, 500);
   }
 
   const validPasswords = ['@Dmin123', 'admin1234'];
@@ -70,17 +80,17 @@ window.executeAdminLogin = async function executeLogin() {
     if (res.ok) {
       const data = await res.json();
       if (data.success && data.token) {
-        grantAdminAccess(data.token);
+        grantAdminAccess(data.token, data.sessionId);
         return;
       }
     }
   } catch (err) {
-    console.warn('Backend login unreachable, using local authentication:', err.message);
+    console.warn('Backend login API unreachable, using resilient local auth:', err.message);
   }
 
   // Local Credential Verification Fallback
   if (validPasswords.includes(password)) {
-    grantAdminAccess('local_verified_admin_token_' + Date.now());
+    grantAdminAccess('local_verified_admin_token_' + Date.now(), 'local_session_' + Date.now());
   } else {
     if (alertBox) {
       alertBox.className = 'alert-banner alert-error';
@@ -347,3 +357,118 @@ if (document.readyState === 'loading') {
 } else {
   initAdminPanel();
 }
+
+
+
+// Item 2: Logout Functionality with Clear Reaction and Alert Message
+window.executeLogout = function() {
+  console.log('[Auth] Admin Logout Executed');
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_jwt_token');
+  localStorage.removeItem('admin_session_id');
+
+  if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
+
+  const loginView = document.getElementById('loginView') || document.getElementById('loginOverlay');
+  const dashboardView = document.getElementById('dashboardView') || document.getElementById('adminMainContainer');
+  const alertBox = document.getElementById('loginAlert');
+
+  if (dashboardView) dashboardView.style.display = 'none';
+  if (loginView) loginView.style.display = 'block';
+
+  if (alertBox) {
+    alertBox.className = 'alert-banner alert-success';
+    alertBox.innerHTML = '🔒 ออกจากระบบเรียบร้อยแล้ว เซสชันของคุณถูกลบออกจากความจำแล้ว';
+    alertBox.style.display = 'block';
+  }
+};
+
+// Item 3: Single Active Session Monitoring (Polled session check & logout on multi-device detection)
+function startSessionMonitoring(currentSessionId) {
+  if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
+
+  window.sessionMonitorInterval = setInterval(async () => {
+    const token = localStorage.getItem('admin_token');
+    const localSessionId = localStorage.getItem('admin_session_id') || currentSessionId;
+    
+    if (!token || !localSessionId) return;
+
+    try {
+      const res = await fetch('/api/auth/session?_t=' + Date.now(), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.activeSessionId && localSessionId && data.activeSessionId !== localSessionId) {
+          clearInterval(window.sessionMonitorInterval);
+          alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์อื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
+          window.executeLogout();
+        }
+      }
+    } catch (err) {
+      // Silently handle offline/network hiccup
+    }
+  }, 5000);
+}
+
+// Item 4: Fetch & Render Blog Posts in Admin CMS
+async function fetchBlogPosts() {
+  const tableBody = document.getElementById('postsTableBody');
+  const paginationInfo = document.getElementById('adminPaginationInfo');
+  if (!tableBody) return;
+
+  let posts = [];
+  try {
+    const res = await fetch('/api/posts?admin=true&_t=' + Date.now());
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        posts = data;
+      }
+    }
+  } catch (err) {
+    console.warn('Fetch posts API unreachable, using fallback dataset:', err.message);
+  }
+
+  if (posts.length === 0 && typeof BLOG_POSTS !== 'undefined') {
+    posts = BLOG_POSTS;
+  } else if (posts.length === 0 && typeof window.BLOG_POSTS !== 'undefined') {
+    posts = window.BLOG_POSTS;
+  }
+
+  if (!posts || posts.length === 0) {
+    posts = [
+      { id: 'p1', title: 'Physics of Flight: Understanding Modern Aircraft Dynamics', category: 'Science', date: '01 Jul 2026', readTime: '6 min read', image: '../assets/images/aircraft_aerodynamics.png' },
+      { id: 'p2', title: 'Modern Petroleum Geoscience in the Energy Transition', category: 'Science', date: '01 Jun 2026', readTime: '7 min read', image: '../assets/images/petroleum_geoscience.png' },
+      { id: 'p3', title: 'Aviation Meteorology: Navigating Complex Weather Patterns', category: 'Science', date: '01 May 2026', readTime: '4 min read', image: '../assets/images/aviation_meteorology.png' },
+      { id: 'p4', title: 'Bridging the Gap: Effective Requirements Analysis in Fintech', category: 'Technology', date: '01 Aug 2026', readTime: '6 min read', image: '../assets/images/fintech_requirements.png' },
+      { id: 'p5', title: 'Automating Workflows with Python and GitHub Bots', category: 'Technology', date: '01 Jul 2026', readTime: '5 min read', image: '../assets/images/python_github_bots.png' },
+      { id: 'p6', title: 'Evaluating AI Models in Modern Software Engineering', category: 'Technology', date: '01 Jun 2026', readTime: '6 min read', image: '../assets/images/ai_software_engineering.png' },
+      { id: 'p7', title: 'Data-Driven Strategies: Automating DCA for US ETFs', category: 'Technology', date: '01 May 2026', readTime: '5 min read', image: '../assets/images/dca_stock_automation.png' }
+    ];
+  }
+
+  tableBody.innerHTML = posts.map(p => {
+    const catClass = (p.category || 'Science').toLowerCase().replace(/\s+/g, '-');
+    const imgSrc = p.image ? (p.image.startsWith('http') || p.image.startsWith('/') || p.image.startsWith('../') ? p.image : `../${p.image}`) : '../assets/images/aircraft_aerodynamics.png';
+
+    return `
+      <tr style="border-bottom: 1px solid var(--border-subtle);">
+        <td style="padding: 0.8rem;"><img src="${imgSrc}" style="width: 50px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" alt=""></td>
+        <td style="padding: 0.8rem; font-weight: 600; color: var(--text-primary); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</td>
+        <td style="padding: 0.8rem;"><span class="badge-cat ${catClass}">${p.category || 'Science'}</span></td>
+        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.date || '01 Aug 2026'}</td>
+        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.readTime || '5 min read'}</td>
+        <td style="padding: 0.8rem;">
+          <button type="button" class="btn-admin-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.4rem;">✏️ Edit</button>
+          <button type="button" class="btn-danger" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; border-radius: 4px;">🗑️ Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (paginationInfo) {
+    paginationInfo.textContent = `Showing 1-${posts.length} of ${posts.length} articles`;
+  }
+}
+window.fetchBlogPosts = fetchBlogPosts;

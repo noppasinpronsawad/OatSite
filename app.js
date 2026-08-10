@@ -199,12 +199,16 @@ function initBlogModule() {
       if (blogGrid) {
         blogGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">⏳ Loading latest articles...</p>';
       }
-      const response = await fetch('/api/posts');
+      const response = await fetch('/api/posts?_t=' + Date.now());
       if (response.ok) {
         const posts = await response.json();
         if (Array.isArray(posts) && posts.length > 0) {
           activePostsData = posts;
+        } else if (typeof BLOG_POSTS !== 'undefined') {
+          activePostsData = BLOG_POSTS;
         }
+      } else if (typeof BLOG_POSTS !== 'undefined') {
+        activePostsData = BLOG_POSTS;
       }
     } catch (err) {
       console.warn('API /api/posts unreachable, using fallback blog-data.js:', err);

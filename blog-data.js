@@ -120,3 +120,5 @@ const BLOG_POSTS = [
     "id": "6a74c52ee73e19e35fec4dfa"
   }
 ];
+
+if (typeof window !== 'undefined') { window.BLOG_POSTS = BLOG_POSTS; }

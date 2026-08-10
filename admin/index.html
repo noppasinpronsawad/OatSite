@@ -840,7 +840,7 @@
             <button class="btn-admin-primary" id="openAddModalBtn" style="width: auto;">
               <span>+ Create New Post</span>
             </button>
-            <button class="btn-admin-secondary btn-danger" id="logoutBtn">Logout</button>
+            <button type="button" class="btn-admin-secondary btn-danger" id="logoutBtn" onclick="window.executeLogout && window.executeLogout()">Logout</button>
           </div>
         </div>
 
@@ -1257,6 +1257,7 @@
     </div>
   </div>
 
-  <script src="/admin/admin.js?v=6.2"></script>
+  <script src="../blog-data.js"></script>
+  <script src="/admin/admin.js?v=7.0"></script>
 </body>
 </html>

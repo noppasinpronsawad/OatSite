@@ -30,6 +30,9 @@ const BLOG_POSTS = [
   }
 ];
 
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = BLOG_POSTS;
+}
 if (typeof window !== 'undefined') {
   window.BLOG_POSTS = BLOG_POSTS;
 }

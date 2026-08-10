@@ -968,7 +968,7 @@ async function startToeicExam() {
 
   // Fetch questions from API
   try {
-    const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}&_t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}&shuffle=true&new_attempt=true&_t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if (data.success && Array.isArray(data.questions)) {
       toeicQuestions = data.questions;

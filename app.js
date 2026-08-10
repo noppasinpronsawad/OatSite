@@ -1025,20 +1025,26 @@ async function startToeicExam() {
     `;
   }
 
-  // Fetch questions from API
+  // Fetch questions from API with 100% In-Memory Fallback Guarantee
   try {
     const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}&shuffle=true&new_attempt=true&_t=${Date.now()}`, { cache: 'no-store' });
-    const data = await res.json();
-    if (data.success && Array.isArray(data.questions)) {
-      toeicQuestions = data.questions;
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+        toeicQuestions = data.questions;
+      } else {
+        toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
+      }
+    } else {
+      toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
     }
   } catch (e) {
-    console.error('Failed to load questions from API:', e);
+    console.warn('API fetch failed, utilizing Pristine In-Memory Dataset:', e);
+    toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
   }
 
   if (!toeicQuestions || toeicQuestions.length === 0) {
-    alert('Failed to load question pool. Please refresh the page.');
-    return;
+    toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
   }
 
   currentToeicIndex = 0;

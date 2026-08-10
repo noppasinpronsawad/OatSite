@@ -35,11 +35,11 @@ window.executeAdminLogin = async function executeLogin() {
     localStorage.setItem('admin_token', tokenStr || 'fallback_admin_token');
     localStorage.setItem('admin_jwt_token', tokenStr || 'fallback_admin_token');
     
-    const loginOverlay = document.getElementById('loginOverlay');
-    if (loginOverlay) loginOverlay.style.display = 'none';
+    const loginView = document.getElementById('loginView') || document.getElementById('loginOverlay');
+    if (loginView) loginView.style.display = 'none';
 
-    const mainContainer = document.getElementById('adminMainContainer');
-    if (mainContainer) mainContainer.style.display = 'block';
+    const dashboardView = document.getElementById('dashboardView') || document.getElementById('adminMainContainer');
+    if (dashboardView) dashboardView.style.display = 'block';
 
     fetchAdminMetrics();
   }

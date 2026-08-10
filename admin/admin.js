@@ -16,6 +16,7 @@ window.executeAdminLogin = async function executeLogin() {
 
   if (!passwordInput || !passwordInput.value.trim()) {
     if (alertBox) {
+      alertBox.className = 'alert-banner alert-error';
       alertBox.textContent = '❌ โปรดกรอกรหัสผ่าน Admin';
       alertBox.style.display = 'block';
     }
@@ -29,20 +30,35 @@ window.executeAdminLogin = async function executeLogin() {
     btnEl.disabled = true;
     btnEl.innerHTML = '<span>⚡ Checking credentials...</span>';
   }
-  if (alertBox) alertBox.style.display = 'none';
 
   function grantAdminAccess(tokenStr) {
+    if (alertBox) {
+      alertBox.className = 'alert-banner alert-success';
+      alertBox.textContent = '✅ ยืนยันตัวตนสำเร็จ กำลังเข้าสู่ระบบ...';
+      alertBox.style.display = 'block';
+    }
+
     localStorage.setItem('admin_token', tokenStr || 'fallback_admin_token');
     localStorage.setItem('admin_jwt_token', tokenStr || 'fallback_admin_token');
-    
-    const loginView = document.getElementById('loginView') || document.getElementById('loginOverlay');
-    if (loginView) loginView.style.display = 'none';
 
-    const dashboardView = document.getElementById('dashboardView') || document.getElementById('adminMainContainer');
-    if (dashboardView) dashboardView.style.display = 'block';
+    setTimeout(() => {
+      const loginView = document.getElementById('loginView') || document.getElementById('loginOverlay');
+      if (loginView) loginView.style.display = 'none';
 
-    fetchAdminMetrics();
+      const dashboardView = document.getElementById('dashboardView') || document.getElementById('adminMainContainer');
+      if (dashboardView) dashboardView.style.display = 'block';
+
+      fetchAdminMetrics();
+      fetchBlogPosts();
+      isExecutingLogin = false;
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = '<span>🔓 Unlock CMS</span>';
+      }
+    }, 400);
   }
+
+  const validPasswords = ['@Dmin123', 'admin1234'];
 
   try {
     const res = await fetch('/api/auth/login', {
@@ -59,24 +75,23 @@ window.executeAdminLogin = async function executeLogin() {
       }
     }
   } catch (err) {
-    console.warn('Backend login unreachable, using resilient credential verification:', err.message);
+    console.warn('Backend login unreachable, using local authentication:', err.message);
   }
 
-  // Resilient Local Credential Verification Fallback
-  const validPasswords = ['@Dmin123', 'admin1234'];
+  // Local Credential Verification Fallback
   if (validPasswords.includes(password)) {
     grantAdminAccess('local_verified_admin_token_' + Date.now());
   } else {
     if (alertBox) {
+      alertBox.className = 'alert-banner alert-error';
       alertBox.textContent = '❌ รหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง';
       alertBox.style.display = 'block';
     }
-  }
-
-  isExecutingLogin = false;
-  if (btnEl) {
-    btnEl.disabled = false;
-    btnEl.innerHTML = '<span>🔓 Unlock CMS</span>';
+    isExecutingLogin = false;
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = '<span>🔓 Unlock CMS</span>';
+    }
   }
 };
 
@@ -321,6 +336,7 @@ function initAdminPanel() {
         if (window.openQuestionBankModal) window.openQuestionBankModal();
       };
     }
+    fetchBlogPosts();
   } catch (err) {
     console.error('Admin Init Error:', err);
   }

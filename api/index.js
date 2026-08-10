@@ -1,31 +1,31 @@
-function safeRequire(reqFn, name) {
-  try {
-    const mod = reqFn();
-    if (typeof mod === 'function') return mod;
-    if (mod && typeof mod.default === 'function') return mod.default;
-    return mod;
-  } catch (err) {
-    console.error(`Failed to load handler ${name}:`, err);
-    return async (req, res) => {
-      res.status(500).json({ error: `Failed to load handler ${name}`, details: err.message });
-    };
-  }
-}
+let handlers = {};
+let startupError = null;
 
-const loginHandler = safeRequire(() => require('./_handlers/auth/login'), 'login');
-const sessionHandler = safeRequire(() => require('./_handlers/auth/session'), 'session');
-const postsHandler = safeRequire(() => require('./_handlers/posts/index'), 'posts');
-const postDetailHandler = safeRequire(() => require('./_handlers/posts/detail'), 'postDetail');
-const uploadHandler = safeRequire(() => require('./_handlers/upload/index'), 'upload');
-const toeicQuestionsHandler = safeRequire(() => require('./_handlers/toeic/questions'), 'toeicQuestions');
-const metricsHandler = safeRequire(() => require('./_handlers/admin/metrics'), 'metrics');
+try {
+  // Static top-level requires for Vercel's Node File Trace (NFT)
+  handlers.login = require('./_handlers/auth/login');
+  handlers.session = require('./_handlers/auth/session');
+  handlers.posts = require('./_handlers/posts/index');
+  handlers.postDetail = require('./_handlers/posts/detail');
+  handlers.upload = require('./_handlers/upload/index');
+  handlers.toeicQuestions = require('./_handlers/toeic/questions');
+  handlers.metrics = require('./_handlers/admin/metrics');
+
+  // Normalize handlers (handle default exports if needed)
+  for (let key in handlers) {
+    if (handlers[key] && typeof handlers[key].default === 'function') {
+      handlers[key] = handlers[key].default;
+    }
+  }
+} catch (err) {
+  startupError = err;
+  console.error("CRITICAL STARTUP ERROR in API Gateway:", err);
+}
 
 /**
  * Native Vercel Serverless API Gateway
- * Consolidates all backend routes into 1 single function to comply with Vercel Hobby Plan (Max 12 Functions).
  */
 module.exports = async (req, res) => {
-  // CORS Headers for all requests
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -34,31 +34,39 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Parse target path from req.url or req.headers
+  if (startupError) {
+    return res.status(500).json({
+      error: 'API Gateway failed to initialize (Startup Crash)',
+      details: startupError.message,
+      stack: startupError.stack
+    });
+  }
+
   const rawUrl = String(req.url || '').split('?')[0];
 
   try {
     if (rawUrl.includes('/auth/login') || rawUrl.includes('/login')) {
-      return await loginHandler(req, res);
+      return await handlers.login(req, res);
     }
     if (rawUrl.includes('/auth/session') || rawUrl.includes('/session')) {
-      return await sessionHandler(req, res);
+      return await handlers.session(req, res);
     }
     if (rawUrl.includes('/posts/detail') || rawUrl.includes('/detail')) {
-      return await postDetailHandler(req, res);
+      return await handlers.postDetail(req, res);
     }
     if (rawUrl.includes('/posts')) {
-      return await postsHandler(req, res);
+      return await handlers.posts(req, res);
     }
     if (rawUrl.includes('/upload')) {
-      return await uploadHandler(req, res);
+      return await handlers.upload(req, res);
     }
     if (rawUrl.includes('/toeic/questions') || rawUrl.includes('/questions')) {
-      return await toeicQuestionsHandler(req, res);
+      return await handlers.toeicQuestions(req, res);
     }
     if (rawUrl.includes('/admin/metrics') || rawUrl.includes('/metrics')) {
-      return await metricsHandler(req, res);
+      return await handlers.metrics(req, res);
     }
+
 
 
     // Default API Gateway Status Response

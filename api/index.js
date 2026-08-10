@@ -1,10 +1,24 @@
-const loginHandler = require('./_handlers/auth/login');
-const sessionHandler = require('./_handlers/auth/session');
-const postsHandler = require('./_handlers/posts/index');
-const postDetailHandler = require('./_handlers/posts/detail');
-const uploadHandler = require('./_handlers/upload/index');
-const toeicQuestionsHandler = require('./_handlers/toeic/questions');
-const metricsHandler = require('./_handlers/admin/metrics');
+const rawLoginHandler = require('./_handlers/auth/login');
+const rawSessionHandler = require('./_handlers/auth/session');
+const rawPostsHandler = require('./_handlers/posts/index');
+const rawPostDetailHandler = require('./_handlers/posts/detail');
+const rawUploadHandler = require('./_handlers/upload/index');
+const rawToeicQuestionsHandler = require('./_handlers/toeic/questions');
+const rawMetricsHandler = require('./_handlers/admin/metrics');
+
+function getHandler(mod) {
+  if (typeof mod === 'function') return mod;
+  if (mod && typeof mod.default === 'function') return mod.default;
+  return mod;
+}
+
+const loginHandler = getHandler(rawLoginHandler);
+const sessionHandler = getHandler(rawSessionHandler);
+const postsHandler = getHandler(rawPostsHandler);
+const postDetailHandler = getHandler(rawPostDetailHandler);
+const uploadHandler = getHandler(rawUploadHandler);
+const toeicQuestionsHandler = getHandler(rawToeicQuestionsHandler);
+const metricsHandler = getHandler(rawMetricsHandler);
 
 /**
  * Native Vercel Serverless API Gateway

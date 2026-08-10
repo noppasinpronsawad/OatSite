@@ -1,24 +1,16 @@
-const rawLoginHandler = require('./_handlers/auth/login');
-const rawSessionHandler = require('./_handlers/auth/session');
-const rawPostsHandler = require('./_handlers/posts/index');
-const rawPostDetailHandler = require('./_handlers/posts/detail');
-const rawUploadHandler = require('./_handlers/upload/index');
-const rawToeicQuestionsHandler = require('./_handlers/toeic/questions');
-const rawMetricsHandler = require('./_handlers/admin/metrics');
-
-function getHandler(mod) {
-  if (typeof mod === 'function') return mod;
-  if (mod && typeof mod.default === 'function') return mod.default;
-  return mod;
+function getHandler(modulePath) {
+  try {
+    const mod = require(modulePath);
+    if (typeof mod === 'function') return mod;
+    if (mod && typeof mod.default === 'function') return mod.default;
+    return mod;
+  } catch (err) {
+    console.error(`Failed to load handler ${modulePath}:`, err);
+    return async (req, res) => {
+      res.status(500).json({ error: `Failed to load handler ${modulePath}`, details: err.message });
+    };
+  }
 }
-
-const loginHandler = getHandler(rawLoginHandler);
-const sessionHandler = getHandler(rawSessionHandler);
-const postsHandler = getHandler(rawPostsHandler);
-const postDetailHandler = getHandler(rawPostDetailHandler);
-const uploadHandler = getHandler(rawUploadHandler);
-const toeicQuestionsHandler = getHandler(rawToeicQuestionsHandler);
-const metricsHandler = getHandler(rawMetricsHandler);
 
 /**
  * Native Vercel Serverless API Gateway
@@ -39,25 +31,25 @@ module.exports = async (req, res) => {
 
   try {
     if (rawUrl.includes('/auth/login') || rawUrl.includes('/login')) {
-      return await loginHandler(req, res);
+      return await getHandler('./_handlers/auth/login')(req, res);
     }
     if (rawUrl.includes('/auth/session') || rawUrl.includes('/session')) {
-      return await sessionHandler(req, res);
+      return await getHandler('./_handlers/auth/session')(req, res);
     }
     if (rawUrl.includes('/posts/detail') || rawUrl.includes('/detail')) {
-      return await postDetailHandler(req, res);
+      return await getHandler('./_handlers/posts/detail')(req, res);
     }
     if (rawUrl.includes('/posts')) {
-      return await postsHandler(req, res);
+      return await getHandler('./_handlers/posts/index')(req, res);
     }
     if (rawUrl.includes('/upload')) {
-      return await uploadHandler(req, res);
+      return await getHandler('./_handlers/upload/index')(req, res);
     }
     if (rawUrl.includes('/toeic/questions') || rawUrl.includes('/questions')) {
-      return await toeicQuestionsHandler(req, res);
+      return await getHandler('./_handlers/toeic/questions')(req, res);
     }
     if (rawUrl.includes('/admin/metrics') || rawUrl.includes('/metrics')) {
-      return await metricsHandler(req, res);
+      return await getHandler('./_handlers/admin/metrics')(req, res);
     }
 
     // Default API Gateway Status Response

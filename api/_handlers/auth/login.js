@@ -8,6 +8,7 @@ require('dotenv').config();
 const JWT_SECRET = String(process.env.JWT_SECRET || DEFAULT_JWT_SECRET).trim().replace(/^["']|["']$/g, '');
 
 module.exports = async (req, res) => {
+  // Always set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -25,7 +26,7 @@ module.exports = async (req, res) => {
 
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
-    } else if (Buffer.isBuffer(body)) {
+    } else if (Buffer.isBuffer && Buffer.isBuffer(body)) {
       try { body = JSON.parse(body.toString('utf-8')); } catch (e) {}
     }
 
@@ -46,26 +47,23 @@ module.exports = async (req, res) => {
 
     // Generate unique sessionId for Single Active Session enforcement
     const sessionId = crypto.randomBytes(16).toString('hex');
-
-        // Persist active sessionId into MongoDB Atlas if connected (Ultra-Resilient)
-    try {
-      const db = await Promise.race([
-        connectToDatabase(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('DB Timeout')), 2500))
-      ]);
-      if (db && AdminSession) {
-        await AdminSession.findOneAndUpdate(
-          { key: 'admin_active_session' },
-          { activeSessionId: sessionId, lastLoginAt: new Date() },
-          { upsert: true, new: true }
-        ).catch(e => console.warn('AdminSession update warning:', e.message));
-      }
-    } catch (dbErr) {
-      console.warn('MongoDB session save skipped, using in-memory session:', dbErr.message);
-    }
-
-    // Also update in-memory active sessionId fallback
     global.activeAdminSessionId = sessionId;
+
+    // Non-blocking MongoDB session save (Safe & Resilient)
+    (async () => {
+      try {
+        const db = await connectToDatabase();
+        if (db && AdminSession) {
+          await AdminSession.findOneAndUpdate(
+            { key: 'admin_active_session' },
+            { activeSessionId: sessionId, lastLoginAt: new Date() },
+            { upsert: true, new: true }
+          ).catch(() => {});
+        }
+      } catch (e) {
+        // Non-blocking silent fallback
+      }
+    })();
 
     // Generate 45-minute JWT Token with sessionId
     const token = jwt.sign(
@@ -79,7 +77,7 @@ module.exports = async (req, res) => {
       message: 'Authentication successful',
       token,
       sessionId,
-      expiresInSeconds: 2700 // 45 minutes
+      expiresInSeconds: 2700
     });
   } catch (err) {
     console.error('Login handler error:', err);

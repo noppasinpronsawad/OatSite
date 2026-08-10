@@ -1,10 +1,23 @@
 /**
- * Admin Panel JavaScript Architecture v8.0 (Master Release)
- * Authentication, Single Active Session Enforcement, Blog Management, Question Bank Inspector & News Ingestion Modals
+ * Admin Panel JavaScript Architecture v9.0 (Master Restored Edition)
+ * Zero-Escape Session Enforcement, Article Management & 10,480 TOEIC Questions Analytics
  * Author: Noppasin Pronsawad
  */
 
 let isExecutingLogin = false;
+
+// Cross-Tab Multi-Device Session Enforcement Listener
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'admin_session_id' && e.newValue) {
+      const myActiveSession = localStorage.getItem('my_active_session');
+      if (myActiveSession && e.newValue !== myActiveSession) {
+        alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์/แท็บอื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
+        window.executeLogout();
+      }
+    }
+  });
+}
 
 window.executeAdminLogin = async function executeLogin() {
   if (isExecutingLogin) return;
@@ -26,7 +39,6 @@ window.executeAdminLogin = async function executeLogin() {
 
   const password = passwordInput.value.trim();
 
-  // Item 1: Instantly disable button and show checking feedback message
   if (btnEl) {
     btnEl.disabled = true;
     btnEl.innerHTML = '<span class="spinner-icon"></span> ⏳ กำลังตรวจสอบรหัสผ่าน...';
@@ -38,9 +50,10 @@ window.executeAdminLogin = async function executeLogin() {
   }
 
   function grantAdminAccess(tokenStr, sessionIdStr) {
-    const activeSessionId = sessionIdStr || ('session_' + Date.now());
+    const activeSessionId = sessionIdStr || ('session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
     localStorage.setItem('admin_token', tokenStr || 'fallback_admin_token');
     localStorage.setItem('admin_jwt_token', tokenStr || 'fallback_admin_token');
+    localStorage.setItem('my_active_session', activeSessionId);
     localStorage.setItem('admin_session_id', activeSessionId);
 
     if (alertBox) {
@@ -110,6 +123,7 @@ window.executeLogout = function() {
   localStorage.removeItem('admin_token');
   localStorage.removeItem('admin_jwt_token');
   localStorage.removeItem('admin_session_id');
+  localStorage.removeItem('my_active_session');
 
   if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
 
@@ -163,13 +177,13 @@ async function fetchAdminMetrics() {
         document.getElementById('m_cloud_name').textContent = m.cloudinary.cloudName;
       }
       if (m.mongodb) {
-        document.getElementById('m_mongo_posts').textContent = m.mongodb.totalPosts;
-        document.getElementById('m_mongo_toeic').textContent = `${m.mongodb.totalToeicQuestions || 1250} ข้อ`;
+        document.getElementById('m_mongo_posts').textContent = m.mongodb.totalPosts || 1;
+        document.getElementById('m_mongo_toeic').textContent = `${m.mongodb.totalToeicQuestions || 10480} ข้อ`;
       }
 
       const summaryQs = document.getElementById('summary_total_qs');
       if (summaryQs) {
-        summaryQs.textContent = `${(m.mongodb && m.mongodb.totalToeicQuestions) || 1250} ข้อ (จากคลัง 1,250 ข้อ)`;
+        summaryQs.textContent = `${(m.mongodb && m.mongodb.totalToeicQuestions) || 10480} ข้อ (คลัง 10,000+ ข้อ)`;
       }
 
       window.cachedDailyNewsLogs = m.dailyNewsLogs || [];
@@ -213,14 +227,14 @@ window.closeAdminModal = function(modalId) {
 window.showNewsLogDetails = function(logId) {
   const logs = window.cachedDailyNewsLogs || [
     {
-      id: 'news-001',
+      id: 'log-006',
       date: '2026-08-08 07:30',
       source: 'BBC World News / Business',
       topic: 'Global Tech & Enterprise Supply Chain Modernization 2026',
       url: 'https://www.bbc.com/news/business',
       summary: 'สรุปข่าวเศรษฐกิจและห่วงโซ่อุปทานระดับโลก มีการใช้เทคโนโลยีปัญญาประดิษฐ์ (AI) เข้ามาเพิ่มประสิทธิภาพองค์กร',
-      questionsGenerated: 100,
-      partBreakdown: { part5: 30, part6: 16, part7: 54 }
+      questionsGenerated: 300,
+      partBreakdown: { part5: 90, part6: 48, part7: 162 }
     }
   ];
   const item = logs.find(l => l.id === logId) || logs[0];
@@ -312,7 +326,7 @@ window.filterQuestionBank = function() {
     );
   }
 
-  if (countEl) countEl.textContent = `แสดง ${questions.length} ข้อ (จากคลัง 1,250 ข้อ)`;
+  if (countEl) countEl.textContent = `แสดง ${questions.length} ข้อ (จากคลัง 10,480 ข้อ)`;
 
   if (questions.length === 0) {
     container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">ไม่พบข้อสอบที่ตรงกับเงื่อนไข</div>';
@@ -358,7 +372,6 @@ function escapeHTML(str) {
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Item 1 & 2: Post Modal, Creation & Edit Handlers
 window.openCreatePostModal = function() {
   const modal = document.getElementById('postModal');
   const titleText = document.getElementById('modalTitleText');
@@ -387,11 +400,11 @@ window.savePostArticle = async function(e) {
   if (e) e.preventDefault();
 
   const title = (document.getElementById('postTitle')?.value || '').trim();
-  const category = (document.getElementById('postCategory')?.value || 'Science').trim();
+  const category = (document.getElementById('postCategory')?.value || 'Daily Life').trim();
   const summary = (document.getElementById('postSummary')?.value || '').trim();
   const content = (document.getElementById('postContent')?.value || '').trim();
   const image = (document.getElementById('postImage')?.value || '').trim();
-  const readTime = (document.getElementById('postReadTime')?.value || '5 min read').trim();
+  const readTime = (document.getElementById('postReadTime')?.value || '3 min read').trim();
   const postId = (document.getElementById('postId')?.value || '').trim();
 
   if (!title || !summary || !content) {
@@ -405,9 +418,9 @@ window.savePostArticle = async function(e) {
     category,
     summary,
     content: `<p>${content}</p>`,
-    image: image || '../assets/images/aircraft_aerodynamics.png',
-    date: '10 Aug 2026',
-    readTime: readTime || '5 min read',
+    image: image || '',
+    date: '08 Aug 2026',
+    readTime: readTime || '3 min read',
     publishAt: new Date().toISOString()
   };
 
@@ -422,7 +435,7 @@ window.savePostArticle = async function(e) {
       body: JSON.stringify(newArticle)
     });
   } catch (err) {
-    console.warn('[Post Save] Local store backup:', err);
+    console.warn('[Post Save] Local backup save:', err);
   }
 
   let customPosts = [];
@@ -441,7 +454,6 @@ window.savePostArticle = async function(e) {
   alert('🎉 บันทึกบทความใหม่เรียบร้อยแล้ว!');
   window.closePostModal();
   fetchBlogPosts();
-  if (typeof fetchDynamicPosts === 'function') fetchDynamicPosts();
 };
 
 window.editBlogPost = function(postId) {
@@ -453,7 +465,7 @@ window.editBlogPost = function(postId) {
   document.getElementById('modalTitleText').textContent = 'Edit Article';
   document.getElementById('postId').value = post.id || post._id;
   document.getElementById('postTitle').value = post.title || '';
-  document.getElementById('postCategory').value = post.category || 'Science';
+  document.getElementById('postCategory').value = post.category || 'Daily Life';
   document.getElementById('postSummary').value = post.summary || '';
   document.getElementById('postContent').value = (post.content || '').replace(/<[^>]*>/g, '');
   document.getElementById('postImage').value = post.image || '';
@@ -474,18 +486,25 @@ window.deleteBlogPost = function(postId) {
   fetchBlogPosts();
 };
 
-// Item 4: Single Active Session Enforcement Polling
 function startSessionMonitoring(currentSessionId) {
   if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
 
-  const localSessionId = currentSessionId || localStorage.getItem('admin_session_id') || ('sess_' + Date.now());
-  localStorage.setItem('admin_session_id', localSessionId);
+  const mySessionId = currentSessionId || localStorage.getItem('my_active_session') || ('sess_' + Date.now());
+  localStorage.setItem('my_active_session', mySessionId);
+  localStorage.setItem('admin_session_id', mySessionId);
 
   window.sessionMonitorInterval = setInterval(async () => {
     const token = localStorage.getItem('admin_token');
-    const mySessionId = localStorage.getItem('admin_session_id');
+    const activeLocalSession = localStorage.getItem('admin_session_id');
 
     if (!token || !mySessionId) return;
+
+    if (activeLocalSession && activeLocalSession !== mySessionId) {
+      clearInterval(window.sessionMonitorInterval);
+      alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์อื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
+      window.executeLogout();
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/session?_t=' + Date.now(), {
@@ -503,12 +522,11 @@ function startSessionMonitoring(currentSessionId) {
         }
       }
     } catch (err) {
-      // Network silence
+      // Silence network errors
     }
-  }, 4000);
+  }, 3500);
 }
 
-// Fetch & Render Blog Posts in Admin CMS (Item 1)
 async function fetchBlogPosts() {
   const tableBody = document.getElementById('postsTableBody');
   const paginationInfo = document.getElementById('adminPaginationInfo');
@@ -533,19 +551,6 @@ async function fetchBlogPosts() {
     posts = [...window.BLOG_POSTS];
   }
 
-  if (!posts || posts.length === 0) {
-    posts = [
-      { id: 'p1', title: 'Physics of Flight: Understanding Modern Aircraft Dynamics', category: 'Science', date: '01 Jul 2026', readTime: '6 min read', image: '../assets/images/aircraft_aerodynamics.png' },
-      { id: 'p2', title: 'Modern Petroleum Geoscience in the Energy Transition', category: 'Science', date: '01 Jun 2026', readTime: '7 min read', image: '../assets/images/petroleum_geoscience.png' },
-      { id: 'p3', title: 'Aviation Meteorology: Navigating Complex Weather Patterns', category: 'Science', date: '01 May 2026', readTime: '4 min read', image: '../assets/images/aviation_meteorology.png' },
-      { id: 'p4', title: 'Bridging the Gap: Effective Requirements Analysis in Fintech', category: 'Technology', date: '01 Aug 2026', readTime: '6 min read', image: '../assets/images/fintech_requirements.png' },
-      { id: 'p5', title: 'Automating Workflows with Python and GitHub Bots', category: 'Technology', date: '01 Jul 2026', readTime: '5 min read', image: '../assets/images/python_github_bots.png' },
-      { id: 'p6', title: 'Evaluating AI Models in Modern Software Engineering', category: 'Technology', date: '01 Jun 2026', readTime: '6 min read', image: '../assets/images/ai_software_engineering.png' },
-      { id: 'p7', title: 'Data-Driven Strategies: Automating DCA for US ETFs', category: 'Technology', date: '01 May 2026', readTime: '5 min read', image: '../assets/images/dca_stock_automation.png' }
-    ];
-  }
-
-  // Merge user-created published articles from localStorage so they NEVER get lost!
   let customPosts = [];
   try {
     customPosts = JSON.parse(localStorage.getItem('custom_user_posts') || '[]');
@@ -558,18 +563,24 @@ async function fetchBlogPosts() {
 
   window.cachedAllBlogPosts = posts;
 
+  if (posts.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">ยังไม่มีบทความในระบบ กดปุ่ม + Create New Post เพื่อเพิ่มบทความแรก</td></tr>';
+    if (paginationInfo) paginationInfo.textContent = 'Showing 0 articles';
+    return;
+  }
+
   tableBody.innerHTML = posts.map(p => {
     const postId = p.id || p._id;
-    const catClass = (p.category || 'Science').toLowerCase().replace(/\s+/g, '-');
-    const imgSrc = p.image ? (p.image.startsWith('http') || p.image.startsWith('/') || p.image.startsWith('../') ? p.image : `../${p.image}`) : '../assets/images/aircraft_aerodynamics.png';
+    const catClass = (p.category || 'Daily Life').toLowerCase().replace(/\s+/g, '-');
+    const imgSrc = p.image ? (p.image.startsWith('http') || p.image.startsWith('/') || p.image.startsWith('../') ? p.image : `../${p.image}`) : '';
 
     return `
       <tr style="border-bottom: 1px solid var(--border-subtle);">
-        <td style="padding: 0.8rem;"><img src="${imgSrc}" style="width: 50px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" alt=""></td>
+        <td style="padding: 0.8rem;">${imgSrc ? `<img src="${imgSrc}" style="width: 50px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" alt="">` : '<span style="font-size:0.8rem; color: var(--text-tertiary);">No Image</span>'}</td>
         <td style="padding: 0.8rem; font-weight: 600; color: var(--text-primary); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</td>
-        <td style="padding: 0.8rem;"><span class="badge-cat ${catClass}">${p.category || 'Science'}</span></td>
-        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.date || '01 Aug 2026'}</td>
-        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.readTime || '5 min read'}</td>
+        <td style="padding: 0.8rem;"><span class="badge-cat ${catClass}">${p.category || 'Daily Life'}</span></td>
+        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.date || '08 Aug 2026'}</td>
+        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.readTime || '3 min read'}</td>
         <td style="padding: 0.8rem;">
           <button type="button" class="btn-admin-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.4rem;" onclick="window.editBlogPost('${postId}')">✏️ Edit</button>
           <button type="button" class="btn-danger" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; border-radius: 4px;" onclick="window.deleteBlogPost('${postId}')">🗑️ Delete</button>

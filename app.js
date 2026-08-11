@@ -63,7 +63,10 @@ function initRouter() {
     let targetViewId = `${hash}-view`;
     if (hash === 'about' || hash === 'resume') targetViewId = 'resume-view';
     if (hash === 'tax' || hash === 'tax-calculator') targetViewId = 'tax-view';
-    if (hash === 'toeic' || hash === 'toeic-simulator') targetViewId = 'toeic-view';
+    if (hash === 'toeic' || hash === 'toeic-simulator') {
+      targetViewId = 'toeic-view';
+      if (typeof resetToeicExam === 'function') resetToeicExam();
+    }
     if (hash === 'showcase') targetViewId = 'showcase-view';
 
     const targetView = document.getElementById(targetViewId);

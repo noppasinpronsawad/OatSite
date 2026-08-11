@@ -158,7 +158,37 @@ function generatePart7TripleSets() {
     const doc3Title = `DOCUMENT 3: Conference Feedback Email`;
     const comboTitle = `TRIPLE PASSAGE: Trade Conference Logistics Set ${s+1}`;
 
-    const comboContent = `<div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,210,255,0.2); padding: 0.8rem; border-radius: 6px; margin-bottom: 0.8rem;"><div style="color: #00d2ff; font-weight: 700;">${doc1Title}</div><p>Keynote Address: Supply Chain Tech 2026 — Main Hall (9:00 AM - 10:30 AM)</p></div><hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 0.8rem 0;"><div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(48,209,88,0.2); padding: 0.8rem; border-radius: 6px; margin-bottom: 0.8rem;"><div style="color: #30d158; font-weight: 700;">${doc2Title}</div><p>Speaker: Dr. Arisawa | Topic: Automated Port Terminal Logistics</p></div><hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 0.8rem 0;"><div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(175,82,222,0.2); padding: 0.8rem; border-radius: 6px;"><div style="color: #af52de; font-weight: 700;">${doc3Title}</div><p>Feedback: The session provided valuable insights into automated container terminals.</p></div>`;
+    const comboContent = `
+      <div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,210,255,0.2); padding: 0.8rem; border-radius: 6px; margin-bottom: 0.8rem;">
+        <div style="color: #00d2ff; font-weight: 700; margin-bottom: 0.5rem;">${doc1Title}</div>
+        <p><strong>Date:</strong> November 12-14, 2026<br><strong>Location:</strong> Grand Metropolis Convention Center</p>
+        <p>Join us for the 10th Annual International Trade Conference. This year's focus is on next-generation supply chain technologies and port automation.</p>
+        <ul>
+          <li><strong>9:00 AM - 10:30 AM:</strong> Keynote Address: Supply Chain Tech 2026 — Main Hall</li>
+          <li><strong>11:00 AM - 12:30 PM:</strong> Panel Discussion: Future of Port Terminal Logistics — Room A</li>
+          <li><strong>2:00 PM - 3:30 PM:</strong> Workshop: Implementing Automated Systems — Room B</li>
+        </ul>
+        <p>Registration includes access to all sessions, lunch buffets, and the evening networking gala.</p>
+      </div>
+      <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 0.8rem 0;">
+      <div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(48,209,88,0.2); padding: 0.8rem; border-radius: 6px; margin-bottom: 0.8rem;">
+        <div style="color: #30d158; font-weight: 700; margin-bottom: 0.5rem;">${doc2Title}</div>
+        <p><strong>Name:</strong> Dr. Hideo Arisawa<br><strong>Title:</strong> Director of Logistics Operations</p>
+        <p><strong>Company:</strong> Global Freight Systems Ltd.</p>
+        <p><strong>Topic:</strong> Automated Port Terminal Logistics</p>
+        <p><strong>Session Time:</strong> 11:00 AM - 12:30 PM (Panel Discussion)</p>
+        <p><strong>Special Requirements:</strong> LCD projector and two wireless microphones requested for co-presenter.</p>
+      </div>
+      <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 0.8rem 0;">
+      <div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(175,82,222,0.2); padding: 0.8rem; border-radius: 6px;">
+        <div style="color: #af52de; font-weight: 700; margin-bottom: 0.5rem;">${doc3Title}</div>
+        <p><strong>To:</strong> events@tradeconference2026.com<br><strong>From:</strong> s.patel@maritimesolutions.com</p>
+        <p><strong>Subject:</strong> Feedback regarding Friday's Panel Discussion</p>
+        <p>To the Event Organizers,</p>
+        <p>I am writing to express my appreciation for the panel discussion on the Future of Port Terminal Logistics. Dr. Arisawa's presentation was exceptional.</p>
+        <p>The session provided valuable insights into automated container terminals, which directly addresses the challenges my company is currently facing. I would highly recommend inviting him to speak again next year.</p>
+        <p>Best regards,<br>Sunil Patel</p>
+      </div>`;
 
     const setQuestions = [];
     for (let q = 1; q <= 5; q++) {

@@ -334,14 +334,18 @@ window.filterQuestionBank = function() {
     );
   }
 
-  if (countEl) countEl.textContent = `แสดง ${questions.length} ข้อ (จากคลัง 10,480 ข้อ)`;
+  if (countEl) countEl.textContent = `แสดงสุ่ม 10 ข้อ จากที่กรองได้ ${questions.length} ข้อ (จากคลัง 10,480 ข้อ)`;
 
   if (questions.length === 0) {
     container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">ไม่พบข้อสอบที่ตรงกับเงื่อนไข</div>';
     return;
   }
 
-  container.innerHTML = questions.map((q, idx) => `
+  // Pick 10 random questions to prevent browser crash
+  const shuffled = [...questions].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 10);
+
+  container.innerHTML = selected.map((q, idx) => `
     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
         <span class="blog-cat-pill" style="background: rgba(0,210,255,0.15); color: #00d2ff;">Part ${q.part}</span>
@@ -521,6 +525,16 @@ window.deleteBlogPost = async function(postId) {
   customPosts = customPosts.filter(p => p.id !== postId && p._id !== postId);
   localStorage.setItem('custom_user_posts', JSON.stringify(customPosts));
 
+  // Track deleted posts to hide them if they come from hardcoded fallbacks
+  let deletedPosts = [];
+  try {
+    deletedPosts = JSON.parse(localStorage.getItem('deleted_user_posts') || '[]');
+  } catch (e) {}
+  if (!deletedPosts.includes(postId)) {
+    deletedPosts.push(postId);
+    localStorage.setItem('deleted_user_posts', JSON.stringify(deletedPosts));
+  }
+
   alert('🗑️ ลบบทความเรียบร้อยแล้ว');
   fetchBlogPosts();
 };
@@ -529,16 +543,53 @@ window.deleteBlogPost = async function(postId) {
 function startSessionMonitoring() {
   if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
 
-  window.sessionMonitorInterval = setInterval(() => {
+  let expiryTime = Date.now() + 45 * 60 * 1000; // 45 minutes fallback
+
+  const updateTimerUI = () => {
+    const timerBadge = document.getElementById('sessionTimer');
+    if (!timerBadge) return;
+    const remaining = Math.max(0, expiryTime - Date.now());
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    timerBadge.textContent = `Session Expiry: ${mins}:${secs.toString().padStart(2, '0')}`;
+    if (remaining === 0) {
+      alert('⏰ Session expired. Please log in again.');
+      window.executeLogout();
+    }
+  };
+
+  window.sessionMonitorInterval = setInterval(async () => {
+    updateTimerUI();
+
     const tabSession = sessionStorage.getItem('my_active_session');
     const globalSession = localStorage.getItem('admin_session_id');
+    const token = localStorage.getItem('admin_token');
 
     if (tabSession && globalSession && tabSession !== globalSession) {
       clearInterval(window.sessionMonitorInterval);
-      alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์อื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
+      alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์/แท็บอื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
       window.executeLogout();
+      return;
     }
-  }, 1500);
+
+    // Ping backend to ensure session is valid across multiple devices
+    if (token && !token.startsWith('local_')) {
+      try {
+        const res = await fetch('/api/auth/check', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.status === 401) {
+          const data = await res.json();
+          clearInterval(window.sessionMonitorInterval);
+          alert('⚠️ ' + (data.error || 'เซสชันปัจจุบันของคุณถูกยกเลิกเนื่องจากมีการล็อกอินจากอุปกรณ์อื่น!'));
+          window.executeLogout();
+        } else if (res.ok) {
+          const data = await res.json();
+          if (data.exp) expiryTime = data.exp * 1000;
+        }
+      } catch (err) {}
+    }
+  }, 5000); // Check every 5 seconds
 }
 
 // Fetch & Render Blog Posts from MongoDB Atlas & Fallback (Item 3)
@@ -574,6 +625,17 @@ async function fetchBlogPosts() {
   if (Array.isArray(customPosts) && customPosts.length > 0) {
     const customIds = new Set(customPosts.map(cp => cp.id));
     posts = [...customPosts, ...posts.filter(p => !customIds.has(p.id || p._id))];
+  }
+
+  // Filter out posts that the user has explicitly deleted locally
+  let deletedPosts = [];
+  try {
+    deletedPosts = JSON.parse(localStorage.getItem('deleted_user_posts') || '[]');
+  } catch (e) {}
+  
+  if (deletedPosts.length > 0) {
+    const deletedSet = new Set(deletedPosts);
+    posts = posts.filter(p => !deletedSet.has(p.id || p._id));
   }
 
   window.cachedAllBlogPosts = posts;
@@ -620,13 +682,13 @@ function initRichEditor() {
     });
   });
 
-  // Setup Headings and Font Size Selectors
   const headingSelect = document.getElementById('editorHeadingSelect');
   if (headingSelect) {
     headingSelect.addEventListener('change', (e) => {
       document.execCommand('formatBlock', false, e.target.value);
     });
   }
+  
   const fontSelect = document.getElementById('editorFontSizeSelect');
   if (fontSelect) {
     fontSelect.addEventListener('change', (e) => {
@@ -634,21 +696,64 @@ function initRichEditor() {
     });
   }
 
-  // Setup Image Insert Button
+  // Setup Image Insert Button (Browse File)
   const insertImageBtn = document.getElementById('insertImageUrlBtn');
   if (insertImageBtn) {
+    // Create hidden file input for editor body
+    let editorFileInput = document.getElementById('editorFileInput');
+    if (!editorFileInput) {
+      editorFileInput = document.createElement('input');
+      editorFileInput.type = 'file';
+      editorFileInput.id = 'editorFileInput';
+      editorFileInput.accept = 'image/*';
+      editorFileInput.style.display = 'none';
+      document.body.appendChild(editorFileInput);
+    }
+
     insertImageBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const url = prompt('Enter Image URL:');
-      if (url) document.execCommand('insertImage', false, url);
+      // Save selection
+      const selection = window.getSelection();
+      const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      
+      editorFileInput.onchange = (evt) => {
+        const file = evt.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e2) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_WIDTH = 800;
+              const scale = Math.min(MAX_WIDTH / img.width, 1);
+              canvas.width = img.width * scale;
+              canvas.height = img.height * scale;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              
+              const base64Str = canvas.toDataURL('image/jpeg', 0.7);
+              
+              const editor = document.getElementById('postContentEditor');
+              editor.focus();
+              if (range) {
+                selection.removeAllRanges();
+                selection.addRange(range);
+              }
+              document.execCommand('insertImage', false, base64Str);
+            };
+            img.src = e2.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      editorFileInput.click();
     });
   }
 
-  // Setup Cover Image File Upload (Convert to Base64)
+  // Setup Cover Image File Upload (Auto 16:9 Crop & Compress)
   const imageFileInput = document.getElementById('imageFileInput');
   const dropzoneBox = document.getElementById('dropzoneBox');
   const postImageUrl = document.getElementById('postImageUrl');
-  const postImage = document.getElementById('postImage'); // Hidden input if exists, or we use postImageUrl
 
   if (dropzoneBox && imageFileInput) {
     dropzoneBox.addEventListener('click', () => imageFileInput.click());
@@ -658,15 +763,42 @@ function initRichEditor() {
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          const base64Str = evt.target.result;
-          if (postImageUrl) postImageUrl.value = base64Str;
-          
-          // Show preview
-          const preview = document.getElementById('imagePreviewBox');
-          if (preview) {
-             preview.src = base64Str;
-             preview.style.display = 'block';
-          }
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const TARGET_RATIO = 16 / 9;
+            
+            let drawWidth = img.width;
+            let drawHeight = img.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (img.width / img.height > TARGET_RATIO) {
+              drawWidth = img.height * TARGET_RATIO;
+              offsetX = (img.width - drawWidth) / 2;
+            } else {
+              drawHeight = img.width / TARGET_RATIO;
+              offsetY = (img.height - drawHeight) / 2;
+            }
+
+            const scale = Math.min(MAX_WIDTH / drawWidth, 1);
+            canvas.width = drawWidth * scale;
+            canvas.height = drawHeight * scale;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
+            
+            const base64Str = canvas.toDataURL('image/jpeg', 0.7); // Under 300KB
+            if (postImageUrl) postImageUrl.value = base64Str;
+            
+            const preview = document.getElementById('imagePreviewBox');
+            if (preview) {
+               preview.src = base64Str;
+               preview.style.display = 'block';
+            }
+          };
+          img.src = evt.target.result;
         };
         reader.readAsDataURL(file);
       }

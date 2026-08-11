@@ -473,6 +473,13 @@ window.savePostArticle = async function(e) {
     newArticle.publishAt = now.toISOString();
   }
 
+  const saveBtn = document.getElementById('savePostBtn');
+  const originalBtnContent = saveBtn ? saveBtn.innerHTML : 'Save & Publish';
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span>⏳ Saving...</span>';
+  }
+
   try {
     const token = localStorage.getItem('admin_token');
     const endpoint = postId && !postId.startsWith('custom_post_') ? `/api/posts/detail?id=${postId}` : '/api/posts';
@@ -497,6 +504,11 @@ window.savePostArticle = async function(e) {
   } catch (err) {
     alert('❌ บันทึกบทความล้มเหลว: ' + err.message);
     console.error('[Post Save] API error:', err);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalBtnContent;
+    }
   }
 };
 
@@ -776,15 +788,32 @@ function initRichEditor() {
     });
   }
 
-  // Allow cropping images inside the editor
+  // Allow resizing images inside the editor
   const editorBox = document.getElementById('postContentEditor');
   if (editorBox) {
     editorBox.addEventListener('click', (e) => {
       if (e.target.tagName === 'IMG') {
-        window.currentCropTargetElement = e.target;
-        if (typeof window.openCropper === 'function') {
-          window.openCropper(e.target.src);
+        window.currentResizeTargetElement = e.target;
+        const resizeModal = document.getElementById('editorResizeModal');
+        if (resizeModal) {
+          // get current width % if set
+          let currentWidth = e.target.style.width || '100%';
+          document.getElementById('editorResizeRange').value = parseInt(currentWidth) || 100;
+          document.getElementById('editorResizeValue').textContent = currentWidth;
+          resizeModal.style.display = 'flex';
+          resizeModal.classList.add('active');
         }
+      }
+    });
+  }
+
+  const resizeRange = document.getElementById('editorResizeRange');
+  if (resizeRange) {
+    resizeRange.addEventListener('input', (e) => {
+      document.getElementById('editorResizeValue').textContent = e.target.value + '%';
+      if (window.currentResizeTargetElement) {
+        window.currentResizeTargetElement.style.width = e.target.value + '%';
+        window.currentResizeTargetElement.style.height = 'auto'; // keep aspect ratio
       }
     });
   }
@@ -849,18 +878,12 @@ function initRichEditor() {
           const canvas = cropperInstance.getCroppedCanvas({ width: 800 });
           if (canvas) {
             const base64Str = canvas.toDataURL('image/jpeg', 0.7);
-            if (window.currentCropTargetElement) {
-              // We are cropping an inline image inside the editor
-              window.currentCropTargetElement.src = base64Str;
-              window.currentCropTargetElement = null;
-            } else {
-              // We are cropping the cover image
-              if (postImageUrl) postImageUrl.value = base64Str;
-              const preview = document.getElementById('imagePreviewBox');
-              if (preview) {
-                preview.src = base64Str;
-                preview.style.display = 'block';
-              }
+            // We are cropping the cover image
+            if (postImageUrl) postImageUrl.value = base64Str;
+            const preview = document.getElementById('imagePreviewBox');
+            if (preview) {
+              preview.src = base64Str;
+              preview.style.display = 'block';
             }
           }
           if (cropperInstance) {

@@ -1296,6 +1296,20 @@
     </div>
   </div>
 
+  <!-- EDITOR IMAGE RESIZE MODAL -->
+  <div id="editorResizeModal" class="admin-modal">
+    <div class="admin-modal-content" style="max-width: 350px; text-align: center;">
+      <h3 style="margin-bottom: 1rem; color: #00d2ff;">📏 Resize Image</h3>
+      <div style="margin: 2rem 0;">
+        <input type="range" id="editorResizeRange" min="10" max="100" step="5" style="width: 100%;">
+        <div style="margin-top: 1rem; font-size: 1.2rem; font-weight: bold;"><span id="editorResizeValue">100%</span></div>
+      </div>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+        <button class="btn-admin-primary" onclick="window.closeAdminModal('editorResizeModal')" style="width: 100%;">Done</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/admin/admin.js?v=12.5"></script>
 </body>
 </html>

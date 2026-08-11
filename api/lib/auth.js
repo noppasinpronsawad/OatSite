@@ -3,7 +3,7 @@ const connectToDatabase = require('./db');
 const AdminSession = require('../models/AdminSession');
 require('dotenv').config();
 
-const DEFAULT_JWT_SECRET = 'antigravity_oatsite_jwt_secret_key_2026';
+const DEFAULT_JWT_SECRET = 'antigravity_oatsite_jwt_secret_key_production_fallback';
 
 async function verifyAuth(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization;

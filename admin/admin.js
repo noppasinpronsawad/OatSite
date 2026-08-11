@@ -19,12 +19,13 @@ if (typeof window !== 'undefined') {
   });
 }
 
-window.executeAdminLogin = async function executeLogin() {
+window.executeAdminLogin = async function executeLogin(e) {
+  if (e && e.preventDefault) e.preventDefault();
   if (isExecutingLogin) return;
   isExecutingLogin = true;
 
   const passwordInput = document.getElementById('adminPassword');
-  const btnEl = document.getElementById('loginSubmitBtn');
+  const btnEl = document.getElementById('loginBtn');
   const alertBox = document.getElementById('loginAlert');
 
   if (!passwordInput || !passwordInput.value.trim()) {
@@ -84,8 +85,6 @@ window.executeAdminLogin = async function executeLogin() {
     }, 300);
   }
 
-  const validPasswords = ['@Dmin123', 'admin1234'];
-
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -100,16 +99,22 @@ window.executeAdminLogin = async function executeLogin() {
         return;
       }
     }
-  } catch (err) {
-    console.warn('Backend login API unreachable, using resilient local auth:', err.message);
-  }
+    
+    // API Error handling
+    let errorMsg = 'Login failed';
+    try {
+      const errorData = await res.json();
+      errorMsg = errorData.error || errorData.message || `API Error: ${res.status}`;
+    } catch (_) {
+      errorMsg = `API Error: ${res.status}`;
+    }
+    throw new Error(errorMsg);
 
-  if (validPasswords.includes(password)) {
-    grantAdminAccess('local_verified_admin_token_' + Date.now(), 'local_session_' + Date.now());
-  } else {
+  } catch (err) {
+    console.error('Backend login API error:', err.message);
     if (alertBox) {
       alertBox.className = 'alert-banner alert-error';
-      alertBox.textContent = '❌ รหัสผ่านไม่ถูกต้อง โปรดลองอีกครั้ง';
+      alertBox.textContent = '❌ ' + (err.message || 'การเข้าสู่ระบบล้มเหลว โปรดลองอีกครั้ง');
       alertBox.style.display = 'block';
     }
     isExecutingLogin = false;
@@ -169,14 +174,7 @@ async function fetchAdminMetrics() {
   const token = localStorage.getItem('admin_token');
   const logsTableBody = document.getElementById('dailyNewsLogsTableBody');
 
-  const defaultLogs = [
-    { id: 'log-006', date: '2026-08-08 07:30', source: 'BBC World News / Business', topic: 'Global Tech & Enterprise Supply Chain Modernization 2026', questionsGenerated: 300, status: 'Success' },
-    { id: 'log-005', date: '2026-08-07 07:30', source: 'TechCrunch / Enterprise AI', topic: 'Generative AI Workflows & Developer Productivity Index', questionsGenerated: 300, status: 'Success' },
-    { id: 'log-004', date: '2026-08-06 07:30', source: 'Financial Times / Banking', topic: 'BahtNet Integration & High-Compliance FinTech Security', questionsGenerated: 300, status: 'Success' },
-    { id: 'log-003', date: '2026-08-05 07:30', source: 'Bloomberg / Aviation', topic: 'Commercial Aviation & Global Route Optimization Dynamics', questionsGenerated: 300, status: 'Success' },
-    { id: 'log-002', date: '2026-08-04 07:30', source: 'Reuters / Energy Market', topic: 'Subsurface Reservoir Geoscience & Energy Transition', questionsGenerated: 300, status: 'Success' },
-    { id: 'log-001', date: '2026-08-03 07:30', source: 'Wall Street Journal', topic: 'US ETF Dollar Cost Averaging & Systematic Backtesting', questionsGenerated: 300, status: 'Success' }
-  ];
+  const defaultLogs = [];
 
   window.cachedDailyNewsLogs = defaultLogs;
 
@@ -202,7 +200,7 @@ async function fetchAdminMetrics() {
 
   const summaryQs = document.getElementById('summary_total_qs');
   if (summaryQs) {
-    summaryQs.textContent = window.totalToeicCount ? window.totalToeicCount + ' ข้อ' : 'กำลังโหลด...';
+    summaryQs.textContent = window.totalToeicCount !== undefined ? window.totalToeicCount.toLocaleString() + ' ข้อ' : 'กำลังโหลด...';
   }
 
   try {
@@ -213,7 +211,7 @@ async function fetchAdminMetrics() {
       const data = await res.json();
       if (data.success && data.metrics) {
         const m = data.metrics;
-        if (m.mongodb && m.mongodb.totalToeicQuestions) {
+        if (m.mongodb && m.mongodb.totalToeicQuestions !== undefined) {
           window.totalToeicCount = m.mongodb.totalToeicQuestions;
           if (summaryQs) summaryQs.textContent = window.totalToeicCount.toLocaleString() + ' ข้อ';
         }
@@ -411,6 +409,15 @@ window.openCreatePostModal = function() {
   if (postIdInput) postIdInput.value = '';
   if (titleText) titleText.textContent = 'Create New Article';
 
+  // Explicitly clear rich text editor and image preview
+  const editor = document.getElementById('postContentEditor');
+  if (editor) editor.innerHTML = '';
+  const imagePreview = document.getElementById('imagePreviewBox');
+  if (imagePreview) {
+    imagePreview.src = '';
+    imagePreview.style.display = 'none';
+  }
+
   if (modal) {
     modal.style.display = 'flex';
     modal.classList.add('active');
@@ -455,11 +462,18 @@ window.savePostArticle = async function(e) {
     summary,
     content: `<div class="article-rich-body">${content}</div>`,
     image: image || '',
-    date: '08 Aug 2026',
-    readTime: readTime || '3 min read',
-    publishAt: new Date().toISOString()
+    readTime: readTime || '3 min read'
   };
 
+  // Only assign current date if it's a new post
+  if (!postId) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    newArticle.date = `${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    newArticle.publishAt = now.toISOString();
+  }
+
+  try {
     const token = localStorage.getItem('admin_token');
     const endpoint = postId && !postId.startsWith('custom_post_') ? `/api/posts/detail?id=${postId}` : '/api/posts';
     const method = postId && !postId.startsWith('custom_post_') ? 'PUT' : 'POST';
@@ -497,8 +511,21 @@ window.editBlogPost = function(postId) {
   document.getElementById('postTitle').value = post.title || '';
   document.getElementById('postCategory').value = post.category || 'Daily Life';
   document.getElementById('postSummary').value = post.summary || '';
-  document.getElementById('postContent').value = (post.content || '').replace(/<[^>]*>/g, '');
-  document.getElementById('postImage').value = post.image || '';
+  document.getElementById('postContent').value = post.content || '';
+  const editor = document.getElementById('postContentEditor');
+  if (editor) editor.innerHTML = post.content || '';
+  
+  const imageUrlInput = document.getElementById('postImageUrl');
+  if (imageUrlInput) imageUrlInput.value = post.image || '';
+  
+  const imagePreviewBox = document.getElementById('imagePreviewBox');
+  if (imagePreviewBox && post.image) {
+    imagePreviewBox.src = post.image;
+    imagePreviewBox.style.display = 'block';
+  } else if (imagePreviewBox) {
+    imagePreviewBox.src = '';
+    imagePreviewBox.style.display = 'none';
+  }
 };
 
 window.deleteBlogPost = async function(postId) {
@@ -612,14 +639,24 @@ async function fetchBlogPosts() {
   tableBody.innerHTML = posts.map(p => {
     const postId = p.id || p._id;
     const catClass = (p.category || 'Daily Life').toLowerCase().replace(/\s+/g, '-');
-    const imgSrc = p.image ? (p.image.startsWith('http') || p.image.startsWith('/') || p.image.startsWith('../') ? p.image : `../${p.image}`) : '';
+    const imgSrc = p.image ? (p.image.startsWith('http') || p.image.startsWith('data:') || p.image.startsWith('/') || p.image.startsWith('../') ? p.image : `../${p.image}`) : '';
+
+    let displayDate = p.date || 'No Date';
+    const dateObj = p.createdAt ? new Date(p.createdAt) : (p.publishAt ? new Date(p.publishAt) : null);
+    if (dateObj && !isNaN(dateObj.getTime())) {
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      displayDate = `${day} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+    } else if (p.date && /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(p.date.trim())) {
+      displayDate = p.date.trim();
+    }
 
     return `
       <tr style="border-bottom: 1px solid var(--border-subtle);">
         <td style="padding: 0.8rem;">${imgSrc ? `<img src="${imgSrc}" style="width: 50px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);" alt="">` : '<span style="font-size:0.8rem; color: var(--text-tertiary);">No Image</span>'}</td>
         <td style="padding: 0.8rem; font-weight: 600; color: var(--text-primary); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</td>
         <td style="padding: 0.8rem;"><span class="badge-cat ${catClass}">${p.category || 'Daily Life'}</span></td>
-        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.date || '08 Aug 2026'}</td>
+        <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${displayDate}</td>
         <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem;">${p.readTime || '4 min read'}</td>
         <td style="padding: 0.8rem;">
           <button type="button" class="btn-admin-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.4rem;" onclick="window.editBlogPost('${postId}')">✏️ Edit</button>
@@ -722,29 +759,44 @@ function initRichEditor() {
   if (dropzoneBox && imageFileInput) {
     dropzoneBox.addEventListener('click', () => imageFileInput.click());
     
+    function openCropper(srcUrl) {
+      const cropperModal = document.getElementById('cropperModal');
+      const cropperImage = document.getElementById('cropperImage');
+      if (cropperModal && cropperImage && srcUrl) {
+        // Must prevent caching or use crossorigin for external images to avoid canvas taint
+        cropperImage.src = srcUrl.startsWith('http') ? srcUrl + (srcUrl.includes('?') ? '&' : '?') + 'notaint=1' : srcUrl;
+        cropperModal.style.display = 'flex';
+        cropperModal.classList.add('active');
+        if (cropperInstance) cropperInstance.destroy();
+        cropperInstance = new Cropper(cropperImage, { aspectRatio: 16 / 9, viewMode: 1 });
+      }
+    }
+
+    const imagePreviewBox = document.getElementById('imagePreviewBox');
+    if (imagePreviewBox) {
+      imagePreviewBox.addEventListener('click', () => {
+        if (imagePreviewBox.src) openCropper(imagePreviewBox.src);
+      });
+    }
+
+    if (postImageUrl && imagePreviewBox) {
+      postImageUrl.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (val) {
+          imagePreviewBox.src = val;
+          imagePreviewBox.style.display = 'block';
+        } else {
+          imagePreviewBox.src = '';
+          imagePreviewBox.style.display = 'none';
+        }
+      });
+    }
+
     imageFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = function(evt) {
-          const cropperModal = document.getElementById('cropperModal');
-          const cropperImage = document.getElementById('cropperImage');
-          
-          if (cropperModal && cropperImage) {
-            cropperImage.src = evt.target.result;
-            cropperModal.style.display = 'flex';
-            cropperModal.classList.add('active');
-            
-            if (cropperInstance) {
-              cropperInstance.destroy();
-            }
-            
-            cropperInstance = new Cropper(cropperImage, {
-              aspectRatio: 16 / 9,
-              viewMode: 1
-            });
-          }
-        };
+        reader.onload = function(evt) { openCropper(evt.target.result); };
         reader.readAsDataURL(file);
       }
     });
@@ -832,6 +884,14 @@ function initAdminPanel() {
       postForm.onsubmit = function(e) {
         if (e) e.preventDefault();
         if (window.savePostArticle) window.savePostArticle(e);
+      };
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+      loginForm.onsubmit = function(e) {
+        if (e) e.preventDefault();
+        if (window.executeAdminLogin) window.executeAdminLogin(e);
       };
     }
 

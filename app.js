@@ -161,22 +161,22 @@ window.handleCoverImageFallback = function(imgEl, category) {
 function formatFullDisplayDate(post) {
   if (!post) return '07 Aug 2026';
   
-  if (post.date && /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
-    return post.date.trim();
-  }
-
-  const dateObj = post.publishAt ? new Date(post.publishAt) : (post.createdAt ? new Date(post.createdAt) : null);
+  const dateObj = post.createdAt ? new Date(post.createdAt) : (post.publishAt ? new Date(post.publishAt) : null);
   if (dateObj && !isNaN(dateObj.getTime())) {
     const day = String(dateObj.getDate()).padStart(2, '0');
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${day} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
   }
 
+  if (post.date && /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
+    return post.date.trim();
+  }
+
   if (post.date && /^[A-Za-z]{3}\s+\d{4}$/.test(post.date.trim())) {
     return `01 ${post.date.trim()}`;
   }
 
-  return post.date || '07 Aug 2026';
+  return post.date || 'No Date';
 }
 
 function initBlogModule() {
@@ -986,61 +986,9 @@ function initToeicSimulator() {
 }
 
 
-// Pristine 100-Question Local In-Memory Fallback Dataset (Zero-Failure Architecture)
-const PRISTINE_FALLBACK_P5 = [
-  { question_id: 'q-501', part: 5, question_text: 'All employees are required to submit their expense reports _______ the last Friday of every month.', choices: { A: 'before', B: 'prior', C: 'ahead', D: 'previous' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 5', 'Prepositions'], detailed_explanation: { correct_reason: 'คำว่า before เป็นบุพบทที่ใช้ระบุเวลา เช่น before the last Friday' } },
-  { question_id: 'q-502', part: 5, question_text: 'The newly elected board of directors will _______ the quarterly financial targets tomorrow morning.', choices: { A: 'review', B: 'reviews', C: 'reviewed', D: 'reviewing' }, correct_answer: 'A', cefr_level: 'A2', tags: ['Part 5', 'Grammar'], detailed_explanation: { correct_reason: 'หลังกริยาช่วย modal verb "will" ต้องใช้กริยาช่องกริยาเพียว (Infinitive without to)' } },
-  { question_id: 'q-503', part: 5, question_text: 'Ms. Vance managed the software migration project _______, earning high praise from top management.', choices: { A: 'efficiently', B: 'efficiency', C: 'efficient', D: 'efficiencies' }, correct_answer: 'A', cefr_level: 'B2', tags: ['Part 5', 'Adverbs'], detailed_explanation: { correct_reason: 'คำกริยาวิเศษณ์ (Adverb) "efficiently" ขยายกริยา managed' } },
-  { question_id: 'q-504', part: 5, question_text: 'Due to unforeseen traffic delays, the keynote speaker arrived _______ than scheduled.', choices: { A: 'later', B: 'late', C: 'latest', D: 'lately' }, correct_answer: 'A', cefr_level: 'A2', tags: ['Part 5', 'Comparatives'], detailed_explanation: { correct_reason: 'มีคำว่า "than" แสดงการเปรียบเทียบขั้นกว่า จึงใช้ "later"' } },
-  { question_id: 'q-505', part: 5, question_text: 'Please confirm whether Mr. Henderson has _______ the updated contract terms.', choices: { A: 'signed', B: 'signature', C: 'signing', D: 'signs' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 5', 'Perfect Tense'], detailed_explanation: { correct_reason: 'หลังกริยาช่วย "has" ใน Present Perfect Tense ต้องตามด้วย กริยาช่อง 3 (Past Participle)' } },
-  { question_id: 'q-506', part: 5, question_text: 'The marketing team conducted extensive market research to evaluate customer _______.', choices: { A: 'satisfaction', B: 'satisfy', C: 'satisfying', D: 'satisfied' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 5', 'Nouns'], detailed_explanation: { correct_reason: 'หลังคำคุณศัพท์ "customer" ต้องใช้คำนาม "satisfaction" (ความพึงพอใจ)' } },
-  { question_id: 'q-507', part: 5, question_text: 'Neither the Regional Manager _______ the department heads were aware of the policy update.', choices: { A: 'nor', B: 'or', C: 'and', D: 'but' }, correct_answer: 'A', cefr_level: 'B2', tags: ['Part 5', 'Conjunctions'], detailed_explanation: { correct_reason: 'โครงสร้างคู่สันธาน "Neither ... nor ..."' } },
-  { question_id: 'q-508', part: 5, question_text: 'All confidential documents must be kept in _______ cabinets at the end of the workday.', choices: { A: 'locked', B: 'locking', C: 'locks', D: 'locker' }, correct_answer: 'A', cefr_level: 'A2', tags: ['Part 5', 'Participles'], detailed_explanation: { correct_reason: 'คำคุณศัพท์ขยายตู้เอกสาร "locked cabinets" (ตู้ที่ถูกล็อกไว้)' } },
-  { question_id: 'q-509', part: 5, question_text: 'The IT helpdesk is available 24/7 to assist staff _______ technical difficulties.', choices: { A: 'with', B: 'about', C: 'on', D: 'for' }, correct_answer: 'A', cefr_level: 'A2', tags: ['Part 5', 'Prepositions'], detailed_explanation: { correct_reason: 'สำนวน "assist someone with something"' } },
-  { question_id: 'q-510', part: 5, question_text: 'Several candidates demonstrated exceptional qualifications, making the final selection _______ difficult.', choices: { A: 'particularly', B: 'particular', C: 'particularity', D: 'particulars' }, correct_answer: 'A', cefr_level: 'C1', tags: ['Part 5', 'Adverbs'], detailed_explanation: { correct_reason: 'ขยายคำคุณศัพท์ "difficult" ด้วยกริยาวิเศษณ์ "particularly"' } }
-];
-
 function getPristineFallbackQuestions(mode) {
-  console.log('[TOEIC Simulator] Serving Pristine In-Memory Fallback Dataset (Mode:', mode, ')');
-  const p5 = [...PRISTINE_FALLBACK_P5];
-  
-  // Build Part 6 Sets with matched [1]-[4] blanks
-  const p6_title = 'MEMORANDUM: Scheduled Cyber Security System Maintenance';
-  const p6_body = '<div class="passage-block"><p><strong>TO:</strong> All Staff Members<br><strong>FROM:</strong> Information Technology Department<br><strong>SUBJECT:</strong> Urgent System Maintenance and Password Reset</p><p>Please be advised that the corporate network will undergo essential cyber security maintenance this coming Saturday from 10:00 PM to 4:00 AM. During this timeframe, all corporate VPN servers and remote login portals will be [1] _______ offline.</p><p>We kindly request that all employees save their open documents and log out of their workstations before leaving the office on Friday evening. [2] _______. Any unsaved work may be lost during the database upgrade.</p><p>Furthermore, effective next Monday, all employees must update their network passwords. The new passwords must be [3] _______ created according to our updated security guidelines, containing at least 12 characters, including numbers and special symbols.</p><p>We appreciate your cooperation in keeping our company data secure. If you have any questions or experience technical difficulties, please contact the IT Helpdesk at extension 4401. [4] _______.</p></div>';
-  
-  const p6 = [
-    { question_id: 'q-601', part: 6, passage_title: p6_title, passage_content: p6_body, question_text: 'Which word best fits blank [1]?', choices: { A: 'temporarily', B: 'permanently', C: 'finally', D: 'eventually' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 6'], detailed_explanation: { correct_reason: 'บริบทการปิดปรับปรุงระบบชั่วคราว จึงต้องใช้คำว่า temporarily' } },
-    { question_id: 'q-602', part: 6, passage_title: p6_title, passage_content: p6_body, question_text: 'Which sentence best fits blank [2]?', choices: { A: 'This precaution will prevent potential data loss during the system reboot.', B: 'Our holiday party is next month.', C: 'Cafeteria discount on Friday.', D: 'New desks delivered.' }, correct_answer: 'A', cefr_level: 'B2', tags: ['Part 6'], detailed_explanation: { correct_reason: 'ประโยคสรุปการป้องกันข้อมูลสูญหาย' } },
-    { question_id: 'q-603', part: 6, passage_title: p6_title, passage_content: p6_body, question_text: 'Which word best fits blank [3]?', choices: { A: 'carefully', B: 'careless', C: 'caring', D: 'cared' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 6'], detailed_explanation: { correct_reason: 'ใช้คำกริยาวิเศษณ์ carefully ขยาย created' } },
-    { question_id: 'q-604', part: 6, passage_title: p6_title, passage_content: p6_body, question_text: 'Which sentence best fits blank [4]?', choices: { A: 'Our support team will be on duty throughout the maintenance period.', B: 'Submit travel vouchers.', C: 'Meeting in auditorium.', D: 'Parking passes.' }, correct_answer: 'A', cefr_level: 'B2', tags: ['Part 6'], detailed_explanation: { correct_reason: 'ประโยคสรุปทีมงานคอยช่วยเหลือตลอดเวลา' } }
-  ];
-
-  // Build Part 7 Double Passage Sets with DOCUMENT 1 + DOCUMENT 2
-  const p7_title = 'DOUBLE PASSAGE: Order Confirmation Email & Commercial Invoice Discrepancy';
-  const p7_body = '<div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,210,255,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;"><div style="color: #00d2ff; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem;">DOCUMENT 1: Purchase Order Confirmation Email</div><p><strong>From:</strong> orders@vertexfurniture.com<br><strong>To:</strong> r.martinez@apexsolutions.com<br><strong>Date:</strong> August 2, 2026<br><strong>Subject:</strong> Order Confirmation #VX-8842</p><p>Dear Mr. Martinez,</p><p>Thank you for your purchase. We have received your order for office furniture. Below is the summary of items ordered:</p><ul><li>4 Ergonomic Mesh Chairs @ $150.00 each = $600.00</li><li>2 Adjustable Standing Desks @ $310.00 each = $620.00</li><li>1 Executive Conference Table @ $450.00 = $450.00</li></ul><p>Total Amount: $1,670.00 (Standard Express Shipping included free of charge).</p></div><hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 1.2rem 0;"><div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(48,209,88,0.2); padding: 1rem; border-radius: 8px;"><div style="color: #30d158; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem;">DOCUMENT 2: Commercial Invoice Billing Inquiry Email</div><p><strong>From:</strong> r.martinez@apexsolutions.com<br><strong>To:</strong> billing@vertexfurniture.com<br><strong>Date:</strong> August 4, 2026<br><strong>Subject:</strong> Billing Discrepancy on Invoice #VX-8842</p><p>Dear Customer Service Team,</p><p>I am writing regarding Invoice #VX-8842 received yesterday. While the items delivered match our order confirmation, the invoice reflects a total charge of $1,820.00. It appears an additional $150.00 delivery fee was added despite the confirmation email promising free express shipping.</p><p>Please issue an adjusted invoice reflecting the correct balance of $1,670.00 at your earliest convenience.</p><p>Sincerely,<br>Robert Martinez</p></div>';
-
-  const p7 = [
-    { question_id: 'q-751', part: 7, passage_title: p7_title, passage_content: p7_body, question_text: 'What type of furniture did Mr. Martinez order in Document 1?', choices: { A: 'Mesh chairs, standing desks, and a conference table', B: 'Filing cabinets and desk lamps', C: 'Cafeteria tables and dining chairs', D: 'Computer monitors and keyboards' }, correct_answer: 'A', cefr_level: 'B2', tags: ['Part 7'], detailed_explanation: { correct_reason: 'เอกสาร 1 สรุปสั่ง เก้าอี้ 4, โต๊ะปรับระดับ 2, โต๊ะประชุม 1' } },
-    { question_id: 'q-752', part: 7, passage_title: p7_title, passage_content: p7_body, question_text: 'How much did each Adjustable Standing Desk cost?', choices: { A: '$310.00', B: '$150.00', C: '$450.00', D: '$620.00' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 7'], detailed_explanation: { correct_reason: 'เอกสาร 1 ระบุราคาของ Standing Desk ตัวละ $310.00' } },
-    { question_id: 'q-753', part: 7, passage_title: p7_title, passage_content: p7_body, question_text: 'Why is Mr. Martinez emailing customer service in Document 2?', choices: { A: 'An unauthorized $150.00 delivery fee was included on the invoice', B: 'Damaged table', C: 'Order desks', D: 'Change address' }, correct_answer: 'A', cefr_level: 'B2', tags: ['Part 7'], detailed_explanation: { correct_reason: 'เอกสาร 2 ทักท้วงเรื่องคิดค่าส่ง $150.00 เพิ่ม' } },
-    { question_id: 'q-754', part: 7, passage_title: p7_title, passage_content: p7_body, question_text: 'What total balance does Mr. Martinez request on the adjusted invoice?', choices: { A: '$1,670.00', B: '$1,820.00', C: '$1,520.00', D: '$2,000.00' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 7'], detailed_explanation: { correct_reason: 'ยอดที่ถูกต้องคือ $1,670.00' } },
-    { question_id: 'q-755', part: 7, passage_title: p7_title, passage_content: p7_body, question_text: 'What company does Robert Martinez work for?', choices: { A: 'Apex Solutions', B: 'Vertex Furniture', C: 'Global Logistics', D: 'Skyline Tower' }, correct_answer: 'A', cefr_level: 'B1', tags: ['Part 7'], detailed_explanation: { correct_reason: 'อีเมล r.martinez@apexsolutions.com แสดงบริษัท Apex Solutions' } }
-  ];
-
-  let pool = [...p5, ...p6, ...p7];
-  
-  // Duplicate pool items cleanly to reach 100 questions for full mode
-  let fullPool = [];
-  while (fullPool.length < 100) {
-    const item = pool[fullPool.length % pool.length];
-    fullPool.push({
-      ...item,
-      question_id: `q-fallback-${fullPool.length + 1}`
-    });
-  }
-
-  const limit = (mode === 'quick' ? 20 : 100);
-  return fullPool.slice(0, limit);
+  console.log('[TOEIC Simulator] Fallback triggered, but mock data was cleaned up for production.');
+  return [];
 }
 
 

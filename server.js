@@ -8,8 +8,13 @@ const PORT = process.env.PORT || 3000;
 // Import Single Unified API Gateway App
 const apiApp = require('./api/index');
 
+// Parse JSON bodies (Vercel emulator)
+app.use(express.json());
+// Parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
+
 // Mount API Gateway
-app.use(apiApp);
+app.use('/api', apiApp);
 
 // Serve Static Frontend Files
 app.use(express.static(__dirname));

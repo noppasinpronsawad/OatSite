@@ -236,6 +236,17 @@ window.closeAdminModal = function(modalId) {
   }
 };
 
+window.showSessionExpiredModal = function() {
+  if (window.sessionMonitorInterval) clearInterval(window.sessionMonitorInterval);
+  const timerBadge = document.getElementById('sessionTimer');
+  if (timerBadge) timerBadge.textContent = 'Session Expired';
+  const modal = document.getElementById('sessionKickModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+};
+
 window.showNewsLogDetails = function(logId) {
   const logs = window.cachedDailyNewsLogs || [
     {
@@ -296,7 +307,11 @@ window.openQuestionBankModal = async function() {
   }
 
   try {
-    const res = await fetch('/api/admin/questions?_t=' + Date.now(), { cache: 'no-store' });
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch('/api/admin/questions?_t=' + Date.now(), { 
+      cache: 'no-store',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.questions)) {
@@ -445,7 +460,6 @@ window.savePostArticle = async function(e) {
     publishAt: new Date().toISOString()
   };
 
-  try {
     const token = localStorage.getItem('admin_token');
     const endpoint = postId && !postId.startsWith('custom_post_') ? `/api/posts/detail?id=${postId}` : '/api/posts';
     const method = postId && !postId.startsWith('custom_post_') ? 'PUT' : 'POST';
@@ -462,31 +476,19 @@ window.savePostArticle = async function(e) {
     if (!res.ok) {
       throw new Error(`API Error: ${res.status}`);
     }
+    
+    alert('🎉 บันทึกบทความใหม่เรียบร้อยแล้ว!');
+    window.closePostModal();
+    fetchBlogPosts();
   } catch (err) {
-    console.warn('[Post Save] API error, falling back to local save:', err);
+    alert('❌ บันทึกบทความล้มเหลว: ' + err.message);
+    console.error('[Post Save] API error:', err);
   }
-
-  let customPosts = [];
-  try {
-    customPosts = JSON.parse(localStorage.getItem('custom_user_posts') || '[]');
-  } catch (e) {}
-
-  if (postId) {
-    customPosts = customPosts.map(p => p.id === postId || p._id === postId ? newArticle : p);
-  } else {
-    customPosts.unshift(newArticle);
-  }
-
-  localStorage.setItem('custom_user_posts', JSON.stringify(customPosts));
-
-  alert('🎉 บันทึกบทความใหม่เรียบร้อยแล้ว!');
-  window.closePostModal();
-  fetchBlogPosts();
 };
 
 window.editBlogPost = function(postId) {
   let posts = window.cachedAllBlogPosts || [];
-  const post = posts.find(p => p.id === postId || p._id === postId);
+  const post = posts.find(p => String(p.id) === String(postId) || String(p._id) === String(postId));
   if (!post) return;
 
   window.openCreatePostModal();
@@ -515,30 +517,13 @@ window.deleteBlogPost = async function(postId) {
         throw new Error(`Delete API failed: ${res.status}`);
       }
     }
+    
+    alert('🗑️ ลบบทความเรียบร้อยแล้ว');
+    fetchBlogPosts();
   } catch (err) {
-    console.warn('API delete failed, proceeding to remove locally if needed:', err);
+    alert('❌ ลบบทความล้มเหลว: ' + err.message);
+    console.error('API delete failed:', err);
   }
-
-  let customPosts = [];
-  try {
-    customPosts = JSON.parse(localStorage.getItem('custom_user_posts') || '[]');
-  } catch (e) {}
-
-  customPosts = customPosts.filter(p => p.id !== postId && p._id !== postId);
-  localStorage.setItem('custom_user_posts', JSON.stringify(customPosts));
-
-  // Track deleted posts to hide them if they come from hardcoded fallbacks
-  let deletedPosts = [];
-  try {
-    deletedPosts = JSON.parse(localStorage.getItem('deleted_user_posts') || '[]');
-  } catch (e) {}
-  if (!deletedPosts.includes(postId)) {
-    deletedPosts.push(postId);
-    localStorage.setItem('deleted_user_posts', JSON.stringify(deletedPosts));
-  }
-
-  alert('🗑️ ลบบทความเรียบร้อยแล้ว');
-  fetchBlogPosts();
 };
 
 // Layer 2: 1.5-Second Interval Tab-Isolated Session Enforcement Loop
@@ -555,7 +540,7 @@ function startSessionMonitoring() {
     const secs = Math.floor((remaining % 60000) / 1000);
     timerBadge.textContent = `Session Expiry: ${mins}:${secs.toString().padStart(2, '0')}`;
     if (remaining === 0) {
-      alert('⏰ Session expired. Please log in again.');
+      window.showSessionExpiredModal();
       window.executeLogout();
     }
   };
@@ -568,8 +553,7 @@ function startSessionMonitoring() {
     const token = localStorage.getItem('admin_token');
 
     if (tabSession && globalSession && tabSession !== globalSession) {
-      clearInterval(window.sessionMonitorInterval);
-      alert('⚠️ ตรวจพบการเข้าสู่ระบบซ้อนจากอุปกรณ์/แท็บอื่น! เซสชันปัจจุบันของคุณถูกยกเลิกแล้ว');
+      window.showSessionExpiredModal();
       window.executeLogout();
       return;
     }
@@ -581,9 +565,7 @@ function startSessionMonitoring() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.status === 401) {
-          const data = await res.json();
-          clearInterval(window.sessionMonitorInterval);
-          alert('⚠️ ' + (data.error || 'เซสชันปัจจุบันของคุณถูกยกเลิกเนื่องจากมีการล็อกอินจากอุปกรณ์อื่น!'));
+          window.showSessionExpiredModal();
           window.executeLogout();
         } else if (res.ok) {
           const data = await res.json();
@@ -617,27 +599,6 @@ async function fetchBlogPosts() {
     posts = [...BLOG_POSTS];
   } else if (posts.length === 0 && typeof window.BLOG_POSTS !== 'undefined') {
     posts = [...window.BLOG_POSTS];
-  }
-
-  let customPosts = [];
-  try {
-    customPosts = JSON.parse(localStorage.getItem('custom_user_posts') || '[]');
-  } catch (e) {}
-
-  if (Array.isArray(customPosts) && customPosts.length > 0) {
-    const customIds = new Set(customPosts.map(cp => cp.id));
-    posts = [...customPosts, ...posts.filter(p => !customIds.has(p.id || p._id))];
-  }
-
-  // Filter out posts that the user has explicitly deleted locally
-  let deletedPosts = [];
-  try {
-    deletedPosts = JSON.parse(localStorage.getItem('deleted_user_posts') || '[]');
-  } catch (e) {}
-  
-  if (deletedPosts.length > 0) {
-    const deletedSet = new Set(deletedPosts);
-    posts = posts.filter(p => !deletedSet.has(p.id || p._id));
   }
 
   window.cachedAllBlogPosts = posts;
@@ -752,10 +713,11 @@ function initRichEditor() {
     });
   }
 
-  // Setup Cover Image File Upload (Auto 16:9 Crop & Compress)
   const imageFileInput = document.getElementById('imageFileInput');
   const dropzoneBox = document.getElementById('dropzoneBox');
   const postImageUrl = document.getElementById('postImageUrl');
+
+  let cropperInstance = null;
 
   if (dropzoneBox && imageFileInput) {
     dropzoneBox.addEventListener('click', () => imageFileInput.click());
@@ -765,46 +727,51 @@ function initRichEditor() {
       if (file) {
         const reader = new FileReader();
         reader.onload = function(evt) {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const TARGET_RATIO = 16 / 9;
+          const cropperModal = document.getElementById('cropperModal');
+          const cropperImage = document.getElementById('cropperImage');
+          
+          if (cropperModal && cropperImage) {
+            cropperImage.src = evt.target.result;
+            cropperModal.style.display = 'flex';
+            cropperModal.classList.add('active');
             
-            let drawWidth = img.width;
-            let drawHeight = img.height;
-            let offsetX = 0;
-            let offsetY = 0;
-
-            if (img.width / img.height > TARGET_RATIO) {
-              drawWidth = img.height * TARGET_RATIO;
-              offsetX = (img.width - drawWidth) / 2;
-            } else {
-              drawHeight = img.width / TARGET_RATIO;
-              offsetY = (img.height - drawHeight) / 2;
+            if (cropperInstance) {
+              cropperInstance.destroy();
             }
-
-            const scale = Math.min(MAX_WIDTH / drawWidth, 1);
-            canvas.width = drawWidth * scale;
-            canvas.height = drawHeight * scale;
             
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
-            
-            const base64Str = canvas.toDataURL('image/jpeg', 0.7); // Under 300KB
-            if (postImageUrl) postImageUrl.value = base64Str;
-            
-            const preview = document.getElementById('imagePreviewBox');
-            if (preview) {
-               preview.src = base64Str;
-               preview.style.display = 'block';
-            }
-          };
-          img.src = evt.target.result;
+            cropperInstance = new Cropper(cropperImage, {
+              aspectRatio: 16 / 9,
+              viewMode: 1
+            });
+          }
         };
         reader.readAsDataURL(file);
       }
     });
+
+    const confirmCropBtn = document.getElementById('confirmCropBtn');
+    if (confirmCropBtn) {
+      confirmCropBtn.addEventListener('click', () => {
+        if (cropperInstance) {
+          const canvas = cropperInstance.getCroppedCanvas({ width: 800 });
+          if (canvas) {
+            const base64Str = canvas.toDataURL('image/jpeg', 0.7);
+            if (postImageUrl) postImageUrl.value = base64Str;
+            const preview = document.getElementById('imagePreviewBox');
+            if (preview) {
+              preview.src = base64Str;
+              preview.style.display = 'block';
+            }
+          }
+          if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+          }
+          window.closeAdminModal('cropperModal');
+          imageFileInput.value = '';
+        }
+      });
+    }
   }
 }
 
@@ -847,6 +814,14 @@ function initAdminPanel() {
     const closeAddBtn = document.getElementById('closeModalBtn');
     if (closeAddBtn) {
       closeAddBtn.onclick = function(e) {
+        if (e) e.preventDefault();
+        if (window.closePostModal) window.closePostModal();
+      };
+    }
+    
+    const cancelPostBtn = document.getElementById('cancelPostBtn');
+    if (cancelPostBtn) {
+      cancelPostBtn.onclick = function(e) {
         if (e) e.preventDefault();
         if (window.closePostModal) window.closePostModal();
       };

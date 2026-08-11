@@ -1111,10 +1111,10 @@
                 <!-- Heading selection -->
                 <select id="editorHeadingSelect" class="toolbar-select" title="Heading Format">
                   <option value="p">Paragraph</option>
-                  <option value="h1">Header 1 (H1)</option>
-                  <option value="h2">Header 2 (H2)</option>
-                  <option value="h3">Header 3 (H3)</option>
-                  <option value="h4">Header 4 (H4)</option>
+                  <option value="H1">Header 1 (H1)</option>
+                  <option value="H2">Header 2 (H2)</option>
+                  <option value="H3">Header 3 (H3)</option>
+                  <option value="H4">Header 4 (H4)</option>
                 </select>
 
                 <!-- Font Size selection -->
@@ -1137,8 +1137,7 @@
                 <!-- Insert Image URL -->
                 <button type="button" class="toolbar-btn" id="insertImageUrlBtn" title="Insert Image URL or <pic>url</pic>">🖼️ Add Image</button>
 
-                <!-- Clear format -->
-                <button type="button" class="toolbar-btn" data-command="removeFormat" title="Clear Formatting">🧹 Clear</button>
+
               </div>
 
               <!-- Editable content container -->
@@ -1280,6 +1279,20 @@
       <h2 style="color: #ff3b30; margin-bottom: 1rem;">⚠️ Session Expired</h2>
       <p style="margin-bottom: 2rem;">A new login was detected on another device. You have been securely logged out.</p>
       <button type="button" class="btn-admin-primary" style="background: #ff3b30; color: #fff; border: none; width: 100%;" onclick="window.location.reload()">OK</button>
+    </div>
+  </div>
+
+  <!-- EDITOR IMAGE ATTACH MODAL -->
+  <div id="editorAttachModal" class="admin-modal">
+    <div class="admin-modal-content" style="max-width: 400px; text-align: center;">
+      <h3 style="margin-bottom: 1rem; color: #00d2ff;">🖼️ Attach Image to Article</h3>
+      <input type="text" id="editorAttachUrlInput" class="admin-input" placeholder="Paste Image URL here...">
+      <div style="margin: 1rem 0; color: var(--text-secondary);">OR</div>
+      <button class="btn-admin-secondary" id="editorAttachUploadBtn" style="width: 100%;">Browse File to Upload</button>
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+        <button class="btn-admin-secondary" onclick="window.closeAdminModal('editorAttachModal')">Cancel</button>
+        <button class="btn-admin-primary" id="editorAttachConfirmBtn">Insert Link</button>
+      </div>
     </div>
   </div>
 

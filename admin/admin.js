@@ -696,10 +696,9 @@ function initRichEditor() {
     });
   }
 
-  // Setup Image Insert Button (Browse File)
+  // Setup Image Insert Button (Browse File or Link)
   const insertImageBtn = document.getElementById('insertImageUrlBtn');
   if (insertImageBtn) {
-    // Create hidden file input for editor body
     let editorFileInput = document.getElementById('editorFileInput');
     if (!editorFileInput) {
       editorFileInput = document.createElement('input');
@@ -710,12 +709,38 @@ function initRichEditor() {
       document.body.appendChild(editorFileInput);
     }
 
+    let savedRange = null;
+
     insertImageBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      // Save selection
       const selection = window.getSelection();
-      const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      savedRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
       
+      const attachModal = document.getElementById('editorAttachModal');
+      if (attachModal) {
+        document.getElementById('editorAttachUrlInput').value = '';
+        attachModal.style.display = 'flex';
+        attachModal.classList.add('active');
+      }
+    });
+
+    document.getElementById('editorAttachConfirmBtn')?.addEventListener('click', () => {
+      const url = document.getElementById('editorAttachUrlInput').value.trim();
+      if (url) {
+        const editor = document.getElementById('postContentEditor');
+        editor.focus();
+        if (savedRange) {
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(savedRange);
+        }
+        document.execCommand('insertImage', false, url);
+        window.closeAdminModal('editorAttachModal');
+      }
+    });
+
+    document.getElementById('editorAttachUploadBtn')?.addEventListener('click', () => {
+      window.closeAdminModal('editorAttachModal');
       editorFileInput.onchange = (evt) => {
         const file = evt.target.files[0];
         if (file) {
@@ -735,9 +760,10 @@ function initRichEditor() {
               
               const editor = document.getElementById('postContentEditor');
               editor.focus();
-              if (range) {
+              if (savedRange) {
+                const selection = window.getSelection();
                 selection.removeAllRanges();
-                selection.addRange(range);
+                selection.addRange(savedRange);
               }
               document.execCommand('insertImage', false, base64Str);
             };
@@ -750,6 +776,19 @@ function initRichEditor() {
     });
   }
 
+  // Allow cropping images inside the editor
+  const editorBox = document.getElementById('postContentEditor');
+  if (editorBox) {
+    editorBox.addEventListener('click', (e) => {
+      if (e.target.tagName === 'IMG') {
+        window.currentCropTargetElement = e.target;
+        if (typeof window.openCropper === 'function') {
+          window.openCropper(e.target.src);
+        }
+      }
+    });
+  }
+
   const imageFileInput = document.getElementById('imageFileInput');
   const dropzoneBox = document.getElementById('dropzoneBox');
   const postImageUrl = document.getElementById('postImageUrl');
@@ -759,7 +798,7 @@ function initRichEditor() {
   if (dropzoneBox && imageFileInput) {
     dropzoneBox.addEventListener('click', () => imageFileInput.click());
     
-    function openCropper(srcUrl) {
+    window.openCropper = function(srcUrl) {
       const cropperModal = document.getElementById('cropperModal');
       const cropperImage = document.getElementById('cropperImage');
       if (cropperModal && cropperImage && srcUrl) {
@@ -770,12 +809,13 @@ function initRichEditor() {
         if (cropperInstance) cropperInstance.destroy();
         cropperInstance = new Cropper(cropperImage, { aspectRatio: 16 / 9, viewMode: 1 });
       }
-    }
+    };
 
     const imagePreviewBox = document.getElementById('imagePreviewBox');
     if (imagePreviewBox) {
       imagePreviewBox.addEventListener('click', () => {
-        if (imagePreviewBox.src) openCropper(imagePreviewBox.src);
+        window.currentCropTargetElement = null; // Cover image cropping
+        if (imagePreviewBox.src) window.openCropper(imagePreviewBox.src);
       });
     }
 
@@ -795,8 +835,9 @@ function initRichEditor() {
     imageFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
+        window.currentCropTargetElement = null; // Cover image upload
         const reader = new FileReader();
-        reader.onload = function(evt) { openCropper(evt.target.result); };
+        reader.onload = function(evt) { window.openCropper(evt.target.result); };
         reader.readAsDataURL(file);
       }
     });
@@ -808,11 +849,18 @@ function initRichEditor() {
           const canvas = cropperInstance.getCroppedCanvas({ width: 800 });
           if (canvas) {
             const base64Str = canvas.toDataURL('image/jpeg', 0.7);
-            if (postImageUrl) postImageUrl.value = base64Str;
-            const preview = document.getElementById('imagePreviewBox');
-            if (preview) {
-              preview.src = base64Str;
-              preview.style.display = 'block';
+            if (window.currentCropTargetElement) {
+              // We are cropping an inline image inside the editor
+              window.currentCropTargetElement.src = base64Str;
+              window.currentCropTargetElement = null;
+            } else {
+              // We are cropping the cover image
+              if (postImageUrl) postImageUrl.value = base64Str;
+              const preview = document.getElementById('imagePreviewBox');
+              if (preview) {
+                preview.src = base64Str;
+                preview.style.display = 'block';
+              }
             }
           }
           if (cropperInstance) {

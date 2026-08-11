@@ -47,15 +47,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // JWT Verification (Protected Route)
-    try {
-      await verifyAuth(req);
-    } catch (authErr) {
-      return res.status(authErr.statusCode || 401).json({ 
-        error: authErr.message, 
-        isSessionOverride: !!authErr.isSessionOverride 
-      });
-    }
+    // Note: JWT Verification (Protected Route) moved to specific methods (PUT, DELETE)
 
     // Configure Cloudinary SDK dynamically per request with trimmed credentials
     const cloudName = String(process.env.CLOUDINARY_CLOUD_NAME || '').trim();
@@ -96,6 +88,12 @@ module.exports = async (req, res) => {
 
     // PUT /api/posts/detail?id=:id -> Update Post
     if (req.method === 'PUT') {
+      try {
+        await verifyAuth(req);
+      } catch (authErr) {
+        return res.status(authErr.statusCode || 401).json({ error: authErr.message });
+      }
+
       const { title, category, summary, content, image, date, readTime, publishAt } = body;
 
       // If updating image, find existing post to delete old Cloudinary image if replaced
@@ -144,6 +142,12 @@ module.exports = async (req, res) => {
 
     // DELETE /api/posts/detail?id=:id -> Delete Post
     if (req.method === 'DELETE') {
+      try {
+        await verifyAuth(req);
+      } catch (authErr) {
+        return res.status(authErr.statusCode || 401).json({ error: authErr.message });
+      }
+
       const deletedPost = await Post.findByIdAndDelete(id);
 
       if (!deletedPost) {

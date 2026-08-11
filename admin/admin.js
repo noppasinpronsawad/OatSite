@@ -418,7 +418,7 @@ window.savePostArticle = async function(e) {
   const category = (document.getElementById('postCategory')?.value || 'Daily Life').trim();
   const summary = (document.getElementById('postSummary')?.value || '').trim();
   const content = (document.getElementById('postContent')?.value || '').trim();
-  const image = (document.getElementById('postImage')?.value || '').trim();
+  const image = (document.getElementById('postImageUrl')?.value || '').trim();
   const readTime = (document.getElementById('postReadTime')?.value || '3 min read').trim();
   const postId = (document.getElementById('postId')?.value || '').trim();
 
@@ -610,8 +610,82 @@ async function fetchBlogPosts() {
 }
 window.fetchBlogPosts = fetchBlogPosts;
 
+function initRichEditor() {
+  // Setup Rich Text Formatting Buttons
+  document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const command = btn.getAttribute('data-command');
+      document.execCommand(command, false, null);
+    });
+  });
+
+  // Setup Headings and Font Size Selectors
+  const headingSelect = document.getElementById('editorHeadingSelect');
+  if (headingSelect) {
+    headingSelect.addEventListener('change', (e) => {
+      document.execCommand('formatBlock', false, e.target.value);
+    });
+  }
+  const fontSelect = document.getElementById('editorFontSizeSelect');
+  if (fontSelect) {
+    fontSelect.addEventListener('change', (e) => {
+      document.execCommand('fontSize', false, e.target.value);
+    });
+  }
+
+  // Setup Image Insert Button
+  const insertImageBtn = document.getElementById('insertImageUrlBtn');
+  if (insertImageBtn) {
+    insertImageBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const url = prompt('Enter Image URL:');
+      if (url) document.execCommand('insertImage', false, url);
+    });
+  }
+
+  // Setup Cover Image File Upload (Convert to Base64)
+  const imageFileInput = document.getElementById('imageFileInput');
+  const dropzoneBox = document.getElementById('dropzoneBox');
+  const postImageUrl = document.getElementById('postImageUrl');
+  const postImage = document.getElementById('postImage'); // Hidden input if exists, or we use postImageUrl
+
+  if (dropzoneBox && imageFileInput) {
+    dropzoneBox.addEventListener('click', () => imageFileInput.click());
+    
+    imageFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const base64Str = evt.target.result;
+          if (postImageUrl) postImageUrl.value = base64Str;
+          
+          // Show preview
+          const preview = document.getElementById('imagePreviewBox');
+          if (preview) {
+             preview.src = base64Str;
+             preview.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+}
+
 function initAdminPanel() {
   try {
+    // 4. Session Persistence Check
+    const token = localStorage.getItem('admin_token');
+    const sessionId = sessionStorage.getItem('my_active_session');
+    
+    if (token && sessionId) {
+      const loginView = document.getElementById('loginView') || document.getElementById('loginOverlay');
+      if (loginView) loginView.style.display = 'none';
+      const dashboardView = document.getElementById('dashboardView') || document.getElementById('adminMainContainer');
+      if (dashboardView) dashboardView.style.display = 'block';
+    }
     const qbBtn = document.getElementById('openQuestionBankBtn');
     if (qbBtn) {
       qbBtn.onclick = function(e) {
@@ -655,6 +729,7 @@ function initAdminPanel() {
     fetchAdminMetrics();
     fetchBlogPosts();
     startSessionMonitoring();
+    initRichEditor();
   } catch (err) {
     console.error('Admin Init Error:', err);
   }

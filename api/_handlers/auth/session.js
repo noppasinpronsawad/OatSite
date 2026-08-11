@@ -20,11 +20,11 @@ module.exports = async (req, res) => {
       activeSessionId: activeSessionId
     });
   } catch (err) {
-    return res.status(200).json({
-      success: true,
-      authenticated: true,
-      role: 'admin',
-      activeSessionId: global.activeAdminSessionId || 'session_default'
+    return res.status(err.statusCode || 401).json({
+      success: false,
+      authenticated: false,
+      error: err.message,
+      isSessionOverride: err.isSessionOverride || false
     });
   }
 };

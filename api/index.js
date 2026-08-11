@@ -5,6 +5,7 @@ try {
   // Static top-level requires for Vercel's Node File Trace (NFT)
   handlers.login = require('./_handlers/auth/login');
   handlers.session = require('./_handlers/auth/session');
+  handlers.check = require('./_handlers/auth/check');
   handlers.posts = require('./_handlers/posts/index');
   handlers.postDetail = require('./_handlers/posts/detail');
   handlers.upload = require('./_handlers/upload/index');
@@ -50,6 +51,9 @@ module.exports = async (req, res) => {
     }
     if (rawUrl.includes('/auth/session') || rawUrl.includes('/session')) {
       return await handlers.session(req, res);
+    }
+    if (rawUrl.includes('/auth/check') || rawUrl.includes('/check')) {
+      return await handlers.check(req, res);
     }
     if (rawUrl.includes('/posts/detail') || rawUrl.includes('/detail')) {
       return await handlers.postDetail(req, res);

@@ -28,21 +28,19 @@ async function verifyAuth(req) {
 
   // Single Active Session Validation
   if (decoded && decoded.sessionId) {
-    let currentActiveId = global.activeAdminSessionId;
+    let currentActiveId = null;
 
-    if (!currentActiveId) {
-      try {
-        const db = await connectToDatabase();
-        if (db) {
-          const activeDoc = await AdminSession.findOne({ key: 'admin_active_session' });
-          if (activeDoc && activeDoc.activeSessionId) {
-            currentActiveId = activeDoc.activeSessionId;
-            global.activeAdminSessionId = currentActiveId;
-          }
+    try {
+      const db = await connectToDatabase();
+      if (db) {
+        const activeDoc = await AdminSession.findOne({ key: 'admin_active_session' });
+        if (activeDoc && activeDoc.activeSessionId) {
+          currentActiveId = activeDoc.activeSessionId;
+          global.activeAdminSessionId = currentActiveId; // just keeping it for backwards compat, though not needed
         }
-      } catch (dbErr) {
-        console.error('DB session lookup error:', dbErr);
       }
+    } catch (dbErr) {
+      console.error('DB session lookup error:', dbErr);
     }
 
     if (currentActiveId && decoded.sessionId !== currentActiveId) {

@@ -1190,7 +1190,7 @@
     <div class="admin-modal-content" style="max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
         <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.2rem;">📰 Daily News Ingestion Log Detail</h3>
-        <button class="close-modal-btn" id="closeNewsModalBtn" onclick="document.getElementById('newsDetailModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+        <button class="close-modal-btn" id="closeNewsModalBtn" onclick="window.closeAdminModal && window.closeAdminModal('newsDetailModal')" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
       </div>
       <div style="font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.9rem;">
         <div><strong>🌐 News Source:</strong> <span id="newsModalSource" style="color: #00d2ff; font-weight: 600;"></span></div>

@@ -407,6 +407,13 @@ window.closePostModal = function() {
 window.savePostArticle = async function(e) {
   if (e) e.preventDefault();
 
+  // Sync content from rich editor to hidden input before validation
+  const editor = document.getElementById('postContentEditor');
+  const hiddenInput = document.getElementById('postContent');
+  if (editor && hiddenInput) {
+    hiddenInput.value = editor.innerHTML;
+  }
+
   const title = (document.getElementById('postTitle')?.value || '').trim();
   const category = (document.getElementById('postCategory')?.value || 'Daily Life').trim();
   const summary = (document.getElementById('postSummary')?.value || '').trim();
@@ -434,16 +441,23 @@ window.savePostArticle = async function(e) {
 
   try {
     const token = localStorage.getItem('admin_token');
-    await fetch('/api/posts', {
-      method: 'POST',
+    const endpoint = postId && !postId.startsWith('custom_post_') ? `/api/posts/detail?id=${postId}` : '/api/posts';
+    const method = postId && !postId.startsWith('custom_post_') ? 'PUT' : 'POST';
+    
+    const res = await fetch(endpoint, {
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(newArticle)
     });
+    
+    if (!res.ok) {
+      throw new Error(`API Error: ${res.status}`);
+    }
   } catch (err) {
-    console.warn('[Post Save] Local backup save:', err);
+    console.warn('[Post Save] API error, falling back to local save:', err);
   }
 
   let customPosts = [];
@@ -479,8 +493,25 @@ window.editBlogPost = function(postId) {
   document.getElementById('postImage').value = post.image || '';
 };
 
-window.deleteBlogPost = function(postId) {
+window.deleteBlogPost = async function(postId) {
   if (!confirm('คุณต้องการลบบทความนี้ใช่หรือไม่?')) return;
+
+  try {
+    const token = localStorage.getItem('admin_token');
+    if (postId && !postId.startsWith('custom_post_')) {
+      const res = await fetch(`/api/posts/detail?id=${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) {
+        throw new Error(`Delete API failed: ${res.status}`);
+      }
+    }
+  } catch (err) {
+    console.warn('API delete failed, proceeding to remove locally if needed:', err);
+  }
 
   let customPosts = [];
   try {
@@ -623,6 +654,7 @@ function initAdminPanel() {
 
     fetchAdminMetrics();
     fetchBlogPosts();
+    startSessionMonitoring();
   } catch (err) {
     console.error('Admin Init Error:', err);
   }

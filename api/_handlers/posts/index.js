@@ -1,7 +1,6 @@
 const connectToDatabase = require('../../lib/db');
 const Post = require('../../models/Post');
 const { verifyAuth } = require('../../lib/auth');
-const initialBlogPosts = require('../../../blog-data');
 
 // Helper to format date as "07 Aug 2026"
 function formatFullDate(dateObj) {
@@ -58,25 +57,6 @@ module.exports = async (req, res) => {
           }
         }
 
-        if ((posts.length === 0 || isSeedRequested) && Array.isArray(initialBlogPosts)) {
-          console.log('Seeding initial blog posts into MongoDB Atlas...');
-          const postsToInsert = initialBlogPosts.map(p => ({
-            title: p.title,
-            category: p.category,
-            summary: p.summary,
-            content: p.content,
-            image: p.image || '',
-            date: p.date.length <= 8 ? `01 ${p.date}` : p.date,
-            readTime: p.readTime,
-            publishAt: new Date()
-          }));
-          
-          if (isSeedRequested) {
-            await Post.deleteMany({});
-          }
-          posts = await Post.insertMany(postsToInsert);
-        }
-
         // Map Mongo _id to id string for clean client compatibility
         posts = posts.map(p => {
           const obj = typeof p.toObject === 'function' ? p.toObject() : p;
@@ -84,12 +64,9 @@ module.exports = async (req, res) => {
           return obj;
         });
       } else {
-        // Fallback to in-memory initialBlogPosts if MongoDB is offline
-        console.warn('Serving in-memory blog posts fallback');
-        posts = initialBlogPosts.map((p, idx) => ({
-          ...p,
-          id: p.id || `post_${idx + 1}`
-        }));
+        // Fallback to empty array if MongoDB is offline
+        console.warn('MongoDB offline, cannot fetch posts');
+        posts = [];
       }
 
       return res.status(200).json(posts);

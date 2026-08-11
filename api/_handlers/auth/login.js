@@ -49,21 +49,19 @@ module.exports = async (req, res) => {
     const sessionId = crypto.randomBytes(16).toString('hex');
     global.activeAdminSessionId = sessionId;
 
-    // Non-blocking MongoDB session save (Safe & Resilient)
-    (async () => {
-      try {
-        const db = await connectToDatabase();
-        if (db && AdminSession) {
-          await AdminSession.findOneAndUpdate(
-            { key: 'admin_active_session' },
-            { activeSessionId: sessionId, lastLoginAt: new Date() },
-            { upsert: true, new: true }
-          ).catch(() => {});
-        }
-      } catch (e) {
-        // Non-blocking silent fallback
+    // Blocking MongoDB session save to ensure single active session
+    try {
+      const db = await connectToDatabase();
+      if (db && AdminSession) {
+        await AdminSession.findOneAndUpdate(
+          { key: 'admin_active_session' },
+          { activeSessionId: sessionId, lastLoginAt: new Date() },
+          { upsert: true, new: true }
+        );
       }
-    })();
+    } catch (dbErr) {
+      console.error('Session DB update failed:', dbErr);
+    }
 
     // Generate 45-minute JWT Token with sessionId
     const token = jwt.sign(

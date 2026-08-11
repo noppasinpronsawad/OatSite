@@ -202,7 +202,7 @@ async function fetchAdminMetrics() {
 
   const summaryQs = document.getElementById('summary_total_qs');
   if (summaryQs) {
-    summaryQs.textContent = '10,480 ข้อ (คลัง 10,000+ ข้อ)';
+    summaryQs.textContent = window.totalToeicCount ? window.totalToeicCount + ' ข้อ' : 'กำลังโหลด...';
   }
 
   try {
@@ -213,6 +213,10 @@ async function fetchAdminMetrics() {
       const data = await res.json();
       if (data.success && data.metrics) {
         const m = data.metrics;
+        if (m.mongodb && m.mongodb.totalToeicQuestions) {
+          window.totalToeicCount = m.mongodb.totalToeicQuestions;
+          if (summaryQs) summaryQs.textContent = window.totalToeicCount.toLocaleString() + ' ข้อ';
+        }
         if (m.dailyNewsLogs && Array.isArray(m.dailyNewsLogs) && m.dailyNewsLogs.length > 0) {
           window.cachedDailyNewsLogs = m.dailyNewsLogs;
           renderLogs(m.dailyNewsLogs);
@@ -292,7 +296,7 @@ window.openQuestionBankModal = async function() {
   }
 
   try {
-    const res = await fetch('/api/toeic/questions?mode=full&_t=' + Date.now(), { cache: 'no-store' });
+    const res = await fetch('/api/admin/questions?_t=' + Date.now(), { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.questions)) {
@@ -334,16 +338,14 @@ window.filterQuestionBank = function() {
     );
   }
 
-  if (countEl) countEl.textContent = `แสดงสุ่ม 10 ข้อ จากที่กรองได้ ${questions.length} ข้อ (จากคลัง 10,480 ข้อ)`;
+  if (countEl) countEl.textContent = `แสดงล่าสุด 100 ข้อ | ตรงเงื่อนไข ${questions.length} ข้อ`;
 
   if (questions.length === 0) {
     container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">ไม่พบข้อสอบที่ตรงกับเงื่อนไข</div>';
     return;
   }
 
-  // Pick 10 random questions to prevent browser crash
-  const shuffled = [...questions].sort(() => 0.5 - Math.random());
-  const selected = shuffled.slice(0, 10);
+  const selected = questions; // Show all filtered (up to 100)
 
   container.innerHTML = selected.map((q, idx) => `
     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;">

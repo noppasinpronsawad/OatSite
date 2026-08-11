@@ -21,16 +21,23 @@ module.exports = async (req, res) => {
       { id: 'log-001', date: '2026-08-03 07:30', source: 'Wall Street Journal', topic: 'US ETF Dollar Cost Averaging & Systematic Backtesting', questionsGenerated: 300, status: 'Success' }
     ];
 
-    return res.status(200).json({
-      success: true,
-      metrics: {
-        vercel: { status: 'Active (Production Edge)', region: 'sin1 (Singapore)' },
-        cloudinary: { cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'noppasin-cdn' },
-        mongodb: { totalPosts: 1, totalToeicQuestions: 10480 },
-        dailyNewsLogs: dailyLogs,
-        gemini: { status: 'Active (API Quota Healthy)', maskedKey: 'AIzaSy...7fXk9' }
+    let actualToeicCount = 10480;
+      if (connectToDatabase) {
+        const db = await connectToDatabase();
+        if (db && typeof ToeicQuestion !== 'undefined') {
+          actualToeicCount = await ToeicQuestion.countDocuments() || 10480;
+        }
       }
-    });
+
+      return res.status(200).json({
+        success: true,
+        metrics: {
+          vercel: { status: 'Active (Production Edge)', region: 'sin1 (Singapore)' },
+          cloudinary: { cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'noppasin-cdn' },
+          mongodb: { totalPosts: 1, totalToeicQuestions: actualToeicCount },
+          dailyNewsLogs: dailyLogs,
+        }
+      });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

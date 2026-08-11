@@ -110,7 +110,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Title, category, summary, and content are required fields' });
       }
 
-      const publishAtDate = publishAt ? new Date(publishAt) : new Date();
+      const publishAtDate = publishAt ? new Date(publishAt) : new Date(Date.now() - 60000);
       const formattedDate = date || formatFullDate(publishAtDate);
 
       if (db) {

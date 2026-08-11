@@ -1100,7 +1100,7 @@
             </div>
             <input type="text" id="postImageUrl" class="admin-input" placeholder="Or enter direct image URL..." style="margin-top: 0.5rem;">
             <button type="button" class="btn-admin-secondary" id="cropUrlBtn" style="margin-top: 0.5rem; width: 100%; display: none;">✂️ Crop Image from URL</button>
-            <img id="imagePreviewBox" alt="Preview">
+            <img id="imagePreviewBox" alt="Preview" style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1);">
           </div>
 
           <!-- VISUAL RICH TEXT EDITOR TOOLBAR -->
@@ -1257,7 +1257,33 @@
     </div>
   </div>
 
+  <!-- Cropper Modal -->
+  <div id="cropperModal" class="admin-modal-overlay">
+    <div class="admin-modal-content" style="max-width: 800px; display: flex; flex-direction: column; gap: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 1.2rem; font-weight: 600; color: #00d2ff;">✂️ Crop Cover Image (16:9)</h2>
+        <button type="button" onclick="window.closeAdminModal('cropperModal')" style="background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <div style="width: 100%; max-height: 60vh; background: #000; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+        <img id="cropperImage" style="max-width: 100%; display: block;">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <button type="button" class="btn-admin-secondary" onclick="window.closeAdminModal('cropperModal')">Cancel</button>
+        <button type="button" class="btn-admin-primary" id="confirmCropBtn">Apply Crop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forced Session Modal -->
+  <div id="sessionKickModal" class="admin-modal-overlay" style="z-index: 999999; backdrop-filter: blur(10px);">
+    <div class="admin-modal-content" style="max-width: 400px; text-align: center; border: 1px solid rgba(255,59,48,0.5);">
+      <h2 style="color: #ff3b30; margin-bottom: 1rem;">⚠️ Session Expired</h2>
+      <p style="margin-bottom: 2rem;">A new login was detected on another device. You have been securely logged out.</p>
+      <button type="button" class="btn-admin-primary" style="background: #ff3b30; color: #fff; border: none; width: 100%;" onclick="window.location.reload()">OK</button>
+    </div>
+  </div>
+
   <script src="../blog-data.js"></script>
-  <script src="/admin/admin.js?v=11.0"></script>
+  <script src="/admin/admin.js?v=12.0"></script>
 </body>
 </html>

@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
         if (!isAdminQuery) {
           dbQuery = dbQuery.select('-content');
         }
-        posts = await dbQuery.sort({ publishAt: -1, createdAt: -1 });
+        posts = await dbQuery.sort({ createdAt: -1 });
 
         // Auto-seed if database is completely empty or ?seed=true
         const isSeedRequested = req.query.seed === 'true';

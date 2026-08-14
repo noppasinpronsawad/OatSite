@@ -215,16 +215,15 @@ function initBlogModule() {
       }
     } catch (err) {
       console.warn('API /api/posts unreachable, using fallback blog-data.js:', err);
-      let customPosts = [];
-      try {
-        customPosts = JSON.parse(localStorage.getItem('custom_user_posts') || '[]');
-      } catch (e) {}
-
-      if (Array.isArray(customPosts) && customPosts.length > 0) {
-        const customIds = new Set(customPosts.map(cp => cp.id));
-        activePostsData = [...customPosts, ...activePostsData.filter(p => !customIds.has(p.id || p._id))];
-      }
     } finally {
+      // Enforce client-side sorting (Newest to Oldest) for any fallback data
+      if (activePostsData && activePostsData.length > 0) {
+        activePostsData.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt) : (a.publishAt ? new Date(a.publishAt) : new Date(a.date || 0));
+          const dateB = b.createdAt ? new Date(b.createdAt) : (b.publishAt ? new Date(b.publishAt) : new Date(b.date || 0));
+          return dateB - dateA;
+        });
+      }
       renderBlog();
     }
   }

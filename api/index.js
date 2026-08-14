@@ -10,7 +10,10 @@ try {
   handlers.postDetail = require('./_handlers/posts/detail');
   handlers.upload = require('./_handlers/upload/index');
   handlers.toeicQuestions = require('./_handlers/toeic/questions');
+  handlers.adminQuestions = require('./_handlers/admin/questions');
   handlers.metrics = require('./_handlers/admin/metrics');
+  handlers.cronScrape = require('./_handlers/cron/toeic-scrape-trigger');
+  handlers.cronGenerate = require('./_handlers/cron/toeic-generate-batch');
 
   // Normalize handlers (handle default exports if needed)
   for (let key in handlers) {
@@ -64,11 +67,20 @@ module.exports = async (req, res) => {
     if (rawUrl.includes('/upload')) {
       return await handlers.upload(req, res);
     }
+    if (rawUrl.includes('/admin/questions')) {
+      return await handlers.adminQuestions(req, res);
+    }
     if (rawUrl.includes('/toeic/questions') || rawUrl.includes('/questions')) {
       return await handlers.toeicQuestions(req, res);
     }
     if (rawUrl.includes('/admin/metrics') || rawUrl.includes('/metrics')) {
       return await handlers.metrics(req, res);
+    }
+    if (rawUrl.includes('/cron/toeic-scrape-trigger')) {
+      return await handlers.cronScrape(req, res);
+    }
+    if (rawUrl.includes('/cron/toeic-generate-batch')) {
+      return await handlers.cronGenerate(req, res);
     }
 
 

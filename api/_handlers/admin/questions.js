@@ -15,8 +15,13 @@ module.exports = async (req, res) => {
     await verifyAuth(req);
     const db = await connectToDatabase();
     if (db && ToeicQuestion) {
-      // Fetch latest 100 questions from MongoDB
-      const questions = await ToeicQuestion.find({}).sort({ createdAt: -1 }).limit(100);
+      // Fetch 100 questions from MongoDB (Randomized if shuffle=true)
+      let questions;
+      if (req.url && req.url.includes('shuffle=true')) {
+        questions = await ToeicQuestion.aggregate([{ $sample: { size: 100 } }]);
+      } else {
+        questions = await ToeicQuestion.find({}).sort({ createdAt: -1 }).limit(100);
+      }
       return res.status(200).json({ success: true, questions });
     } else {
       return res.status(500).json({ success: false, error: 'Database not available' });

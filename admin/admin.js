@@ -299,7 +299,7 @@ window.openQuestionBankModal = async function() {
     modal.classList.add('active');
   }
 
-  const container = document.getElementById('qbQuestionsList');
+  const container = document.getElementById('qbListContainer');
   if (container) {
     container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 3rem;">⏳ กำลังโหลดคลังข้อสอบทั้งหมดจาก DB...</div>';
   }
@@ -330,10 +330,38 @@ window.openQuestionBankModal = async function() {
   window.filterQuestionBank();
 };
 
+window.refreshQuestionBank = async function() {
+  const container = document.getElementById('qbListContainer');
+  if (container) {
+    container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 3rem;">⏳ กำลังโหลดและสุ่มข้อสอบชุดใหม่...</div>';
+  }
+
+  try {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch('/api/admin/questions?shuffle=true&_t=' + Date.now(), { 
+      cache: 'no-store',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.questions)) {
+        window.cachedDbQuestions = data.questions;
+        window.filterQuestionBank();
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('Fetch DB questions error:', err);
+  }
+  
+  // Fallback if failed
+  window.filterQuestionBank();
+};
+
 window.filterQuestionBank = function() {
-  const partFilter = document.getElementById('qbPartFilter')?.value || 'all';
+  const partFilter = document.getElementById('qbPartSelect')?.value || 'all';
   const search = (document.getElementById('qbSearchInput')?.value || '').toLowerCase().trim();
-  const container = document.getElementById('qbQuestionsList');
+  const container = document.getElementById('qbListContainer');
   const countEl = document.getElementById('qbTotalCountBadge');
 
   if (!container) return;
@@ -409,6 +437,9 @@ window.openCreatePostModal = function() {
   if (postIdInput) postIdInput.value = '';
   if (titleText) titleText.textContent = 'Create New Article';
 
+  const scheduleCard = document.getElementById('schedulePickerCard');
+  if (scheduleCard) scheduleCard.style.display = 'block';
+
   // Explicitly clear rich text editor and image preview
   const editor = document.getElementById('postContentEditor');
   if (editor) editor.innerHTML = '';
@@ -465,12 +496,22 @@ window.savePostArticle = async function(e) {
     readTime: readTime || '3 min read'
   };
 
-  // Only assign current date if it's a new post
+  // Only assign current date or schedule if it's a new post
   if (!postId) {
+    let finalPublishDate = new Date();
+    const enableScheduleCheck = document.getElementById('enableScheduleCheck');
+    if (enableScheduleCheck && enableScheduleCheck.checked) {
+      const scheduleInput = document.getElementById('postPublishAt')?.value;
+      if (scheduleInput) {
+        const parsedDate = new Date(scheduleInput);
+        if (!isNaN(parsedDate.getTime())) {
+          finalPublishDate = parsedDate;
+        }
+      }
+    }
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const now = new Date();
-    newArticle.date = `${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
-    newArticle.publishAt = now.toISOString();
+    newArticle.date = `${String(finalPublishDate.getDate()).padStart(2, '0')} ${months[finalPublishDate.getMonth()]} ${finalPublishDate.getFullYear()}`;
+    newArticle.publishAt = finalPublishDate.toISOString();
   }
 
   const saveBtn = document.getElementById('savePostBtn');
@@ -524,6 +565,9 @@ window.editBlogPost = function(postId) {
   document.getElementById('postCategory').value = post.category || 'Daily Life';
   document.getElementById('postSummary').value = post.summary || '';
   document.getElementById('postContent').value = post.content || '';
+  
+  const scheduleCard = document.getElementById('schedulePickerCard');
+  if (scheduleCard) scheduleCard.style.display = 'none';
   const editor = document.getElementById('postContentEditor');
   if (editor) editor.innerHTML = post.content || '';
   
@@ -617,10 +661,6 @@ function startSessionMonitoring() {
 
 // Fetch & Render Blog Posts from MongoDB Atlas & Fallback (Item 3)
 async function fetchBlogPosts() {
-  const tableBody = document.getElementById('postsTableBody');
-  const paginationInfo = document.getElementById('adminPaginationInfo');
-  if (!tableBody) return;
-
   let posts = [];
   try {
     const res = await fetch('/api/posts?admin=true&_t=' + Date.now());
@@ -640,15 +680,35 @@ async function fetchBlogPosts() {
     posts = [...window.BLOG_POSTS];
   }
 
-  window.cachedAllBlogPosts = posts;
+  // Enforce client-side sorting (Newest to Oldest)
+  if (posts.length > 0) {
+    posts.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : (a.publishAt ? new Date(a.publishAt) : new Date(a.date || 0));
+      const dateB = b.createdAt ? new Date(b.createdAt) : (b.publishAt ? new Date(b.publishAt) : new Date(b.date || 0));
+      return dateB - dateA;
+    });
+  }
 
-  if (posts.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">ยังไม่มีบทความในระบบ กดปุ่ม + Create New Post เพื่อเพิ่มบทความแรก</td></tr>';
+  window.cachedAllBlogPosts = posts;
+  
+  // Call the filtering function immediately
+  applyAdminFilters();
+  setupAdminFilters();
+}
+
+function renderAdminPosts(postsToRender) {
+  const tableBody = document.getElementById('postsTableBody');
+  const paginationInfo = document.getElementById('adminPaginationInfo');
+  
+  if (!tableBody) return;
+
+  if (postsToRender.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">ไม่พบบทความ หรือยังไม่มีข้อมูลในระบบ</td></tr>';
     if (paginationInfo) paginationInfo.textContent = 'Showing 0 articles';
     return;
   }
 
-  tableBody.innerHTML = posts.map(p => {
+  tableBody.innerHTML = postsToRender.map(p => {
     const postId = p.id || p._id;
     const catClass = (p.category || 'Daily Life').toLowerCase().replace(/\s+/g, '-');
     const imgSrc = p.image ? (p.image.startsWith('http') || p.image.startsWith('data:') || p.image.startsWith('/') || p.image.startsWith('../') ? p.image : `../${p.image}`) : '';
@@ -679,20 +739,122 @@ async function fetchBlogPosts() {
   }).join('');
 
   if (paginationInfo) {
-    paginationInfo.textContent = `Showing 1-${posts.length} of ${posts.length} articles`;
+    paginationInfo.textContent = `Showing 1-${postsToRender.length} of ${postsToRender.length} articles`;
   }
 }
 window.fetchBlogPosts = fetchBlogPosts;
 
+function applyAdminFilters() {
+  const search = (document.getElementById('adminSearchInput')?.value || '').toLowerCase().trim();
+  const category = document.getElementById('adminCategorySelect')?.value || 'all';
+  const fromDate = document.getElementById('adminFromDate')?.value || '';
+  const toDate = document.getElementById('adminToDate')?.value || '';
+
+  let filtered = window.cachedAllBlogPosts || [];
+
+  if (search) {
+    filtered = filtered.filter(p => 
+      (p.title || '').toLowerCase().includes(search) || 
+      (p.summary || '').toLowerCase().includes(search) ||
+      (p.category || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (category !== 'all') {
+    filtered = filtered.filter(p => (p.category || 'Daily Life') === category);
+  }
+
+  if (fromDate || toDate) {
+    const fromTime = fromDate ? new Date(fromDate).getTime() : 0;
+    const toTime = toDate ? new Date(toDate).getTime() : Infinity;
+    filtered = filtered.filter(p => {
+      const pTime = p.createdAt ? new Date(p.createdAt).getTime() : (p.publishAt ? new Date(p.publishAt).getTime() : new Date(p.date || 0).getTime());
+      if (isNaN(pTime)) return true;
+      return pTime >= fromTime && pTime <= toTime;
+    });
+  }
+
+  renderAdminPosts(filtered);
+}
+window.applyAdminFilters = applyAdminFilters;
+
+function setupAdminFilters() {
+  const searchInput = document.getElementById('adminSearchInput');
+  const catSelect = document.getElementById('adminCategorySelect');
+  const fromDate = document.getElementById('adminFromDate');
+  const toDate = document.getElementById('adminToDate');
+  const resetBtn = document.getElementById('adminResetFilterBtn');
+
+  // Restrict to today max
+  const today = new Date().toISOString().split('T')[0];
+  if (fromDate) fromDate.max = today;
+  if (toDate) toDate.max = today;
+
+  const onFilterChange = () => {
+    if (window.applyAdminFilters) window.applyAdminFilters();
+  };
+
+  if (searchInput) searchInput.addEventListener('input', onFilterChange);
+  if (catSelect) catSelect.addEventListener('change', onFilterChange);
+  if (fromDate) fromDate.addEventListener('change', onFilterChange);
+  if (toDate) toDate.addEventListener('change', onFilterChange);
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      if (catSelect) catSelect.value = 'all';
+      if (fromDate) fromDate.value = '';
+      if (toDate) toDate.value = '';
+      onFilterChange();
+    });
+  }
+}
+window.setupAdminFilters = setupAdminFilters;
+
 function initRichEditor() {
+  document.execCommand('defaultParagraphSeparator', false, 'p');
+
   // Setup Rich Text Formatting Buttons
   document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const command = btn.getAttribute('data-command');
       document.execCommand(command, false, null);
+      updateToolbarState();
     });
   });
+
+  function updateToolbarState() {
+    document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
+      const command = btn.getAttribute('data-command');
+      if (document.queryCommandState(command)) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    const formatBlock = document.queryCommandValue('formatBlock');
+    if (formatBlock) {
+      const headingSelect = document.getElementById('editorHeadingSelect');
+      if (headingSelect) {
+        const matchedOption = Array.from(headingSelect.options).find(opt => opt.value.toLowerCase() === formatBlock.toLowerCase());
+        if (matchedOption) {
+          headingSelect.value = matchedOption.value;
+        } else {
+          headingSelect.value = 'p';
+        }
+      }
+    }
+
+    const fontSize = document.queryCommandValue('fontSize');
+    if (fontSize) {
+      const fontSelect = document.getElementById('editorFontSizeSelect');
+      if (fontSelect) {
+        fontSelect.value = fontSize;
+      }
+    }
+  }
 
   const headingSelect = document.getElementById('editorHeadingSelect');
   if (headingSelect) {
@@ -788,7 +950,7 @@ function initRichEditor() {
     });
   }
 
-  // Allow resizing images inside the editor
+  // Allow resizing images inside the editor and add paste interception / selection updates
   const editorBox = document.getElementById('postContentEditor');
   if (editorBox) {
     editorBox.addEventListener('click', (e) => {
@@ -805,6 +967,19 @@ function initRichEditor() {
         }
       }
     });
+
+    editorBox.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+      const paragraphs = text.split(/\r?\n\r?\n/).map(p => {
+        const escapedText = String(p).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+        return `<p>${escapedText}</p>`;
+      }).join('');
+      document.execCommand('insertHTML', false, paragraphs);
+    });
+
+    editorBox.addEventListener('keyup', updateToolbarState);
+    editorBox.addEventListener('mouseup', updateToolbarState);
   }
 
   const resizeRange = document.getElementById('editorResizeRange');
@@ -926,6 +1101,30 @@ function initAdminPanel() {
       };
     }
 
+    // Admin Theme Toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = themeBtn ? themeBtn.querySelector('.theme-icon') : null;
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('apple_resume_theme', theme);
+      if (themeIcon) {
+        themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+      }
+    }
+
+    const savedTheme = localStorage.getItem('apple_resume_theme') || 'dark';
+    applyTheme(savedTheme);
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+      });
+    }
+
     const openAddBtn = document.getElementById('openAddModalBtn');
     if (openAddBtn) {
       openAddBtn.onclick = function(e) {
@@ -968,6 +1167,7 @@ function initAdminPanel() {
 
     fetchAdminMetrics();
     fetchBlogPosts();
+    setupAdminFilters();
     startSessionMonitoring();
     initRichEditor();
   } catch (err) {

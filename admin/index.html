@@ -11,8 +11,9 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
   <!-- Cropper.js for Interactive Image Cropping -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -76,7 +77,9 @@
       display: block;
     }
 
-    .admin-input, .admin-select, .admin-textarea {
+    .admin-input,
+    .admin-select,
+    .admin-textarea {
       width: 100%;
       padding: 0.75rem 1rem;
       border-radius: var(--radius-sm);
@@ -90,7 +93,9 @@
       transition: all var(--transition-fast);
     }
 
-    .admin-input:focus, .admin-select:focus, .admin-textarea:focus {
+    .admin-input:focus,
+    .admin-select:focus,
+    .admin-textarea:focus {
       border-color: var(--accent-blue);
       box-shadow: 0 0 12px var(--accent-blue-glow);
     }
@@ -172,7 +177,7 @@
     /* Admin Filter Bar Styling */
     .admin-filter-bar {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 0.8rem;
       flex-wrap: wrap;
       background: var(--bg-tertiary);
@@ -408,6 +413,7 @@
     .crop-modal-content {
       max-width: 700px;
     }
+
     .crop-wrapper {
       max-height: 400px;
       width: 100%;
@@ -416,10 +422,12 @@
       overflow: hidden;
       margin-bottom: 1rem;
     }
+
     .crop-wrapper img {
       max-width: 100%;
       display: block;
     }
+
     .crop-toolbar {
       display: flex;
       gap: 0.5rem;
@@ -513,17 +521,42 @@
       display: block;
     }
 
-    .rich-editor-content h1, .rich-editor-content h2, .rich-editor-content h3, .rich-editor-content h4 {
+    .rich-editor-content p {
+      margin-bottom: 1em;
+      font-size: 1em;
+    }
+
+    .rich-editor-content ul {
+      margin-left: 1.5em;
+      margin-bottom: 1em;
+      list-style-type: disc;
+    }
+
+    .rich-editor-content h1,
+    .rich-editor-content h2,
+    .rich-editor-content h3,
+    .rich-editor-content h4 {
       font-weight: 800;
-      margin-top: 1rem;
-      margin-bottom: 0.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
       letter-spacing: -0.02em;
     }
 
-    .rich-editor-content h1 { font-size: 1.6rem; }
-    .rich-editor-content h2 { font-size: 1.35rem; }
-    .rich-editor-content h3 { font-size: 1.15rem; }
-    .rich-editor-content h4 { font-size: 1.0rem; }
+    .rich-editor-content h1 {
+      font-size: 1.6rem;
+    }
+
+    .rich-editor-content h2 {
+      font-size: 1.35rem;
+    }
+
+    .rich-editor-content h3 {
+      font-size: 1.15rem;
+    }
+
+    .rich-editor-content h4 {
+      font-size: 1.0rem;
+    }
 
     .article-body-img {
       max-width: 100%;
@@ -713,15 +746,17 @@
         padding: 0.5rem 0.4rem;
       }
     }
-  
+
     /* Force Modal Visibility Specificity */
-    .admin-modal.active, #newsDetailModal.active, #questionBankModal.active {
+    .admin-modal.active,
+    #newsDetailModal.active,
+    #questionBankModal.active {
       display: flex !important;
       visibility: visible !important;
       opacity: 1 !important;
       z-index: 999999 !important;
     }
-</style>
+  </style>
 
   <style>
     .alert-banner {
@@ -733,30 +768,41 @@
       display: none;
       transition: all 0.3s ease;
     }
+
     .alert-error {
       background: rgba(255, 69, 58, 0.18) !important;
       border: 1px solid #ff453a !important;
       color: #ff453a !important;
     }
-    .alert-info, .alert-loading {
+
+    .alert-info,
+    .alert-loading {
       background: rgba(0, 210, 255, 0.18) !important;
       border: 1px solid #00d2ff !important;
       color: #00d2ff !important;
     }
+
     .alert-success {
       background: rgba(48, 209, 88, 0.18) !important;
       border: 1px solid #30d158 !important;
       color: #30d158 !important;
     }
+
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
+
     .spinner-icon {
       display: inline-block;
       width: 14px;
       height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       border-top-color: #fff;
       animation: spin 0.8s linear infinite;
@@ -799,15 +845,19 @@
 
       <div id="loginAlert" class="alert-banner alert-error"></div>
 
-      <form id="loginForm" onsubmit="event.preventDefault(); if(window.executeAdminLogin) window.executeAdminLogin(event); return false;">
+      <form id="loginForm"
+        onsubmit="event.preventDefault(); if(window.executeAdminLogin) window.executeAdminLogin(event); return false;">
         <div class="admin-form-group">
           <div>
             <label class="admin-label" for="adminPassword">Admin Password</label>
-            <input type="password" id="adminPassword" class="admin-input" placeholder="Enter password..." required autofocus>
+            <input type="password" id="adminPassword" class="admin-input" placeholder="Enter password..." required
+              autofocus>
           </div>
           <button type="submit" class="btn-admin-primary" id="loginBtn">
             <span>Unlock CMS</span>
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </form>
@@ -815,16 +865,20 @@
 
     <!-- DASHBOARD CMS VIEW -->
     <div id="dashboardView" class="admin-card" style="display: none;">
-      
+
       <!-- Top Navigation Tabs -->
-      <div class="admin-tab-nav" style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.8rem; flex-wrap: wrap;">
-        <button type="button" class="btn-admin-secondary active" id="blogMgmtTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('blog')">
+      <div class="admin-tab-nav"
+        style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.8rem; flex-wrap: wrap;">
+        <button type="button" class="btn-admin-secondary active" id="blogMgmtTabBtn"
+          onclick="window.switchAdminTab && window.switchAdminTab('blog')">
           📰 Blog Management
         </button>
-        <button type="button" class="btn-admin-secondary" id="toeicStatsTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('toeic')">
+        <button type="button" class="btn-admin-secondary" id="toeicStatsTabBtn"
+          onclick="window.switchAdminTab && window.switchAdminTab('toeic')">
           📈 TOEIC Statistics
         </button>
-        <button type="button" class="btn-admin-secondary" id="sysDashTabBtn" onclick="window.switchAdminTab && window.switchAdminTab('system')">
+        <button type="button" class="btn-admin-secondary" id="sysDashTabBtn"
+          onclick="window.switchAdminTab && window.switchAdminTab('system')">
           ⚙️ System Dashboard
         </button>
       </div>
@@ -834,13 +888,15 @@
         <div class="dashboard-header">
           <div class="dashboard-title-group">
             <h2 class="gradient-text">Blog Management</h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Search, filter, edit, schedule & publish articles stored in MongoDB Atlas.</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Search, filter, edit, schedule & publish
+              articles stored in MongoDB Atlas.</p>
           </div>
           <div class="dashboard-actions">
             <button class="btn-admin-primary" id="openAddModalBtn" style="width: auto;">
               <span>+ Create New Post</span>
             </button>
-            <button type="button" class="btn-admin-secondary btn-danger" id="logoutBtn" onclick="window.executeLogout && window.executeLogout()">Logout</button>
+            <button type="button" class="btn-admin-secondary btn-danger" id="logoutBtn"
+              onclick="window.executeLogout && window.executeLogout()">Logout</button>
           </div>
         </div>
 
@@ -849,9 +905,14 @@
         <!-- ADMIN SEARCH & FILTER BAR -->
         <div class="admin-filter-bar">
           <div class="filter-search-box">
-            <input type="text" id="adminSearchInput" class="admin-input" placeholder="🔍 Search articles by title or keyword...">
+            <label class="admin-label" for="adminSearchInput" style="display: block; margin-bottom: 0.3rem;">คำค้นหา
+              (Keyword)</label>
+            <input type="text" id="adminSearchInput" class="admin-input"
+              placeholder="🔍 Search articles by title or keyword...">
           </div>
           <div class="filter-select-box">
+            <label class="admin-label" for="adminCategorySelect" style="display: block; margin-bottom: 0.3rem;">หมวดหมู่
+              (Type)</label>
             <select id="adminCategorySelect" class="admin-select">
               <option value="all">All Categories</option>
               <option value="Daily Life">Daily Life</option>
@@ -861,9 +922,14 @@
             </select>
           </div>
           <div class="filter-date-box">
-            <input type="text" id="adminFromDate" class="admin-input date-picker-input" placeholder="📅 From Date">
-            <span style="color: var(--text-tertiary); font-size: 0.85rem;">to</span>
-            <input type="text" id="adminToDate" class="admin-input date-picker-input" placeholder="📅 To Date">
+            <label class="admin-label" for="adminFromDate" style="display: block; margin-bottom: 0.3rem;">ตั้งแต่วันที่
+              (From)</label>
+            <input type="date" id="adminFromDate" class="admin-input date-picker-input" placeholder="📅 From Date">
+          </div>
+          <div class="filter-date-box">
+            <label class="admin-label" for="adminToDate" style="display: block; margin-bottom: 0.3rem;">ถึงวันที่
+              (To)</label>
+            <input type="date" id="adminToDate" class="admin-input date-picker-input" placeholder="📅 To Date">
           </div>
           <button type="button" class="btn-admin-secondary" id="adminResetFilterBtn">Reset</button>
         </div>
@@ -903,7 +969,8 @@
         <div class="dashboard-header">
           <div class="dashboard-title-group">
             <h2 class="gradient-text">System Monitoring Dashboard</h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Real-time usage quotas & system health metrics for Vercel, Cloudinary, MongoDB & Gemini API.</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Real-time usage quotas & system health metrics
+              for Vercel, Cloudinary, MongoDB & Gemini API.</p>
           </div>
           <div class="dashboard-actions">
             <button class="btn-admin-primary" id="refreshMetricsBtn" style="width: auto;">
@@ -912,16 +979,20 @@
           </div>
         </div>
 
-        <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-          
+        <div class="metrics-grid"
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+
           <!-- Vercel Metrics Card -->
-          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+          <div class="metric-card"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <span style="font-size: 1.5rem;">▲</span>
-              <span class="timer-badge" style="background: rgba(48, 209, 88, 0.15); color: #30d158;">VERCEL ACTIVE</span>
+              <span class="timer-badge" style="background: rgba(48, 209, 88, 0.15); color: #30d158;">VERCEL
+                ACTIVE</span>
             </div>
             <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Vercel Serverless</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Hosting & Edge Functions Status</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Hosting & Edge Functions
+              Status</p>
             <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
               <div>Status: <strong id="m_vercel_status" style="color: #30d158;">Active (Production)</strong></div>
               <div>Region: <strong id="m_vercel_region">Singapore (SIN1)</strong></div>
@@ -930,13 +1001,16 @@
           </div>
 
           <!-- Cloudinary Metrics Card -->
-          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+          <div class="metric-card"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <span style="font-size: 1.5rem;">☁️</span>
-              <span id="m_cloud_badge" class="timer-badge" style="background: rgba(0, 210, 255, 0.15); color: #00d2ff;">CLOUDINARY OK</span>
+              <span id="m_cloud_badge" class="timer-badge"
+                style="background: rgba(0, 210, 255, 0.15); color: #00d2ff;">CLOUDINARY OK</span>
             </div>
             <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Cloudinary Media</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Image Storage & Transformations</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Image Storage &
+              Transformations</p>
             <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
               <div>Cloud Name: <strong id="m_cloud_name">oatsite_blog</strong></div>
               <div>Storage Quota: <strong>25.0 GB Free Tier</strong></div>
@@ -945,10 +1019,12 @@
           </div>
 
           <!-- MongoDB Metrics Card -->
-          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+          <div class="metric-card"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <span style="font-size: 1.5rem;">🍃</span>
-              <span id="m_mongo_badge" class="timer-badge" style="background: rgba(48, 209, 88, 0.15); color: #30d158;">MONGODB OK</span>
+              <span id="m_mongo_badge" class="timer-badge"
+                style="background: rgba(48, 209, 88, 0.15); color: #30d158;">MONGODB OK</span>
             </div>
             <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">MongoDB Atlas</h3>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">NoSQL Database Cluster</p>
@@ -960,13 +1036,16 @@
           </div>
 
           <!-- Gemini API Metrics Card -->
-          <div class="metric-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+          <div class="metric-card"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <span style="font-size: 1.5rem;">✨</span>
-              <span id="m_gemini_badge" class="timer-badge" style="background: rgba(175, 82, 222, 0.15); color: #af52de;">GEMINI READY</span>
+              <span id="m_gemini_badge" class="timer-badge"
+                style="background: rgba(175, 82, 222, 0.15); color: #af52de;">GEMINI READY</span>
             </div>
             <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Google Gemini API</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">AI Question Generator Service</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">AI Question Generator
+              Service</p>
             <div style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;">
               <div>API Key Status: <strong id="m_gemini_key">AIzaSy... (Active)</strong></div>
               <div>Generator Status: <strong id="m_gemini_status" style="color: #30d158;">Active & Ready</strong></div>
@@ -982,33 +1061,41 @@
         <div class="dashboard-header">
           <div class="dashboard-title-group">
             <h2 class="gradient-text">TOEIC Statistics & AI Ingestion Analytics</h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">คลังข้อสอบ TOEIC และประวัติการดึงข่าวประจำวัน (Daily News Ingestion Log)</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">คลังข้อสอบ TOEIC และประวัติการดึงข่าวประจำวัน
+              (Daily News Ingestion Log)</p>
           </div>
           <div class="dashboard-actions">
-            <button class="btn-admin-primary" id="openQuestionBankBtn" onclick="window.openQuestionBankModal && window.openQuestionBankModal()" style="width: auto;">
+            <button class="btn-admin-primary" id="openQuestionBankBtn"
+              onclick="window.openQuestionBankModal && window.openQuestionBankModal()" style="width: auto;">
               <span>🔍 Browse Questions in DB (ดูข้อสอบใน DB)</span>
             </button>
-            <button class="btn-admin-secondary" id="refreshToeicStatsBtn" onclick="fetchAdminMetrics()" style="width: auto;">
+            <button class="btn-admin-secondary" id="refreshToeicStatsBtn" onclick="fetchAdminMetrics()"
+              style="width: auto;">
               <span>🔄 Refresh Statistics</span>
             </button>
           </div>
         </div>
 
         <!-- Question Pool Summary Banner -->
-        <div style="margin-top: 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <div
+          style="margin-top: 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
             <div>
               <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem;">📚 TOEIC Question Pool Analytics</h3>
-              <p style="font-size: 0.85rem; color: var(--text-secondary);">จำนวนข้อสอบในคลังปัจจุบันเทียบกับเป้าหมายระบบ</p>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">จำนวนข้อสอบในคลังปัจจุบันเทียบกับเป้าหมายระบบ
+              </p>
             </div>
             <div style="display: flex; gap: 1.5rem; font-size: 0.95rem; flex-wrap: wrap;">
-              <div>จำนวนข้อสอบในคลัง: <strong id="summary_total_qs" style="color: #30d158; font-size: 1.1rem;">กำลังโหลด...</strong></div>
+              <div>จำนวนข้อสอบในคลัง: <strong id="summary_total_qs"
+                  style="color: #30d158; font-size: 1.1rem;">กำลังโหลด...</strong></div>
               <div><strong>เพิ่มจากข่าวประจำวัน 300 ข้อ/วัน</strong></div>
             </div>
           </div>
 
           <!-- Daily News Log Table -->
-          <h4 style="font-size: 1rem; margin-bottom: 0.8rem; color: var(--text-primary);">📰 Log การดึงข่าวประจำวัน (Daily News Fetching Log)</h4>
+          <h4 style="font-size: 1rem; margin-bottom: 0.8rem; color: var(--text-primary);">📰 Log การดึงข่าวประจำวัน
+            (Daily News Fetching Log)</h4>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
               <thead>
@@ -1032,7 +1119,7 @@
 
   </main>
 
-<!-- ADD / EDIT POST MODAL -->
+  <!-- ADD / EDIT POST MODAL -->
   <div id="postModal" class="admin-modal">
     <div class="admin-modal-content">
       <div class="modal-header">
@@ -1045,7 +1132,8 @@
         <div class="admin-form-group">
           <div>
             <label class="admin-label" for="postTitle">Article Title</label>
-            <input type="text" id="postTitle" class="admin-input" placeholder="e.g. The Evolution of Silicate Weathering" required>
+            <input type="text" id="postTitle" class="admin-input"
+              placeholder="e.g. The Evolution of Silicate Weathering" required>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -1065,13 +1153,15 @@
           </div>
 
           <!-- BEAUTIFUL FLATPICKR SCHEDULE PICKER CARD (DD/MM/YYYY HH:mm) -->
-          <div class="schedule-picker-card">
-            <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin-bottom: 0;">
+          <div class="schedule-picker-card" id="schedulePickerCard">
+            <label
+              style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin-bottom: 0;">
               <input type="checkbox" id="enableScheduleCheck" style="width: 16px; height: 16px; cursor: pointer;">
               <span>🕒 ตั้งเวลาเผยแพร่บทความล่วงหน้า (Schedule Publish)</span>
             </label>
-            
-            <div id="scheduleFieldWrap" style="margin-top: 0.8rem; opacity: 0.4; pointer-events: none; transition: all 0.2s;">
+
+            <div id="scheduleFieldWrap"
+              style="margin-top: 0.8rem; opacity: 0.4; pointer-events: none; transition: all 0.2s;">
               <div class="schedule-presets">
                 <button type="button" class="preset-chip" data-preset="1h">⚡ อีก 1 ชม.</button>
                 <button type="button" class="preset-chip" data-preset="tomorrow">🌅 พรุ่งนี้ 09:00</button>
@@ -1079,8 +1169,10 @@
               </div>
 
               <div>
-                <label class="admin-label" for="postPublishAt" style="font-size: 0.8rem; margin-bottom: 0.3rem;">เลือกวันและเวลาที่ต้องการให้บทความขึ้นบนเว็บ</label>
-                <input type="text" id="postPublishAt" class="admin-input date-picker-input" placeholder="📅 เลือกวันและเวลา..." disabled>
+                <label class="admin-label" for="postPublishAt"
+                  style="font-size: 0.8rem; margin-bottom: 0.3rem;">เลือกวันและเวลาที่ต้องการให้บทความขึ้นบนเว็บ</label>
+                <input type="text" id="postPublishAt" class="admin-input date-picker-input"
+                  placeholder="📅 เลือกวันและเวลา..." disabled>
               </div>
 
               <div id="formattedDateBadge" class="formatted-date-badge"></div>
@@ -1089,7 +1181,8 @@
 
           <div>
             <label class="admin-label" for="postSummary">Short Summary</label>
-            <input type="text" id="postSummary" class="admin-input" placeholder="Brief 1-2 sentence description for list card view..." required>
+            <input type="text" id="postSummary" class="admin-input"
+              placeholder="Brief 1-2 sentence description for list card view..." required>
           </div>
 
           <div>
@@ -1098,9 +1191,12 @@
               <span id="dropzoneText">📸 Click or drag image file here to crop & upload</span>
               <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
             </div>
-            <input type="text" id="postImageUrl" class="admin-input" placeholder="Or enter direct image URL..." style="margin-top: 0.5rem;">
-            <button type="button" class="btn-admin-secondary" id="cropUrlBtn" style="margin-top: 0.5rem; width: 100%; display: none;">✂️ Crop Image from URL</button>
-            <img id="imagePreviewBox" crossorigin="anonymous" alt="Preview" title="Click to crop image" style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
+            <input type="text" id="postImageUrl" class="admin-input" placeholder="Or enter direct image URL..."
+              style="margin-top: 0.5rem;">
+            <button type="button" class="btn-admin-secondary" id="cropUrlBtn"
+              style="margin-top: 0.5rem; width: 100%; display: none;">✂️ Crop Image from URL</button>
+            <img id="imagePreviewBox" crossorigin="anonymous" alt="Preview" title="Click to crop image"
+              style="display: none; width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
           </div>
 
           <!-- VISUAL RICH TEXT EDITOR TOOLBAR -->
@@ -1129,19 +1225,25 @@
 
                 <!-- Formatting buttons (Strictly NO Color Picker) -->
                 <button type="button" class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)"><b>B</b></button>
-                <button type="button" class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)"><i>I</i></button>
-                <button type="button" class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                <button type="button" class="toolbar-btn" data-command="italic"
+                  title="Italic (Ctrl+I)"><i>I</i></button>
+                <button type="button" class="toolbar-btn" data-command="underline"
+                  title="Underline (Ctrl+U)"><u>U</u></button>
+                <button type="button" class="toolbar-btn" data-command="insertUnorderedList"
+                  title="Bullet List"><b>•</b></button>
 
                 <span class="toolbar-divider"></span>
 
                 <!-- Insert Image URL -->
-                <button type="button" class="toolbar-btn" id="insertImageUrlBtn" title="Insert Image URL or <pic>url</pic>">🖼️ Add Image</button>
+                <button type="button" class="toolbar-btn" id="insertImageUrlBtn"
+                  title="Insert Image URL or <pic>url</pic>">🖼️ Add Image</button>
 
 
               </div>
 
               <!-- Editable content container -->
-              <div id="postContentEditor" class="rich-editor-content" contenteditable="true" placeholder="Type or paste your article content here..."></div>
+              <div id="postContentEditor" class="rich-editor-content" contenteditable="true"
+                placeholder="Type or paste your article content here..."></div>
               <input type="hidden" id="postContent" required>
             </div>
           </div>
@@ -1186,63 +1288,98 @@
 
   <!-- NEWS INGESTION LOG DETAIL MODAL -->
   <div id="newsDetailModal" class="admin-modal" style="">
-    <div class="admin-modal-content" style="max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
+    <div class="admin-modal-content"
+      style="max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+      <div class="modal-header"
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
         <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.2rem;">📰 Daily News Ingestion Log Detail</h3>
-        <button class="close-modal-btn" id="closeNewsModalBtn" onclick="window.closeAdminModal && window.closeAdminModal('newsDetailModal')" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+        <button class="close-modal-btn" id="closeNewsModalBtn"
+          onclick="window.closeAdminModal && window.closeAdminModal('newsDetailModal')"
+          style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
       </div>
       <div style="font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.9rem;">
-        <div><strong>🌐 News Source:</strong> <span id="newsModalSource" style="color: #00d2ff; font-weight: 600;"></span></div>
-        <div><strong>📰 Headline:</strong> <span id="newsModalHeadline" style="font-weight: 600; color: #fff;"></span></div>
-        <div><strong>🔗 Source URL:</strong> <a id="newsModalUrl" href="#" target="_blank" style="color: #30d158; word-break: break-all;"></a></div>
-        <div><strong>📅 Ingestion Timestamp:</strong> <span id="newsModalDate" style="color: var(--text-secondary);"></span></div>
+        <div><strong>🌐 News Source:</strong> <span id="newsModalSource"
+            style="color: #00d2ff; font-weight: 600;"></span></div>
+        <div><strong>📰 Headline:</strong> <span id="newsModalHeadline" style="font-weight: 600; color: #fff;"></span>
+        </div>
+        <div><strong>🔗 Source URL:</strong> <a id="newsModalUrl" href="#" target="_blank"
+            style="color: #30d158; word-break: break-all;"></a></div>
+        <div><strong>📅 Ingestion Timestamp:</strong> <span id="newsModalDate"
+            style="color: var(--text-secondary);"></span></div>
         <div><strong>📝 Article Content Summary:</strong>
-          <div id="newsModalSummary" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-sm); margin-top: 0.4rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;"></div>
+          <div id="newsModalSummary"
+            style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-sm); margin-top: 0.4rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+          </div>
         </div>
         <div><strong>⚡ AI Generated Question Breakdown:</strong>
-          <div id="newsModalBreakdown" style="display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.88rem; flex-wrap: wrap;"></div>
+          <div id="newsModalBreakdown"
+            style="display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.88rem; flex-wrap: wrap;"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- DAILY NEWS LOG DETAIL MODAL -->
-  <div id="newsDetailModal" class="admin-modal" style=" position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-    <div class="admin-modal-content" style="width: 90%; max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem;">
-        <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.25rem; font-weight: 700;">📰 Daily News Ingestion Log Detail</h3>
-        <button type="button" class="close-modal-btn" id="closeNewsModalBtn" onclick="window.closeAdminModal('newsDetailModal')" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+  <div id="newsDetailModal" class="admin-modal"
+    style=" position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="admin-modal-content"
+      style="width: 90%; max-width: 650px; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
+      <div class="modal-header"
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem;">
+        <h3 id="newsModalTitle" class="gradient-text" style="font-size: 1.25rem; font-weight: 700;">📰 Daily News
+          Ingestion Log Detail</h3>
+        <button type="button" class="close-modal-btn" id="closeNewsModalBtn"
+          onclick="window.closeAdminModal('newsDetailModal')"
+          style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
       </div>
       <div style="font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.9rem;">
-        <div><strong>🌐 News Source:</strong> <span id="newsModalSource" style="color: #00d2ff; font-weight: 600;"></span></div>
-        <div><strong>📰 Headline:</strong> <span id="newsModalHeadline" style="font-weight: 600; color: #fff;"></span></div>
-        <div><strong>🔗 Source URL:</strong> <a id="newsModalUrl" href="#" target="_blank" style="color: #30d158; word-break: break-all;"></a></div>
-        <div><strong>📅 Ingestion Timestamp:</strong> <span id="newsModalDate" style="color: var(--text-secondary, #aaa);"></span></div>
+        <div><strong>🌐 News Source:</strong> <span id="newsModalSource"
+            style="color: #00d2ff; font-weight: 600;"></span></div>
+        <div><strong>📰 Headline:</strong> <span id="newsModalHeadline" style="font-weight: 600; color: #fff;"></span>
+        </div>
+        <div><strong>🔗 Source URL:</strong> <a id="newsModalUrl" href="#" target="_blank"
+            style="color: #30d158; word-break: break-all;"></a></div>
+        <div><strong>📅 Ingestion Timestamp:</strong> <span id="newsModalDate"
+            style="color: var(--text-secondary, #aaa);"></span></div>
         <div><strong>📝 Article Content Summary:</strong>
-          <div id="newsModalSummary" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color, #333); padding: 1rem; border-radius: 8px; margin-top: 0.4rem; color: #ddd; font-size: 0.88rem; line-height: 1.5;"></div>
+          <div id="newsModalSummary"
+            style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color, #333); padding: 1rem; border-radius: 8px; margin-top: 0.4rem; color: #ddd; font-size: 0.88rem; line-height: 1.5;">
+          </div>
         </div>
         <div><strong>⚡ AI Generated Question Breakdown:</strong>
-          <div id="newsModalBreakdown" style="display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.88rem; flex-wrap: wrap;"></div>
+          <div id="newsModalBreakdown"
+            style="display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.88rem; flex-wrap: wrap;"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- QUESTION BANK INSPECTOR MODAL (VIEW ALL QUESTIONS IN DB) -->
-  <div id="questionBankModal" class="admin-modal" style=" position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-    <div class="admin-modal-content" style="width: 92%; max-width: 850px; max-height: 85vh; overflow-y: auto; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card, #1c1c1e); z-index: 10;">
-        <div>
-          <h3 class="gradient-text" style="font-size: 1.25rem; margin-bottom: 0.2rem; font-weight: 700;">📚 TOEIC Question Bank Inspector (MongoDB Atlas)</h3>
-          <p style="font-size: 0.85rem; color: var(--text-secondary, #aaa);">ตรวจสอบรายการข้อสอบ ตัวเลือกคำตอบ และเฉลยภาษาไทยในระบบ DB</p>
+  <div id="questionBankModal" class="admin-modal"
+    style=" position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="admin-modal-content"
+      style="width: 92%; max-width: 850px; max-height: 85vh; overflow-y: auto; background: var(--bg-card, #1c1c1e); border: 1px solid var(--border-color, #333); border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative;">
+      <div class="modal-header"
+        style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid var(--border-color, #333); padding-bottom: 1rem; margin-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card, #1c1c1e); z-index: 10;">
+        <div style="flex: 1; min-width: 250px;">
+          <h3 class="gradient-text" style="font-size: 1.25rem; margin-bottom: 0.2rem; font-weight: 700;">📚 TOEIC
+            Question Bank Inspector (MongoDB Atlas)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary, #aaa);">ตรวจสอบรายการข้อสอบ ตัวเลือกคำตอบ
+            และเฉลยภาษาไทยในระบบ DB</p>
         </div>
-        <button type="button" class="close-modal-btn" onclick="window.closeAdminModal('questionBankModal')" style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button type="button" class="btn-admin-secondary" onclick="window.refreshQuestionBank && window.refreshQuestionBank()" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">🔄 สุ่มข้อสอบใหม่ (100 ข้อ)</button>
+          <button type="button" class="close-modal-btn" onclick="window.closeAdminModal('questionBankModal')"
+            style="background: rgba(255,255,255,0.08); border: none; font-size: 1.4rem; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+        </div>
       </div>
 
       <!-- Search & Part Filter -->
       <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
-        <input type="text" id="qbSearchInput" oninput="window.filterQuestionBank && window.filterQuestionBank()" class="admin-input" placeholder="🔍 ค้นหาคำถาม หรือ Keyword..." style="flex: 1; min-width: 200px;">
-        <select id="qbPartSelect" onchange="window.filterQuestionBank && window.filterQuestionBank()" class="admin-select" style="width: auto;">
+        <input type="text" id="qbSearchInput" oninput="window.filterQuestionBank && window.filterQuestionBank()"
+          class="admin-input" placeholder="🔍 ค้นหาคำถาม หรือ Keyword..." style="flex: 1; min-width: 200px;">
+        <select id="qbPartSelect" onchange="window.filterQuestionBank && window.filterQuestionBank()"
+          class="admin-select" style="width: auto;">
           <option value="all">ทุก Part (Part 5, 6, 7)</option>
           <option value="5">Part 5 (Incomplete Sentences)</option>
           <option value="6">Part 6 (Text Completion)</option>
@@ -1261,13 +1398,16 @@
     <div class="admin-modal-content" style="max-width: 800px; display: flex; flex-direction: column; gap: 1rem;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 1.2rem; font-weight: 600; color: #00d2ff;">✂️ Crop Cover Image (16:9)</h2>
-        <button type="button" onclick="window.closeAdminModal('cropperModal')" style="background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <button type="button" onclick="window.closeAdminModal('cropperModal')"
+          style="background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
       </div>
-      <div style="width: 100%; max-height: 60vh; background: #000; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+      <div
+        style="width: 100%; max-height: 60vh; background: #000; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
         <img id="cropperImage" crossorigin="anonymous" style="max-width: 100%; display: block;">
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-        <button type="button" class="btn-admin-secondary" onclick="window.closeAdminModal('cropperModal')">Cancel</button>
+        <button type="button" class="btn-admin-secondary"
+          onclick="window.closeAdminModal('cropperModal')">Cancel</button>
         <button type="button" class="btn-admin-primary" id="confirmCropBtn">Apply Crop</button>
       </div>
     </div>
@@ -1275,10 +1415,13 @@
 
   <!-- Forced Session Modal -->
   <div id="sessionKickModal" class="admin-modal" style="z-index: 999999; backdrop-filter: blur(10px);">
-    <div class="admin-modal-content" style="max-width: 400px; text-align: center; border: 1px solid rgba(255,59,48,0.5);">
+    <div class="admin-modal-content"
+      style="max-width: 400px; text-align: center; border: 1px solid rgba(255,59,48,0.5);">
       <h2 style="color: #ff3b30; margin-bottom: 1rem;">⚠️ Session Expired</h2>
       <p style="margin-bottom: 2rem;">A new login was detected on another device. You have been securely logged out.</p>
-      <button type="button" class="btn-admin-primary" style="background: #ff3b30; color: #fff; border: none; width: 100%;" onclick="window.location.reload()">OK</button>
+      <button type="button" class="btn-admin-primary"
+        style="background: #ff3b30; color: #fff; border: none; width: 100%;"
+        onclick="window.location.reload()">OK</button>
     </div>
   </div>
 
@@ -1302,14 +1445,17 @@
       <h3 style="margin-bottom: 1rem; color: #00d2ff;">📏 Resize Image</h3>
       <div style="margin: 2rem 0;">
         <input type="range" id="editorResizeRange" min="10" max="100" step="5" style="width: 100%;">
-        <div style="margin-top: 1rem; font-size: 1.2rem; font-weight: bold;"><span id="editorResizeValue">100%</span></div>
+        <div style="margin-top: 1rem; font-size: 1.2rem; font-weight: bold;"><span id="editorResizeValue">100%</span>
+        </div>
       </div>
       <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-        <button class="btn-admin-primary" onclick="window.closeAdminModal('editorResizeModal')" style="width: 100%;">Done</button>
+        <button class="btn-admin-primary" onclick="window.closeAdminModal('editorResizeModal')"
+          style="width: 100%;">Done</button>
       </div>
     </div>
   </div>
 
   <script src="/admin/admin.js?v=12.5"></script>
 </body>
+
 </html>

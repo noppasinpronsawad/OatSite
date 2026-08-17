@@ -10,7 +10,7 @@ const PostSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['Daily Life', 'Science', 'Technology', 'Investment'],
+      enum: ['Daily Life', 'Science', 'Technology', 'Finance'],
       trim: true
     },
     summary: {

@@ -814,6 +814,16 @@ window.setupAdminFilters = setupAdminFilters;
 function initRichEditor() {
   document.execCommand('defaultParagraphSeparator', false, 'p');
 
+  // Intercept Paste to Strip Formatting (Plain Text Only)
+  const editor = document.getElementById('postContentEditor');
+  if (editor) {
+    editor.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+      document.execCommand('insertText', false, text);
+    });
+  }
+
   // Setup Rich Text Formatting Buttons
   document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -990,6 +1000,75 @@ function initRichEditor() {
         window.currentResizeTargetElement.style.width = e.target.value + '%';
         window.currentResizeTargetElement.style.height = 'auto'; // keep aspect ratio
       }
+    });
+  }
+
+  // Math Modal Logic
+  const insertMathBtn = document.getElementById('insertMathBtn');
+  const mathModal = document.getElementById('mathModal');
+  const mathInput = document.getElementById('mathInput');
+  const mathPreview = document.getElementById('mathPreview');
+  const confirmInsertMathBtn = document.getElementById('confirmInsertMathBtn');
+
+  if (insertMathBtn && mathModal) {
+    let savedSelectionRange = null;
+
+    insertMathBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const selection = window.getSelection();
+      savedSelectionRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      
+      mathInput.value = '';
+      mathPreview.innerHTML = '';
+      mathModal.style.display = 'flex';
+      mathModal.classList.add('active');
+    });
+
+    const renderPreview = () => {
+      if (!window.katex) {
+        mathPreview.innerHTML = `<span style="color: red;">Error: KaTeX library is not loaded. Please hard refresh the page.</span>`;
+        return;
+      }
+      
+      let latex = mathInput.value.trim();
+      latex = latex.replace(/^\$\$([\s\S]*)\$\$$/, '$1').trim();
+      latex = latex.replace(/^\\\(([\s\S]*)\\\)$/, '$1').trim();
+
+      const isDisplay = document.querySelector('input[name="mathMode"]:checked').value === 'display';
+      try {
+        window.katex.render(latex, mathPreview, {
+          displayMode: isDisplay,
+          throwOnError: false
+        });
+      } catch (err) {
+        mathPreview.innerHTML = `<span style="color: red;">${err.message}</span>`;
+      }
+    };
+
+    mathInput.addEventListener('input', renderPreview);
+    document.querySelectorAll('input[name="mathMode"]').forEach(r => r.addEventListener('change', renderPreview));
+
+    confirmInsertMathBtn.addEventListener('click', () => {
+      let latex = mathInput.value.trim();
+      if (latex) {
+        // Strip existing delimiters if the user manually typed them in the input
+        latex = latex.replace(/^\$\$([\s\S]*)\$\$$/, '$1').trim();
+        latex = latex.replace(/^\\\(([\s\S]*)\\\)$/, '$1').trim();
+
+        const isDisplay = document.querySelector('input[name="mathMode"]:checked').value === 'display';
+        const formattedLatex = isDisplay ? `$$ ${latex} $$` : `\\( ${latex} \\)`;
+        
+        const editor = document.getElementById('postContentEditor');
+        editor.focus();
+        if (savedSelectionRange) {
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(savedSelectionRange);
+        }
+        
+        document.execCommand('insertText', false, formattedLatex);
+      }
+      window.closeAdminModal('mathModal');
     });
   }
 

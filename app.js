@@ -66,6 +66,10 @@ function initRouter() {
     if (hash === 'toeic' || hash === 'toeic-simulator') {
       targetViewId = 'toeic-view';
       if (typeof resetToeicExam === 'function') resetToeicExam();
+    } else {
+      if (typeof toeicTimerInterval !== 'undefined' && toeicTimerInterval) {
+        clearInterval(toeicTimerInterval);
+      }
     }
     if (hash === 'showcase') targetViewId = 'showcase-view';
 
@@ -371,7 +375,19 @@ function initBlogModule() {
 
     // Header Image inside Modal if present
     const imgHeader = post.image ? `<img src="${post.image}" class="article-modal-header-img" alt="${post.title}">` : '';
-    if (bodyEl) bodyEl.innerHTML = imgHeader + fullContent;
+    if (bodyEl) {
+      bodyEl.innerHTML = imgHeader + fullContent;
+      // Trigger KaTeX to render LaTeX equations
+      if (window.renderMathInElement) {
+        renderMathInElement(bodyEl, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
   }
 
   if (closeArticleBtn && articleModal) {
@@ -1179,6 +1195,52 @@ function renderToeicQuestion(index) {
     if (!passageContent) {
       passageTitle = `Part ${q.part} Reading Passage`;
       passageContent = '<p>Read the passage carefully and select the best answer for each question below.</p>';
+    }
+
+    // Handle Multiple Passages JSON formatting
+    try {
+      let jsonStart = passageContent.indexOf('[');
+      if (jsonStart !== -1) {
+        let possibleHeader = passageContent.substring(0, jsonStart).trim();
+        // Only proceed if it looks like an array and the header looks like our tag (or is empty)
+        if (possibleHeader === '' || possibleHeader.includes('**[')) {
+          let jsonStr = passageContent.substring(jsonStart);
+          const passagesArr = JSON.parse(jsonStr); 
+          
+          if (Array.isArray(passagesArr)) {
+            let headerHtml = possibleHeader ? `<div style="margin-bottom: 1rem; font-weight: bold; color: #a1a1aa;">${possibleHeader.replace(/\*\*/g, '')}</div>` : '';
+            
+            let htmlPassages = passagesArr.map((doc, idx) => {
+              const colors = ['#00d2ff', '#30d158', '#af52de', '#ff9f0a'];
+              const rgbBorder = ['0,210,255', '48,209,88', '175,82,222', '255,159,10'];
+              const color = colors[idx % colors.length];
+              const border = rgbBorder[idx % rgbBorder.length];
+              
+              let title = '';
+              let text = '';
+              if (typeof doc === 'string') {
+                  text = doc;
+              } else {
+                  title = doc.title || doc.passage_title || '';
+                  text = doc.text || doc.passage_text || doc.content || '';
+              }
+
+              let titleHtml = title ? `<div style="color: ${color}; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem;">DOCUMENT ${idx+1}: ${title}</div>` : `<div style="color: ${color}; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem;">DOCUMENT ${idx+1}</div>`;
+
+              return `
+                <div class="passage-block" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(${border},0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                  ${titleHtml}
+                  <p style="white-space: pre-line; line-height: 1.6; margin: 0;">${text}</p>
+                </div>
+              `;
+            }).join('<hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); margin: 1.2rem 0;">');
+            
+            passageContent = headerHtml + htmlPassages;
+          }
+        }
+      }
+    } catch (e) {
+      // Not a JSON array, ignore and render as normal text
     }
 
     // Top-Bottom Layout with NO Guidance Panel (100% Full Width Passage Box)

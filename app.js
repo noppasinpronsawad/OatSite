@@ -376,7 +376,17 @@ function initBlogModule() {
     // Header Image inside Modal if present
     const imgHeader = post.image ? `<img src="${post.image}" class="article-modal-header-img" alt="${post.title}">` : '';
     if (bodyEl) {
-      bodyEl.innerHTML = imgHeader + fullContent;
+      let sanitizedContent = fullContent;
+      if (window.DOMPurify) {
+        sanitizedContent = window.DOMPurify.sanitize(fullContent, {
+          ADD_TAGS: ['iframe'],
+          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+        });
+      } else {
+        console.warn('DOMPurify not loaded, skipping sanitization');
+      }
+
+      bodyEl.innerHTML = imgHeader + sanitizedContent;
       // Trigger KaTeX to render LaTeX equations
       if (window.renderMathInElement) {
         renderMathInElement(bodyEl, {

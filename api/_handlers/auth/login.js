@@ -36,12 +36,10 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
 
-    // Ultra-resilient password matching: accepts @Dmin123, admin1234, and process.env.ADMIN_PASSWORD
+    // Match password against environment variable only
     const envPass = String(process.env.ADMIN_PASSWORD || '').trim().replace(/^["']|["']$/g, '');
-    const validPasswords = ['@Dmin123', 'admin1234'];
-    if (envPass) validPasswords.push(envPass);
 
-    if (!validPasswords.includes(password)) {
+    if (!envPass || password !== envPass) {
       return res.status(401).json({ error: 'Invalid admin password' });
     }
 

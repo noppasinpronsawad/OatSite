@@ -814,16 +814,6 @@ window.setupAdminFilters = setupAdminFilters;
 function initRichEditor() {
   document.execCommand('defaultParagraphSeparator', false, 'p');
 
-  // Intercept Paste to Strip Formatting (Plain Text Only)
-  const editor = document.getElementById('postContentEditor');
-  if (editor) {
-    editor.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-      document.execCommand('insertText', false, text);
-    });
-  }
-
   // Setup Rich Text Formatting Buttons
   document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
     btn.addEventListener('click', (e) => {

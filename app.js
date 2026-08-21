@@ -1041,6 +1041,8 @@ async function startToeicExam() {
   }
 
   // Fetch questions from API with 100% In-Memory Fallback Guarantee
+  // [DISABLED PER USER REQUEST] - Using Mockup Data exclusively until question bank grows
+  /*
   try {
     const res = await fetch(`/api/toeic/questions?mode=${toeicExamMode}&shuffle=true&new_attempt=true&_t=${Date.now()}`, { cache: 'no-store' });
     if (res.ok) {
@@ -1057,10 +1059,10 @@ async function startToeicExam() {
     console.warn('API fetch failed, utilizing Pristine In-Memory Dataset:', e);
     toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
   }
+  */
 
-  if (!toeicQuestions || toeicQuestions.length === 0) {
-    toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
-  }
+  // Force using mockups
+  toeicQuestions = getPristineFallbackQuestions(toeicExamMode);
 
   currentToeicIndex = 0;
   toeicUserAnswers = {};

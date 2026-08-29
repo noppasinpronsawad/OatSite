@@ -9,6 +9,9 @@ module.exports = async (req, res) => {
 
   try {
     const db = await connectToDatabase();
+    if (!db) {
+      return res.status(503).json({ error: 'Database connection failed. MONGODB_URI is likely missing.' });
+    }
     
     // 1. Fetch BBC News Business RSS feed
     const rssResponse = await fetch('http://feeds.bbci.co.uk/news/business/rss.xml');

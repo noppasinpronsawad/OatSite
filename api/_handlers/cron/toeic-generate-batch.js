@@ -209,6 +209,9 @@ module.exports = async (req, res) => {
 
   try {
     const db = await connectToDatabase();
+    if (!db) {
+      return res.status(503).json({ error: 'Database connection failed. MONGODB_URI is likely missing.' });
+    }
 
     // Select Random Theme and Grammar
     const randomTheme = themes[Math.floor(Math.random() * themes.length)];

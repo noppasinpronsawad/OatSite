@@ -2,8 +2,7 @@
   "version": 2,
   "crons": [
     {"path": "/api/cron/toeic-scrape-trigger", "schedule": "0 22 * * *"},
-    {"path": "/api/cron/toeic-generate-batch", "schedule": "0 23,10,16 * * *"},
-    {"path": "/api/cron/toeic-generate-batch", "schedule": "30 4 * * *"}
+    {"path": "/api/cron/toeic-generate-batch", "schedule": "0 23 * * *"}
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
